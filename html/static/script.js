@@ -142,6 +142,7 @@ $(document).ready(function () {
         };
         const user = window.isAuth.user.name;
         const is_superuser = window.isAuth.user.is_superuser;
+        var shouldPrevent = false;
         let drawer = $('#drawer')
             .kendoDrawer({
                 mode: 'push',
