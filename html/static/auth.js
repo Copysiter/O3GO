@@ -27,8 +27,12 @@ if (isAuth) {
     const is_superuser = window.isAuth.user.is_superuser;
 
     if (
-        (!is_superuser && document.location.pathname === '/auth/') ||
-        (!is_superuser && document.location.pathname === '/auth/')
+        // (!is_superuser && document.location.pathname === '/auth/') ||
+        // (!is_superuser && document.location.pathname === '/auth/')
+        (document.location.pathname === '/') ||
+        (document.location.pathname === '') ||
+        (document.location.pathname === '/auth/') ||
+        (document.location.pathname === '/auth')
     ) {
         document.location.href = document.location.origin + '/report/';
     }
