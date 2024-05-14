@@ -1,3 +1,5 @@
+window.api_base_url = `${document.location.hostname}:8000`
+
 window.getToken = function () {
     return JSON.parse(localStorage.getItem('token'));
 };
@@ -17,7 +19,7 @@ window.setToken = function (item) {
 
 window.isAuth = window.getToken('token');
 if (!isAuth && document.location.pathname !== '/auth' && document.location.pathname !== '/auth/') {
-    document.location.href = '/auth';
+    document.location.href = document.location.origin + '/auth/';
 }
 
 if (isAuth) {
@@ -25,10 +27,10 @@ if (isAuth) {
     const is_superuser = window.isAuth.user.is_superuser;
 
     if (
-        (!is_superuser && document.location.pathname === '/auth') ||
+        (!is_superuser && document.location.pathname === '/auth/') ||
         (!is_superuser && document.location.pathname === '/auth/')
     ) {
-        document.location.href = '/report';
+        document.location.href = document.location.origin + '/report/';
     }
 }
 
@@ -62,13 +64,13 @@ checkAuth = function () {
             .fail(function (data) {
                 if (localStorage.getItem('token')) localStorage.removeItem('token');
                 if (!isAuth && document.location.pathname !== '/auth' && document.location.pathname !== '/auth/') {
-                    document.location.href = '/auth';
+                    document.location.href = document.location.origin + '/auth/';
                 }
             });
     } else {
         if (localStorage.getItem('token')) localStorage.removeItem('token');
         if (!isAuth && document.location.pathname !== '/auth' && document.location.pathname !== '/auth/') {
-            document.location.href = '/auth';
+            document.location.href = document.location.origin + '/auth/';
         }
     }
     // $('#notification')
@@ -109,7 +111,7 @@ setInterval(() => {
             .fail(function (data) {
                 if (localStorage.getItem('token')) localStorage.removeItem('token');
                 if (document.location.pathname !== '/auth') {
-                    document.location.href = '/auth';
+                    document.location.href = document.location.origin + '/auth';
                 }
                 $('#notification')
                     .getKendoNotification()

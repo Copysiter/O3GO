@@ -1,8 +1,12 @@
 $(document).ready(function () {
     let isAuth = JSON.parse(localStorage.getItem('token'));
-    console.log(isAuth);
+    console.log()
+    console.log(document.location)
+    console.log(document.location.href)
+    console.log(document.location.path)
+    console.log()
     if (isAuth) {
-        document.location.href = '/devices';
+        document.location.href = document.location.origin + '/devices/';
     }
     $('#authorization')
         .kendoWindow({
@@ -106,7 +110,7 @@ $(document).ready(function () {
                 .done(function (data) {
                     console.log(data);
                     window.setToken(data);
-                    document.location.href = '/report';
+                    document.location.href = document.location.origin + '/report/';
                 })
                 .fail(function (data) {
                     console.log(2, data);

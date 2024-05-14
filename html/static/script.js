@@ -1,5 +1,3 @@
-window.api_base_url = `${location.hostname}:8000`
-
 $(document).ready(function () {
     // window.storageToken = new kendo.data.DataSource({
     //     offlineStorage: {
@@ -13,15 +11,15 @@ $(document).ready(function () {
     // });
     const drawerRootTemplate = `<ul>
     <li class='d-none'>
-    <a href='/users' data-role='drawer-item' class='${
+    <a href='/users/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'users' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='users-icon'>
     <span><i class='mdi mdi-account-circle fs-20'></i></span>
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='User'>Users</span>
-    </a> 
+    </a>
     </li>
     <li>
-    <a href='/report' data-role='drawer-item' class='${
+    <a href='/report/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'report' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='routing-icon'>
     <span><i class='mdi mdi-poll fs-20'></i></span>
@@ -30,7 +28,7 @@ $(document).ready(function () {
     </li>
     <li>
     <li>
-    <a href='/devices' data-role='drawer-item' class='${
+    <a href='/devices/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'devices' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='routing-icon'>
     <span><i class='mdi mdi-deskphone fs-20'></i></span>
@@ -38,24 +36,24 @@ $(document).ready(function () {
     </a>
     </li>
     <li>
-    <a href='/proxies' data-role='drawer-item' class='${
+    <a href='/proxies/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'proxies' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='peers-icon'>
     <span><i class='mdi mdi-server-network fs-20'></i></span>
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='proxies'>Proxies</span>
-    </a> 
+    </a>
     </li>
     <li>
-    <a href='/services' data-role='drawer-item' class='${
+    <a href='/services/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'services' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='peers-icon'>
     <span><i class='mdi mdi-cube fs-20'></i></span>
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='services'>Services</span>
-    </a> 
+    </a>
     </li>
     <li>
     <li>
-    <a href='/numbers' data-role='drawer-item' class='${
+    <a href='/numbers/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'numbers' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
     <span><i class='mdi mdi-checkbox-marked-outline fs-20'></i></span>
@@ -66,22 +64,57 @@ $(document).ready(function () {
     </ul>`;
 
     const drawerUserTemplate = `<ul>
-    <li>
-    <a href='/messages' data-role='drawer-item' class='${
-        $('body').attr('data-id') == 'messages' ? 'k-selected ' : ''
-    }d-flex align-items-center text-decoration-none p-0' id='messages-icon'>
-    <span><i class='mdi mdi-email fs-20'></i></span>
-    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='Message'>Messages</span>
+    <li class='d-none'>
+    <a href='/users/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'users' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='users-icon'>
+    <span><i class='mdi mdi-account-circle fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='User'>Users</span>
     </a>
     </li>
     <li>
-    <a href='/reports' data-role='drawer-item' class='${
-        $('body').attr('data-id') == 'reports' ? 'k-selected ' : ''
-    }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
+    <a href='/report/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'report' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='routing-icon'>
     <span><i class='mdi mdi-poll fs-20'></i></span>
-    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='Report'>Reports</span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='report'>Report</span>
     </a>
     </li>
+    <li>
+    <li>
+    <a href='/devices/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'devices' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='routing-icon'>
+    <span><i class='mdi mdi-deskphone fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='devices'>Devices</span>
+    </a>
+    </li>
+    <li>
+    <a href='/proxies/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'proxies' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='peers-icon'>
+    <span><i class='mdi mdi-server-network fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='proxies'>Proxies</span>
+    </a>
+    </li>
+    <li>
+    <a href='/services/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'services' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='peers-icon'>
+    <span><i class='mdi mdi-cube fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='services'>Services</span>
+    </a>
+    </li>
+    <li>
+    <li>
+    <a href='/numbers/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'numbers' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
+    <span><i class='mdi mdi-checkbox-marked-outline fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='numbers'>Numbers</span>
+    </a>
+    </li>
+    <li>
     </ul>`;
 
     if (window.isAuth) {
@@ -190,7 +223,7 @@ function logout() {
         .data('kendoConfirm')
         .result.done(function () {
             localStorage.removeItem('token');
-            document.location.href = '/auth';
+            document.location.href = document.location.origin + '/auth/';
         })
         .fail(function () {
             return;
