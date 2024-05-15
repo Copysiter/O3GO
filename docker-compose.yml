@@ -49,6 +49,8 @@ services:
   flower:
     image: mher/flower
     restart: always
+    env_file:
+      - ./.env
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - FLOWER_PORT=5555

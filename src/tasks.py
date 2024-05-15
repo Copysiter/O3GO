@@ -33,13 +33,15 @@ async def get_device(db: AsyncSession, data: dict) -> models.Device:
         device = await crud.device.create(db, obj_in={
             'ext_id': data.get('device_id')
         })
-    device = await crud.device.update(
-        db=db, db_obj=device, obj_in={
-            'api_key': data.get('api_key'),
-            'root': data.get('root'),
-            'operator': data.get('operator')
-        }
-    )
+
+    obj_in = {}
+    if data.get('root') is not None:
+        obj_in['root'] = data.get('root')
+    if data.get('operator') is not None:
+        obj_in['operator'] = data.get('operator')
+
+    device = await crud.device.update(db=db, db_obj=device, obj_in=obj_in)
+
     return device
 
 
@@ -119,14 +121,16 @@ async def get_number(db, data):
         return number
 
 
-async def device_handler(data: schemas.WebhookRequest):
+async def event_handler(data: schemas.WebhookRequest):
     async with async_session() as db:
-        data['device'] = await get_device(db, data)
+        if data.get('device_id'):
+            data['device'] = await get_device(db, data)
 
         if data.get('status') in (
                 'start', 'number', 'bad', 'code', 'no_code'):
             data['service'] = await get_service(db, data)
-            if data['device'] and data['service']:
+
+            if data.get('device') and data.get('service'):
                 report = await get_report(db, data)
 
         if data.get('proxy'):
@@ -139,4 +143,4 @@ async def device_handler(data: schemas.WebhookRequest):
 @celery.task(name="webhook")
 def webhook_handler(data: schemas.WebhookRequest):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(device_handler(data))
+    loop.run_until_complete(event_handler(data))
