@@ -15,7 +15,7 @@ class WebhookRequest(BaseModel):
     status: Optional[str] = None
     proxy: Optional[str] = None
     proxy_status: Optional[str] = None
-    number: Optional[int] = None
+    number: Optional[str] = None
     info_1: Optional[str] = None
     info_2: Optional[str] = None
     info_3: Optional[str] = None

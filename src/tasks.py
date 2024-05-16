@@ -25,119 +25,133 @@ def create_task(task_type):
     return True
 
 
-async def get_device(db: AsyncSession, data: dict) -> models.Device:
-    device = await crud.device.get_by_ext_id(
-        db, ext_id=data.get('device_id')
-    )
+async def get_device(
+    db: AsyncSession, ext_id: str = None,
+    root: bool = None, operator: str = None
+) -> models.Device:
+    device = await crud.device.get_by_ext_id(db, ext_id=ext_id)
     if not device:
-        device = await crud.device.create(db, obj_in={
-            'ext_id': data.get('device_id')
-        })
+        device = await crud.device.create(db, obj_in={'ext_id': ext_id})
 
     obj_in = {}
-    if data.get('root') is not None:
-        obj_in['root'] = data.get('root')
-    if data.get('operator') is not None:
-        obj_in['operator'] = data.get('operator')
+    if root is not None:
+        obj_in['root'] = root
+    if operator is not None:
+        obj_in['operator'] = operator
 
     device = await crud.device.update(db=db, db_obj=device, obj_in=obj_in)
 
     return device
 
 
-async def get_service(db: AsyncSession, data: dict) -> models.Service:
-    service = await crud.service.get_by_alias(
-        db, alias=data.get('service')
-    )
+async def get_service(db: AsyncSession, alias: str = None) -> models.Service:
+    service = await crud.service.get_by_alias(db, alias=alias)
     if not service:
-        service = await crud.service.create(db, obj_in={
-            'alias': data.get('service')
-        })
+        service = await crud.service.create(db, obj_in={'alias': alias})
     return service
 
 
-async def get_report(db: AsyncSession, data: dict) -> models.Report:
+async def get_report(
+    db: AsyncSession, status: str, api_key: str,
+    device_id: int, service_id: int,
+) -> models.Report:
     today = date.today()
-    api_key = data.get('api_key')
-    device = data.get('device')
-    service = data.get('service')
-    status = data.get('status')
-    if device and service:
-        report = await crud.report.get_by(
-            db=db, api_key=api_key, device_id=device.id,
-            service_id=service.id, date=today
-        )
-        if not report:
-            report = await crud.report.create(db, obj_in={
-                'api_key': api_key,
-                'device_id': device.id,
-                'service_id': service.id
-            })
-        report = await crud.report.update(
-            db=db, db_obj=report, obj_in={
-                f'{status}_count': getattr(report, f'{status}_count') + 1
-            }
-        )
-        return report
 
-
-async def get_proxy(db: AsyncSession, data: dict) -> models.Proxy:
-    proxy = await crud.proxy.get_by_url(
-        db, url=data.get('proxy')
+    report = await crud.report.get_by(
+        db=db, api_key=api_key, device_id=device_id,
+        service_id=service_id, date=today
     )
-    if not proxy:
-        proxy = await crud.proxy.create(db, obj_in={
-            'url': data.get('proxy')
+    if not report:
+        report = await crud.report.create(db, obj_in={
+            'api_key': api_key,
+            'device_id': device_id,
+            'service_id': service_id
         })
-    if data.get('proxy_status') in ('good', 'bad'):
-        proxy = await crud.proxy.update(
-            db=db, db_obj=proxy, obj_in={
-                f'{data.get("proxy_status")}_count': getattr(
-                    proxy, f'{data.get("proxy_status")}_count') + 1
-            }
-        )
+
+    report = await crud.report.update(
+        db=db, db_obj=report, obj_in={
+            f'{status}_count': getattr(report, f'{status}_count') + 1
+        }
+    )
+    return report
+
+
+async def get_proxy(db: AsyncSession, url: str, status: str) -> models.Proxy:
+    proxy = await crud.proxy.get_by_url(db, url=url)
+    if not proxy:
+        proxy = await crud.proxy.create(db, obj_in={'url': url})
+
+    proxy = await crud.proxy.update(
+        db=db, db_obj=proxy, obj_in={
+            f'{status}_count': getattr(proxy, f'{status}_count') + 1})
     return proxy
 
 
-async def get_number(db, data):
-    device = data.get('device')
-    proxy = data.get('proxy')
-    service = data.get('service')
-    if proxy and service and device:
-        number = await crud.number.get_by_number(
-            db, number=data.get('number')
-        )
-        if not number:
-            number = await crud.number.create(db=db, obj_in={
-                'number': data.get('number'),
-                'service_alias': service.alias,
-                'api_key': data.get('api_key'),
-                'proxy': proxy.url,
-                'device_ext_id': device.ext_id,
-                'info_1': data.get('info_1'),
-                'info_2': data.get('info_2'),
-                'info_3': data.get('info_3')
-            })
-        return number
+async def get_number(
+    db, number: str, api_key: str, proxy: str,
+    device_ext_id: str, service_alias: str,
+    info_1: str, info_2: str, info_3: str
+) -> models.Number:
+    number_ = await crud.number.get_by_number(db, number=number)
+    if not number_:
+        number_ = await crud.number.create(db=db, obj_in={
+            'number': number,
+            'service_alias': service_alias,
+            'api_key': api_key,
+            'proxy': proxy,
+            'device_ext_id': device_ext_id,
+            'info_1': info_1,
+            'info_2': info_2,
+            'info_3': info_3
+        })
+    return number_
 
 
 async def event_handler(data: schemas.WebhookRequest):
     async with async_session() as db:
-        if data.get('device_id'):
-            data['device'] = await get_device(db, data)
+        api_key = data.get('api_key')
+        device_ext_id = data.get('device_id')
+        device_root = data.get('root')
+        device_operator = data.get('operator')
+        service_alias = data.get('service')
+        number = data.get('number')
+        number_info_1 = data.get('info_1')
+        number_info_2 = data.get('info_2')
+        number_info_3 = data.get('info_3')
+        report_status = data.get('status')
+        check_status = report_status in (
+            'start', 'number', 'bad', 'code', 'no_code')
+        proxy_url = data.get('proxy')
+        proxy_status = data.get('proxy_status')
+        check_proxy_status = data.get('proxy_status') in ('good', 'bad')
 
-        if data.get('status') in (
-                'start', 'number', 'bad', 'code', 'no_code'):
-            data['service'] = await get_service(db, data)
+        device, service = None, None
 
-            if data.get('device') and data.get('service'):
-                report = await get_report(db, data)
+        if device_ext_id:
+            device = await get_device(
+                db, ext_id=device_ext_id, root=device_root,
+                operator=device_operator
+            )
 
-        if data.get('proxy'):
-            data['proxy'] = await get_proxy(db, data)
+        if check_status or number:
+            service = await get_service(db, alias=service_alias)
 
-        if data.get('number'):
-            number = await get_number(db, data)
+        if check_status and device and service:
+            _ = await get_report(
+                db, api_key=api_key, device_id=device.id,
+                service_id=service.id, status=report_status
+            )
+
+        if proxy_url and check_proxy_status:
+            _ = await get_proxy(db, url=proxy_url, status=proxy_status)
+
+        if number and device and service:
+            _ = await get_number(
+                db, number=number, api_key=api_key, proxy=proxy_url,
+                device_ext_id=device.ext_id, service_alias=service.alias,
+                info_1=number_info_1, info_2=number_info_2,
+                info_3=number_info_3
+            )
 
 
 @celery.task(name="webhook")
