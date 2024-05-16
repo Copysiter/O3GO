@@ -10,7 +10,7 @@ from schemas import NumberCreate, NumberUpdate  # noqa
 
 class CRUDNumber(CRUDBase[Number, NumberCreate, NumberUpdate]):
     async def get_by_number(
-        self, db: AsyncSession, number: int
+        self, db: AsyncSession, number: str
     ) -> Optional[Number]:
         statement = select(self.model).where(self.model.number == number)
         results = await db.execute(statement=statement)
@@ -37,9 +37,6 @@ class CRUDNumber(CRUDBase[Number, NumberCreate, NumberUpdate]):
         statement = (select(self.model).
                      where(*where).
                      order_by(func.random()).limit(1))
-        print()
-        print(statement)
-        print()
         results = await db.execute(statement=statement)
         return results.unique().scalar_one_or_none()
 
