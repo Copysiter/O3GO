@@ -20,7 +20,7 @@ class NumberBase(BaseModel):
 
 # Properties to receive on number creation
 class NumberCreate(NumberBase):
-    number: int
+    number: str
     service_alias: str
 
 

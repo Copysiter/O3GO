@@ -1,6 +1,6 @@
 ﻿from fastapi import APIRouter
 
-from .endpoints import base, auth, users, devices, services, proxies, report, numbers, utils  # noqa
+from .endpoints import base, auth, users, devices, services, proxies, report, numbers, options, utils  # noqa
 
 
 api_router = APIRouter()
@@ -14,3 +14,4 @@ api_router.include_router(services.router, prefix='/services', tags=['Services']
 api_router.include_router(proxies.router, prefix='/proxies', tags=['Proxies'])
 api_router.include_router(report.router, prefix='/report', tags=['Report'])
 api_router.include_router(numbers.router, prefix='/numbers', tags=['Numbers'])
+api_router.include_router(options.router, prefix='/options', tags=['Options'])

@@ -8,3 +8,4 @@ from .number import Number, NumberCreate, NumberInDB, NumberUpdate, NumberRows, 
 from .reg import Reg, RegCreate, RegInDB, RegUpdate, RegRows  # noqa
 from .report import Report, ReportCreate, ReportInDB, ReportUpdate, ReportRows  # noqa
 from .webhook import WebhookRequest, WebhookResponse  # noqa
+from .option import OptionStr, OptionInt, OptionBool  # noqa

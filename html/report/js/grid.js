@@ -257,11 +257,26 @@ window.initGrid = function() {
                             field: 'device_id',
                             title: 'Device',
                             filterable: {
-                                cell: {
-                                    inputWidth: 0,
-                                    showOperators: true,
-                                    operator: 'eq',
+                                multi: true,
+                                dataSource: {
+                                    transport: {
+                                        read: {
+                                            url: `http://${api_base_url}/api/v1/options/device`,
+                                            type: 'GET',
+                                            beforeSend: function (request) {
+                                                request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
+                                            },
+                                            dataType: 'json',
+                                        }
+                                    }
                                 },
+                                itemTemplate: function(e) {
+                                    if (e.field == "all") {
+                                        return "";
+                                    } else {
+                                        return "<div class=''><label class='d-flex align-items-center py-8 ps-3 border-bottom cursor-pointer'><input type='checkbox' name='" + e.field + "' value='#=value#' class='k-checkbox k-checkbox-md k-rounded-md'/><span class='ms-8'>#=text#</span></label></div>"
+                                    }
+                                }
                             },
                             template: '# if (device_name) { ##: device_name ## } else { ## } #'
                         },
