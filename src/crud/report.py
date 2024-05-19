@@ -39,14 +39,11 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                      order_by(*order_list).
                      offset(skip).limit(limit))
 
-        print()
-        print(statement)
-        print()
-
         rows = (await db.execute(statement=statement)).all()
         keys = [row[0] for row in rows]
         ids = [row[1] for row in rows]
         ts = {(row[0], row[1]): row[2] for row in rows}
+
         statement = (select(
                         self.model.api_key,
                         self.model.device_id, self.model.service_id,
