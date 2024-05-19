@@ -200,6 +200,7 @@ window.initGrid = function() {
                                 },
                             },
                         },
+                        filter: { field: 'period', operator: "eq", value: '0d' },
                         requestStart: function (e) {
                             setTimeout(function (e) {
                                 if (showLoader) $('.k-loading-mask').show();
