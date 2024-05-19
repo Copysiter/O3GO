@@ -34,8 +34,7 @@ window.initToolbar = function() {
 
     $("#period-ddl").kendoDropDownList({
         dataSource: [{"value": "0d", "text": "Current Day"},
-                     {"value": "-1d", "text": "Yesterday"},
-                     {"value": "1d", "text": "Last Day"},
+                     {"value": "1d", "text": "Yesterday"},
                      {"value": "3d", "text": "Last 3 Days"},
                      {"value": "7d", "text": "Last 7 Days"},
                      {"value": "30d", "text": "Last 30 Days"}],

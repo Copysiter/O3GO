@@ -20,13 +20,10 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
         for i in range(len(filters)):
             if filters[i]['field'] == 'period' and filters[i]['value']:
                 d = int(filters[i]['value'][:-1])
-                if d == -1:
-                    filter_list.append(
-                        self.model.date >= date.today() - timedelta(days=1))
+                filter_list.append(
+                    self.model.date >= date.today() - timedelta(days=d))
+                if d > 0:
                     filter_list.append(self.model.date < date.today())
-                else:
-                    filter_list.append(
-                        self.model.date >= date.today() - timedelta(days=d))
                 del filters[i]
             elif filters[i]['field'] == 'date':
                 filters[i]['value'] = datetime.strptime(
