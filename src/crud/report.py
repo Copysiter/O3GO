@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Any
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,10 +15,25 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
         self, db: AsyncSession, *, skip=0, limit=100,
         filters: list = None, orders: list = None
     ) -> List[Any]:
-        filter_list = [self.model.date >= date.today() -
-                       timedelta(days=settings.REPORT_LAST_DAYS)]
+        filter_list = []
+
+        for i in range(len(filters)):
+            if filters[i]['field'] == 'period' and filters[i]['value']:
+                d = int(filters[i]['value'][:-1])
+                if d == -1:
+                    filter_list.append(
+                        self.model.date >= date.today() - timedelta(days=1))
+                    filter_list.append(self.model.date < date.today())
+                else:
+                    filter_list.append(
+                        self.model.date >= date.today() - timedelta(days=d))
+                del filters[i]
+            elif filters[i]['field'] == 'date':
+                filters[i]['value'] = datetime.strptime(
+                    filters[i]['value'], '%Y-%m-%d %H:%M:%S').date()
         filter_list += self.get_filters(filters) if filters else []
         order_list = self.get_orders(orders) if orders else []
+
         statement = (select(
                         self.model.api_key, self.model.device_id,
                      func.max(self.model.timestamp).label('timestamp')).
@@ -26,6 +41,11 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                      group_by(self.model.api_key, self.model.device_id).
                      order_by(*order_list).
                      offset(skip).limit(limit))
+
+        print()
+        print(statement)
+        print()
+
         rows = (await db.execute(statement=statement)).all()
         keys = [row[0] for row in rows]
         ids = [row[1] for row in rows]

@@ -45,11 +45,14 @@ window.initGrid = function() {
                             mode: 'menu',
                         },
                         columns: [{
-                            field: 'start_count' + obj.id,
+                            field: 'start_count_' + obj.id,
                             title: "<span class='rotate'>start</span>",
                             rowSpan: 2,
                             sortable: false,
                             filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
                             headerAttributes: {
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
@@ -66,6 +69,9 @@ window.initGrid = function() {
                             rowSpan: 2,
                             sortable: false,
                             filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
                             headerAttributes: {
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
@@ -77,11 +83,14 @@ window.initGrid = function() {
                                 }
                             }
                         }, {
-                            field: 'code_count' + obj.id,
+                            field: 'code_count_' + obj.id,
                             title: "<span class='rotate'>code</span>",
                             rowSpan: 2,
-                            sortable: false,
+                            sortable: true,
                             filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
                             headerAttributes: {
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
@@ -93,11 +102,14 @@ window.initGrid = function() {
                                 }
                             }
                         }, {
-                            field: 'no_code_count' + obj.id,
+                            field: 'no_code_count_' + obj.id,
                             title: "<span class='rotate'>no code</span>",
                             rowSpan: 2,
                             sortable: false,
                             filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
                             headerAttributes: {
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
@@ -109,11 +121,14 @@ window.initGrid = function() {
                                 }
                             }
                         }, {
-                            field: 'bad_count' + obj.id,
+                            field: 'bad_count_' + obj.id,
                             title: "<span class='rotate'>bad</span>",
                             rowSpan: 2,
                             sortable: false,
                             filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
                             headerAttributes: {
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },

@@ -309,9 +309,11 @@ td[role='gridcell'] .badge:first-child {
 .k-form .k-form-buttons button {
     width: 49%;
 }
+/*
 .datepicker {
     margin-right: 20px;
 }
+*/
 /* .k-form-layout ~ .k-form-buttons {
     display: none;
 } */
@@ -383,6 +385,7 @@ td[role='gridcell'] .badge:first-child {
     box-shadow: 0 4px 8px -6px rgb(0 0 0 / 30%);
     color: #424242;
     background-color: #ececec;
+    z-index: 1;
 }
 .k-grid .k-grid-header .k-with-icon,
 .k-grid .k-grid-header .k-filterable {

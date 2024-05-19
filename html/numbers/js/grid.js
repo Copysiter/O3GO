@@ -240,7 +240,7 @@ window.initGrid = function() {
                 },
                 {
                     field: 'timestamp',
-                    title: 'Last Used',
+                    title: 'Timestamp',
                     // width: 33,
                     filterable: false,
                     // filterable: {
