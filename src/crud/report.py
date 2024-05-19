@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 from typing import List, Any
-from sqlalchemy import select, func
+from sqlalchemy import select, func, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func, distinct
 
@@ -32,8 +32,7 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
         order_list = self.get_orders(orders) if orders else []
 
         statement = (select(
-                        self.model.api_key, self.model.device_id,
-                     func.max(self.model.timestamp).label('timestamp')).
+                        self.model.api_key, self.model.device_id).
                      where(*filter_list).
                      group_by(self.model.api_key, self.model.device_id).
                      order_by(*order_list).
@@ -42,7 +41,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
         rows = (await db.execute(statement=statement)).all()
         keys = [row[0] for row in rows]
         ids = [row[1] for row in rows]
-        ts = {(row[0], row[1]): row[2] for row in rows}
+        pks = [(row[0], row[1]) for row in rows]
+        # ts = {(row[0], row[1]): row[2] for row in rows}
 
         statement = (select(
                         self.model.api_key,
@@ -52,14 +52,14 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                         func.sum(self.model.code_count).label('code_count'),
                         func.sum(self.model.no_code_count).label('no_code_count'),
                         func.sum(self.model.bad_count).label('bad_count'),
+                        func.max(self.model.timestamp).label('timestamp'),
                         func.string_agg(distinct(Device.ext_id), None).label('device_ext_id'),
                         func.string_agg(distinct(Device.name), None).label('device_name'),
                         func.string_agg(distinct(Device.operator), None).label('device_operator'),
                         func.bool_and(Device.root).label('device_root')).
                      join(Device, Device.id == self.model.device_id).
                      where(
-                        self.model.api_key.in_(keys),
-                        self.model.device_id.in_(ids),
+                        tuple_(self.model.api_key, self.model.device_id).in_(pks),
                         *filter_list).
                      group_by(
                         self.model.api_key, self.model.device_id,
@@ -76,9 +76,9 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'device_ext_id': row.device_ext_id,
                     'device_name': row.device_name,
                     'device_operator': row.device_operator,
-                    'device_root': row.device_root
+                    'device_root': row.device_root,
+                    'timestamp': row.timestamp
                 }
-            stats[pk]['timestamp'] = ts.get(pk)
             for c in ('start_count', 'number_count', 'code_count',
                       'no_code_count', 'bad_count'):
                 stats[pk][f'{c}_{row.service_id}'] = getattr(row, c)
