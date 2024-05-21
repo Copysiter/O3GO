@@ -35,7 +35,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 filters[i]['value'] = datetime.strptime(
                     filters[i]['value'], '%Y-%m-%d %H:%M:%S').date()
                 filter_list.append(filters[i])
-            elif filters[i]['field'] in ('device_operator', 'device_ext_id'):
+            elif filters[i]['field'] in (
+                    'device_name', 'device_operator', 'device_ext_id'):
                 field = filters[i]['field'].replace('device_', '')
                 filter_list.append({
                     'field': getattr(Device, field, None),
