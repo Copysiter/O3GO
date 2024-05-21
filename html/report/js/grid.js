@@ -102,6 +102,31 @@ window.initGrid = function() {
                                 }
                             }
                         }, {
+                            field: 'code_pct_' + obj.id,
+                            title: "<span class='rotate'>code, %</span>",
+                            rowSpan: 2,
+                            sortable: true,
+                            filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
+                            headerAttributes: {
+                                style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
+                            },
+                            template: function(item) {
+                                if (
+                                    item.hasOwnProperty('code_count_' + obj.id) &&
+                                    item.hasOwnProperty('number_count_' + obj.id) &&
+                                    item['code_count_' + obj.id] > 0 &&
+                                    item['number_count_' + obj.id] > 0
+                                ) {
+                                    console.log(item['code_count_' + obj.id]/item['number_count_' + obj.id]*100)
+                                    return (item['code_count_' + obj.id]/item['number_count_' + obj.id]*100).toFixed(1);
+                                } else {
+                                    return 0;
+                                }
+                            }
+                        }, {
                             field: 'no_code_count_' + obj.id,
                             title: "<span class='rotate'>no code</span>",
                             rowSpan: 2,
@@ -191,11 +216,11 @@ window.initGrid = function() {
                                 id: 'id',
                                 fields: {
                                     id: { type: 'number'},
-                                    report_nid: { type: 'string' },
-                                    report_name: { type: 'string' },
-                                    report_root: { type: 'boolean' },
-                                    report_operator: { type: 'string' },
-                                    timestamp: { type: 'date', editable: false },
+                                    api_key: { type: 'string' },
+                                    device_id: { type: 'number' },
+                                    device_ext_id: { type: 'string' },
+                                    device_operator: { type: 'string' },
+                                    timestamp: { type: 'date' },
 
                                 },
                             },

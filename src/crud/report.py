@@ -11,25 +11,49 @@ from schemas import ReportCreate, ReportUpdate  # noqa
 
 
 class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
+    def filter_modify(self, filters):
+        filter_list = []
+        for i in range(len(filters)):
+            if filters[i]['field'] == 'period' and filters[i]['value']:
+                d = int(filters[i]['value'][:-1])
+                filter_list.append({
+                    'field': 'date',
+                    'operator': 'gte',
+                    'value': date.today() - timedelta(days=d)
+                })
+                # filter_list.append(
+                # self.model.date >= date.today() - timedelta(days=d))
+                if d > 0:
+                    filter_list.append({
+                        'field': 'date',
+                        'operator': 'lt',
+                        'value': date.today()
+                    })
+                    # filter_list.append(self.model.date < date.today())
+            elif filters[i]['field'] == 'date' and \
+                    isinstance(filters[i]['value'], str):
+                filters[i]['value'] = datetime.strptime(
+                    filters[i]['value'], '%Y-%m-%d %H:%M:%S').date()
+                filter_list.append(filters[i])
+            elif filters[i]['field'] in ('device_operator', 'device_ext_id'):
+                field = filters[i]['field'].replace('device_', '')
+                filter_list.append({
+                    'field': getattr(Device, field, None),
+                    'relationship': self.model.device,
+                    'operator': filters[i]['operator'],
+                    'value': filters[i]['value']
+                })
+            elif filters[i]['field'] in self.model.__table__.c:
+                filter_list.append(filters[i])
+
+        return filter_list
+
     async def get_rows(
         self, db: AsyncSession, *, skip=0, limit=100,
         filters: list = None, orders: list = None
     ) -> List[Any]:
-        filter_list = []
-
-        for i in range(len(filters)):
-            if filters[i]['field'] == 'period' and filters[i]['value']:
-                d = int(filters[i]['value'][:-1])
-                filter_list.append(
-                    self.model.date >= date.today() - timedelta(days=d))
-                if d > 0:
-                    filter_list.append(self.model.date < date.today())
-                del filters[i]
-            elif filters[i]['field'] == 'date':
-                filters[i]['value'] = datetime.strptime(
-                    filters[i]['value'], '%Y-%m-%d %H:%M:%S').date()
-        filter_list += self.get_filters(filters) if filters else []
         order_list = self.get_orders(orders) if orders else []
+        filter_list = self.get_filters(self.filter_modify(filters))
 
         statement = (select(
                         self.model.api_key, self.model.device_id).
@@ -87,7 +111,7 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
     async def get_count(
         self, db: AsyncSession, *, filters: dict = None
     ) -> List[Any]:
-        filter_list = self.get_filters(filters) if filters else []
+        filter_list = self.get_filters(self.filter_modify(filters))
         statement = select(
             func.count(
                 func.distinct(

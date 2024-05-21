@@ -80,7 +80,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 else:
                     where = field.in_(filters[i]['value'])
             if filters[i]['operator'] == 'or':
-                where = [or_(field) == value for value in filters[i]['value']]
+                where = [or_(field) == value
+                         for value in filters[i]['value']]
 
             if relationship := filters[i].get('relationship'):
                 filter_list.append(relationship.has(where))
