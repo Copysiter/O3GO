@@ -290,13 +290,21 @@ window.initGrid = function() {
                                 cell: {
                                     inputWidth: 0,
                                     showOperators: true,
-                                    operator: 'eq',
+                                    operator: 'contains',
                                 },
                             },
                         },
                         {
-                            field: 'device_id',
+                            field: 'device_name',
                             title: 'Device',
+                            filterable: {
+                                cell: {
+                                    inputWidth: 0,
+                                    showOperators: true,
+                                    operator: 'contains',
+                                },
+                            },
+                            /*
                             filterable: {
                                 multi: true,
                                 dataSource: {
@@ -319,6 +327,7 @@ window.initGrid = function() {
                                     }
                                 }
                             },
+                            */
                             template: '# if (device_name) { ##: device_name ## } else { ## } #'
                         },
                         {
@@ -329,7 +338,7 @@ window.initGrid = function() {
                                 cell: {
                                     inputWidth: 0,
                                     showOperators: true,
-                                    operator: 'eq',
+                                    operator: 'contains',
                                 },
                             },
                         },
@@ -349,7 +358,7 @@ window.initGrid = function() {
                                 cell: {
                                     inputWidth: 0,
                                     showOperators: true,
-                                    operator: 'eq',
+                                    operator: 'contains',
                                 },
                             },
                         }].concat(service_columns).concat([{
