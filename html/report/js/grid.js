@@ -108,7 +108,7 @@ window.initGrid = function() {
                             sortable: true,
                             filterable: false,
                             attributes: {
-                                style: `background:\\${obj.color_bg}44;`,
+                                style: `background:\\${obj.color_bg}66;`,
                             },
                             headerAttributes: {
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
