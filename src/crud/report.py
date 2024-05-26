@@ -98,7 +98,7 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 func.sum(self.model.no_code_count).label('no_code_count'),
                 func.sum(self.model.bad_count).label('bad_count'),
                 func.max(self.model.timestamp).label('timestamp'),
-                func.max(self.model.timestamp).label('ts_1'),
+                func.max(self.model.ts_1).label('ts_1'),
                 func.string_agg(
                     distinct(Device.ext_id), None).label('device_ext_id'),
                 func.string_agg(
