@@ -116,6 +116,7 @@ window.initGrid = function() {
                             timestamp: { type: 'date', editable: false },
                             good_count: { type: 'number', editable: false },
                             bad_count: { type: 'number', editable: false },
+                            ts_1: { type: 'date', editable: false },
                             actions: { type: 'object', editable: false },
                         },
                     },
@@ -260,6 +261,13 @@ window.initGrid = function() {
                     //         operator: 'eq',
                     //     },
                     // },
+                    format: '{0: yyyy-MM-dd HH:mm:ss}',
+                },
+                {
+                    field: 'ts_1',
+                    title: 'Last Used Successful',
+                    // width: 33,
+                    filterable: false,
                     format: '{0: yyyy-MM-dd HH:mm:ss}',
                 },
                 {

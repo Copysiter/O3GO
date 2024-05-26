@@ -49,47 +49,71 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
 
         return filter_list
 
+    def order_modify(self, orders):
+        order_list = []
+        if not orders:
+            order_list.append(
+                {'field': func.max(self.model.timestamp), 'dir': 'desc'})
+        for i in range(len(orders)):
+            match orders[i]['field']:
+                case str(x) if 'count' in x:
+                    end = orders[i]['field'].rfind('_')
+                    field = func.sum(
+                        getattr(self.model, orders[i]['field'][:end]))
+                case 'timestamp':
+                    field = func.max(self.model.timestamp)
+                case 'ts_1':
+                    field = func.max(self.model.ts_1)
+                case _:
+                    field = orders[i]['field']
+            order_list.append(
+                {'field': field, 'dir': orders[i]['dir']})
+
+        return order_list
+
     async def get_rows(
         self, db: AsyncSession, *, skip=0, limit=100,
         filters: list = None, orders: list = None
     ) -> List[Any]:
-        order_list = self.get_orders(orders) if orders else []
+        order_list = self.get_orders(self.order_modify(orders))
         filter_list = self.get_filters(self.filter_modify(filters))
 
         statement = (select(
                         self.model.api_key, self.model.device_id).
+                     join(Device, Device.id == self.model.device_id).
                      where(*filter_list).
                      group_by(self.model.api_key, self.model.device_id).
                      order_by(*order_list).
                      offset(skip).limit(limit))
 
         rows = (await db.execute(statement=statement)).all()
-        keys = [row[0] for row in rows]
-        ids = [row[1] for row in rows]
         pks = [(row[0], row[1]) for row in rows]
-        # ts = {(row[0], row[1]): row[2] for row in rows}
 
         statement = (select(
-                        self.model.api_key,
-                        self.model.device_id, self.model.service_id,
-                        func.sum(self.model.start_count).label('start_count'),
-                        func.sum(self.model.number_count).label('number_count'),
-                        func.sum(self.model.code_count).label('code_count'),
-                        func.sum(self.model.no_code_count).label('no_code_count'),
-                        func.sum(self.model.bad_count).label('bad_count'),
-                        func.max(self.model.timestamp).label('timestamp'),
-                        func.string_agg(distinct(Device.ext_id), None).label('device_ext_id'),
-                        func.string_agg(distinct(Device.name), None).label('device_name'),
-                        func.string_agg(distinct(Device.operator), None).label('device_operator'),
-                        func.bool_and(Device.root).label('device_root')).
-                     join(Device, Device.id == self.model.device_id).
-                     where(
-                        tuple_(self.model.api_key, self.model.device_id).in_(pks),
-                        *filter_list).
-                     group_by(
-                        self.model.api_key, self.model.device_id,
-                        self.model.service_id).
-                     order_by(*order_list))
+                self.model.api_key,
+                self.model.device_id, self.model.service_id,
+                func.sum(self.model.start_count).label('start_count'),
+                func.sum(self.model.number_count).label('number_count'),
+                func.sum(self.model.code_count).label('code_count'),
+                func.sum(self.model.no_code_count).label('no_code_count'),
+                func.sum(self.model.bad_count).label('bad_count'),
+                func.max(self.model.timestamp).label('timestamp'),
+                func.max(self.model.timestamp).label('ts_1'),
+                func.string_agg(
+                    distinct(Device.ext_id), None).label('device_ext_id'),
+                func.string_agg(
+                    distinct(Device.name), None).label('device_name'),
+                func.string_agg(
+                    distinct(Device.operator), None).label('device_operator'),
+                func.bool_and(Device.root).label('device_root')
+            ). join(Device, Device.id == self.model.device_id).
+            where(
+                tuple_(self.model.api_key, self.model.device_id).in_(pks),
+                *filter_list).
+            group_by(
+                self.model.api_key, self.model.device_id,
+                self.model.service_id).
+            order_by(*order_list))
         rows = await db.execute(statement=statement)
         stats = {}
         for row in rows.mappings().all():
@@ -102,7 +126,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'device_name': row.device_name,
                     'device_operator': row.device_operator,
                     'device_root': row.device_root,
-                    'timestamp': row.timestamp
+                    'timestamp': row.timestamp,
+                    'ts_1': row.ts_1,
                 }
             for c in ('start_count', 'number_count', 'code_count',
                       'no_code_count', 'bad_count'):

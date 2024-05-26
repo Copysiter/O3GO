@@ -1,7 +1,7 @@
 import time
 import asyncio
 
-from datetime import date
+from datetime import datetime, date
 from celery import Celery
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -48,6 +48,7 @@ async def get_service(db: AsyncSession, alias: str = None) -> models.Service:
     service = await crud.service.get_by_alias(db, alias=alias)
     if not service:
         service = await crud.service.create(db, obj_in={'alias': alias})
+
     return service
 
 
@@ -56,7 +57,6 @@ async def get_report(
     device_id: int, service_id: int,
 ) -> models.Report:
     today = date.today()
-
     report = await crud.report.get_by(
         db=db, api_key=api_key, device_id=device_id,
         service_id=service_id, date=today
@@ -68,11 +68,12 @@ async def get_report(
             'service_id': service_id
         })
 
-    report = await crud.report.update(
-        db=db, db_obj=report, obj_in={
-            f'{status}_count': getattr(report, f'{status}_count') + 1
-        }
-    )
+    obj_in = {f'{status}_count': getattr(report, f'{status}_count') + 1}
+    if status == 'code':
+        obj_in.update({'ts_1': datetime.utcnow()})
+
+    report = await crud.report.update(db=db, db_obj=report, obj_in=obj_in)
+
     return report
 
 
@@ -81,9 +82,12 @@ async def get_proxy(db: AsyncSession, url: str, status: str) -> models.Proxy:
     if not proxy:
         proxy = await crud.proxy.create(db, obj_in={'url': url})
 
-    proxy = await crud.proxy.update(
-        db=db, db_obj=proxy, obj_in={
-            f'{status}_count': getattr(proxy, f'{status}_count') + 1})
+    obj_in = {f'{status}_count': getattr(proxy, f'{status}_count') + 1}
+    if status == 'good':
+        obj_in.update({'ts_1': datetime.utcnow()})
+
+    proxy = await crud.proxy.update(db=db, db_obj=proxy, obj_in=obj_in)
+
     return proxy
 
 
@@ -93,6 +97,7 @@ async def get_number(
     info_1: str, info_2: str, info_3: str
 ) -> models.Number:
     number_ = await crud.number.get_by_number(db, number=number)
+
     if not number_:
         number_ = await crud.number.create(db=db, obj_in={
             'number': number,
@@ -104,6 +109,7 @@ async def get_number(
             'info_2': info_2,
             'info_3': info_3
         })
+
     return number_
 
 

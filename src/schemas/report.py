@@ -14,6 +14,15 @@ class ReportBase(BaseModel):
     code_count: Optional[int] = 0
     no_code_count: Optional[int] = 0
     bad_count: Optional[int] = 0
+    info_1: Optional[str] = None
+    info_2: Optional[str] = None
+    info_3: Optional[str] = None
+    int_1: Optional[int] = None
+    int_2: Optional[int] = None
+    int_3: Optional[int] = None
+    ts_1: Optional[datetime] = None
+    ts_2: Optional[datetime] = None
+    ts_3: Optional[datetime] = None
 
 
 # Properties to receive via API on creation

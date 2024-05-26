@@ -48,12 +48,13 @@ window.initGrid = function() {
                             field: 'start_count_' + obj.id,
                             title: "<span class='rotate'>start</span>",
                             rowSpan: 2,
-                            sortable: false,
+                            sortable: true,
                             filterable: false,
                             attributes: {
                                 style: `background:\\${obj.color_bg}44;`,
                             },
                             headerAttributes: {
+                                class: 'rotate-cell',
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
                             template: function(item) {
@@ -67,12 +68,13 @@ window.initGrid = function() {
                             field: 'number_count_' + obj.id,
                             title: "<span class='rotate'>number</span>",
                             rowSpan: 2,
-                            sortable: false,
+                            sortable: true,
                             filterable: false,
                             attributes: {
                                 style: `background:\\${obj.color_bg}44;`,
                             },
                             headerAttributes: {
+                                class: 'rotate-cell',
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
                             template: function(item) {
@@ -92,6 +94,7 @@ window.initGrid = function() {
                                 style: `background:\\${obj.color_bg}44;`,
                             },
                             headerAttributes: {
+                                class: 'rotate-cell',
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
                             template: function(item) {
@@ -105,12 +108,13 @@ window.initGrid = function() {
                             field: 'code_pct_' + obj.id,
                             title: "<span class='rotate'>code, %</span>",
                             rowSpan: 2,
-                            sortable: true,
+                             sortable: false,
                             filterable: false,
                             attributes: {
                                 style: `background:\\${obj.color_bg}66;`,
                             },
                             headerAttributes: {
+                                class: 'rotate-cell',
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
                             template: function(item) {
@@ -130,12 +134,13 @@ window.initGrid = function() {
                             field: 'no_code_count_' + obj.id,
                             title: "<span class='rotate'>no code</span>",
                             rowSpan: 2,
-                            sortable: false,
+                            sortable: true,
                             filterable: false,
                             attributes: {
                                 style: `background:\\${obj.color_bg}44;`,
                             },
                             headerAttributes: {
+                                class: 'rotate-cell',
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
                             template: function(item) {
@@ -149,12 +154,13 @@ window.initGrid = function() {
                             field: 'bad_count_' + obj.id,
                             title: "<span class='rotate'>bad</span>",
                             rowSpan: 2,
-                            sortable: false,
+                            sortable: true,
                             filterable: false,
                             attributes: {
                                 style: `background:\\${obj.color_bg}44;`,
                             },
                             headerAttributes: {
+                                class: 'rotate-cell',
                                 style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
                             },
                             template: function(item) {
@@ -167,7 +173,6 @@ window.initGrid = function() {
                         }]
                     });
                 });
-                console.log(service_columns);
                 $('#report-grid').kendoGrid({
                     dataSource: {
                         transport: {
@@ -221,7 +226,7 @@ window.initGrid = function() {
                                     device_ext_id: { type: 'string' },
                                     device_operator: { type: 'string' },
                                     timestamp: { type: 'date' },
-
+                                    ts_1: { type: 'date'},
                                 },
                             },
                         },
@@ -297,6 +302,7 @@ window.initGrid = function() {
                         {
                             field: 'device_name',
                             title: 'Device',
+                            sortable: false,
                             filterable: {
                                 cell: {
                                     inputWidth: 0,
@@ -365,7 +371,7 @@ window.initGrid = function() {
                             field: 'timestamp',
                             title: 'Last Activity',
                             // width: 33,
-                            sortable: false,
+                            sortable: true,
                             filterable: false,
                             // filterable: {
                             //     cell: {
@@ -374,6 +380,13 @@ window.initGrid = function() {
                             //         operator: 'eq',
                             //     },
                             // },
+                            format: '{0: yyyy-MM-dd HH:mm:ss}',
+                        },
+                        {
+                            field: 'ts_1',
+                            title: 'Last Success Code',
+                            // width: 33,
+                            filterable: false,
                             format: '{0: yyyy-MM-dd HH:mm:ss}',
                         },
                         {},

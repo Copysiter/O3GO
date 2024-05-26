@@ -23,6 +23,8 @@ async def read_devices(
     """
     Retrieve devices.
     """
+    if not orders:
+        orders = [{'field': 'id', 'dir': 'desc'}]
     devices = await crud.device.get_rows(
         db, filters=filters, orders=orders, skip=skip, limit=limit
     )

@@ -27,6 +27,8 @@ async def read_users(
     """
     Retrieve users.
     """
+    if not orders:
+        orders = [{'field': 'id', 'dir': 'desc'}]
     users = await crud.user.get_rows(
         db, filters=filters, orders=orders,
         skip=skip, limit=limit

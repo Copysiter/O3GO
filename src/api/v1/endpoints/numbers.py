@@ -23,6 +23,8 @@ async def read_numbers(
     """
     Retrieve numbers.
     """
+    if not orders:
+        orders = [{'field': 'id', 'dir': 'desc'}]
     numbers = await crud.number.get_rows(
         db, filters=filters, orders=orders, skip=skip, limit=limit
     )

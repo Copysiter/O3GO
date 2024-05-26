@@ -23,6 +23,8 @@ async def read_services(
     """
     Retrieve services.
     """
+    if not orders:
+        orders = [{'field': 'id', 'dir': 'desc'}]
     services = await crud.service.get_rows(
         db, filters=filters, orders=orders, skip=skip, limit=limit
     )

@@ -93,14 +93,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def get_orders(self, orders: list = None) -> List[Dict]:
         order_list = []
         for i in range(len(orders)):
+            field = (
+                getattr(self.model, orders[i]['field'], None)
+                if isinstance(orders[i]['field'], str)
+                else orders[i]['field']
+            )
             if orders[i]['dir'].lower() == 'desc':
-                order_list.append(
-                    getattr(self.model,
-                            orders[i]['field']).desc())
+                order_list.append(field.desc())
             else:
-                order_list.append(
-                    getattr(self.model,
-                            orders[i]['field']).asc())
+                order_list.append(field.asc())
         return order_list
 
     async def get_rows(

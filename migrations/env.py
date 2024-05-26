@@ -15,7 +15,7 @@ load_dotenv('.env')
 config = context.config
 
 import os
-config.set_main_option('sqlalchemy.url', os.environ['POSTGRES_DSN'])
+config.set_main_option('sqlalchemy.url', os.environ['POSTGRES_LOCAL_DSN'])
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

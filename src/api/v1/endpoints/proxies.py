@@ -23,6 +23,8 @@ async def read_proxies(
     """
     Retrieve proxies.
     """
+    if not orders:
+        orders = [{'field': 'id', 'dir': 'desc'}]
     proxies = await crud.proxy.get_rows(
         db, filters=filters, orders=orders, skip=skip, limit=limit
     )

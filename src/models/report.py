@@ -26,6 +26,15 @@ class Report(Base):
         Date, nullable=False, default=date.today, index=True)
     timestamp = Column(DateTime, nullable=False,
                        default=datetime.utcnow, onupdate=datetime.utcnow)
+    info_1 = Column(String)
+    info_2 = Column(String)
+    info_3 = Column(String)
+    int_1 = Column(Integer)
+    int_2 = Column(Integer)
+    int_3 = Column(Integer)
+    ts_1 = Column(DateTime)
+    ts_2 = Column(DateTime)
+    ts_3 = Column(DateTime)
 
     device = relationship('Device', back_populates='reports', lazy='joined')
 
