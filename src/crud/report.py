@@ -127,6 +127,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'device_operator': row.device_operator,
                     'device_root': row.device_root,
                     'timestamp': row.timestamp,
+                    'timedelta': (datetime.utcnow() -
+                                  row.timestamp).total_seconds(),
                     'ts_1': row.ts_1,
                 }
             for c in ('start_count', 'number_count', 'code_count',

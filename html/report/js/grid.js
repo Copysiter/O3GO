@@ -289,6 +289,13 @@ window.initGrid = function() {
                     change: function (e) {},
                     columns: [
                         {
+                            field: 'alert',
+                            title: ' ',
+                            filterable: false,
+                            sortable: false,
+                            template: '# if (timedelta > 300) { #<div class="mdi mdi-alert text-red fs-18 mx-n2 my-n5"></div># } else { #># } #'
+                        },
+                        {
                             field: 'api_key',
                             title: 'API Key',
                             filterable: {
