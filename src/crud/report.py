@@ -197,13 +197,13 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
             join(Service, Service.id == self.model.service_id).
             where(
                 self.model.timestamp >= start_ts,
-                self.model.timestamp >= end_ts,
+                self.model.timestamp < end_ts,
             ).
             group_by(
                 self.model.api_key, self.model.device_id,
                 self.model.service_id).
             having(func.sum(self.model.start_count) > 0).
-            having(func.sum(self.model.code_count) > func.sum(
+            having(func.sum(self.model.code_count) < func.sum(
                 self.model.start_count)).
             having(func.sum(self.model.code_count) < 2).
             order_by(func.max(self.model.timestamp)))
