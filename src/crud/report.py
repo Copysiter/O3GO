@@ -213,7 +213,7 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
 
         result = await db.execute(statement=statement)
 
-        return result.unique().scalars().all()
+        return result.mappings().all()
 
 
 report = CRUDReport(Report)
