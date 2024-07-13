@@ -16,9 +16,6 @@ class ProxyBase(BaseModel):
     int_1: Optional[int] = None
     int_2: Optional[int] = None
     int_3: Optional[int] = None
-    ts_1: Optional[datetime] = None
-    ts_2: Optional[datetime] = None
-    ts_3: Optional[datetime] = None
 
 
 # Properties to receive via API on creation
@@ -28,7 +25,9 @@ class ProxyCreate(ProxyBase):
 
 # Properties to receive via API on update
 class ProxyUpdate(ProxyBase):
-    pass
+    ts_1: Optional[datetime] = None
+    ts_2: Optional[datetime] = None
+    ts_3: Optional[datetime] = None
 
 
 class ProxyInDBBase(ProxyBase):
@@ -53,3 +52,7 @@ class ProxyInDB(ProxyInDBBase):
 class ProxyRows(BaseModel):
     data: List[Proxy]
     total: int
+
+
+class ProxyIds(BaseModel):
+    ids: List[int]

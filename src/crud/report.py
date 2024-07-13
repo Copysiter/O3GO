@@ -6,7 +6,7 @@ from sqlalchemy.sql import func, distinct
 
 from core.config import settings  # noqa
 from crud.base import CRUDBase  # noqa
-from models import Report, Device  # noqa
+from models import Report, Device, Service  # noqa
 from schemas import ReportCreate, ReportUpdate  # noqa
 
 
@@ -106,7 +106,7 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 func.string_agg(
                     distinct(Device.operator), None).label('device_operator'),
                 func.bool_and(Device.root).label('device_root')
-            ). join(Device, Device.id == self.model.device_id).
+            ).join(Device, Device.id == self.model.device_id).
             where(
                 tuple_(self.model.api_key, self.model.device_id).in_(pks),
                 *filter_list).
@@ -167,6 +167,47 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
             service_id: int, days: int = 7
     ) -> Report:
         pass
+
+    async def get_bad(self, db: AsyncSession) -> List[Any]:
+        end_ts = datetime.utcnow().replace(
+            hour=0, minute=0, second=0, microsecond=0)
+        start_ts = end_ts - timedelta(hours=1)
+        statement = (select(
+                self.model.api_key,
+                self.model.device_id, self.model.service_id,
+                func.sum(self.model.start_count).label('start_count'),
+                func.sum(self.model.number_count).label('number_count'),
+                func.sum(self.model.code_count).label('code_count'),
+                func.sum(self.model.no_code_count).label('no_code_count'),
+                func.sum(self.model.bad_count).label('bad_count'),
+                func.max(self.model.timestamp).label('timestamp'),
+                func.max(self.model.ts_1).label('ts_1'),
+                func.string_agg(
+                    distinct(Device.ext_id), None).label('device_ext_id'),
+                func.string_agg(
+                    distinct(Device.name), None).label('device_name'),
+                func.string_agg(
+                    distinct(Device.operator), None).label('device_operator'),
+                func.bool_and(Device.root).label('device_root'),
+                func.string_agg(
+                    distinct(Service.name), None).label('service_name'),
+            ).
+            join(Device, Device.id == self.model.device_id).
+            join(Service, Service.id == self.model.service_id).
+            where(
+                self.model.timestamp >= start_ts,
+                self.model.timestamp >= end_ts,
+            ).
+            group_by(
+                self.model.api_key, self.model.device_id,
+                self.model.service_id).
+            having(func.sum(self.model.start_count) > 0).
+            having(func.sum(self.model.code_count) > func.sum(
+                self.model.start_count)).
+            having(func.sum(self.model.code_count) < 2).
+            order_by(func.max(self.model.timestamp)))
+        result = await db.execute(statement=statement)
+        return result.unique().scalars().all()
 
 
 report = CRUDReport(Report)

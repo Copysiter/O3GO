@@ -1,6 +1,6 @@
 from typing import Any, List  # noqa
 
-from fastapi import APIRouter, Depends, HTTPException, status  # noqa
+from fastapi import APIRouter, Depends, Body, HTTPException, status  # noqa
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,6 +50,23 @@ async def create_proxy(
         db=db, obj_in=proxy_in
     )
     return proxy
+
+
+@router.post('/delete', response_model=List[schemas.Proxy])
+async def delete_proxies(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    data: schemas.ProxyIds,
+    # _: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Delete an proxies.
+    """
+    proxies = []
+    for id in data.ids:
+        proxy = await crud.proxy.delete(db=db, id=id)
+        proxies.append(proxy)
+    return proxies
 
 
 @router.put('/{id}', response_model=schemas.Proxy)

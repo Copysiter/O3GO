@@ -205,7 +205,15 @@ window.initGrid = function() {
                 refresh: true,
                 pageSizes: [100, 250, 500],
             },
-            change: function (e) {},
+            change: function (e) {
+                let toolbar = $('#proxies-toolbar').data('kendoToolBar');
+                let rows = this.select();
+                if (rows.length > 0) {
+                    toolbar.show($('#delete'));
+                } else {
+                    toolbar.hide($('#delete'));
+                }
+            },
             columns: [
                 {
                     field: 'id',
@@ -322,6 +330,7 @@ window.initGrid = function() {
                 selectedItemIds = [];
                 selectedItemImsi = [];
                 $('#proxies-grid').data('kendoGrid').clearSelection();
+                $('#proxies-toolbar').data('kendoToolBar').hide($('#delete'));
             }
         });
     } catch (error) {
