@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from typing import List, Any
+from fastapi import HTTPException
 from sqlalchemy import select, func, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func, distinct
@@ -168,11 +169,9 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
     ) -> Report:
         pass
 
-    async def get_bad(self, db: AsyncSession) -> List[Any]:
-        end_ts = datetime.utcnow().replace(
-            minute=0, second=0, microsecond=0)
-        start_ts = end_ts - timedelta(hours=1)
-
+    async def get_bad(
+        self, db: AsyncSession, begin_ts: datetime, end_ts: datetime
+    ) -> List[Any]:
         statement = (select(
                 self.model.api_key,
                 self.model.device_id, self.model.service_id,
@@ -196,7 +195,7 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
             join(Device, Device.id == self.model.device_id).
             join(Service, Service.id == self.model.service_id).
             where(
-                self.model.timestamp >= start_ts,
+                self.model.timestamp >= begin_ts,
                 self.model.timestamp < end_ts,
             ).
             group_by(

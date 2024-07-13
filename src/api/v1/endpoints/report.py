@@ -1,4 +1,5 @@
 from typing import Any, List  # noqa
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status  # noqa
 from fastapi.encoders import jsonable_encoder
@@ -32,10 +33,18 @@ async def get_report(
 
 @router.get('/bad') # , response_model=schemas.DeviceRows)
 async def get_bad_report(
-    db: AsyncSession = Depends(deps.get_db)
+    db: AsyncSession = Depends(deps.get_db), *,
+    begin: str, end: str,
 ) -> Any:
     """
     Retrieve bad reports.
     """
-    report = await crud.report.get_bad(db)
+    try:
+        begin_ts = datetime.strptime(begin, '%Y-%m-%d %H:%M:%S')
+        end_ts = datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        )
+    report = await crud.report.get_bad(db, begin_ts, end_ts)
     return {'data': jsonable_encoder(report)}
