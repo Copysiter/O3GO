@@ -173,6 +173,9 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
             minute=0, second=0, microsecond=0)
         start_ts = end_ts - timedelta(hours=1)
 
+        end_ts = datetime(2024, 7, 13, 18, 0, 0, 0)
+        start_ts = datetime(2024, 7, 13, 17, 0, 0, 0)
+
         statement = (select(
                 self.model.api_key,
                 self.model.device_id, self.model.service_id,
