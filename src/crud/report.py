@@ -170,8 +170,9 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
 
     async def get_bad(self, db: AsyncSession) -> List[Any]:
         end_ts = datetime.utcnow().replace(
-            hour=0, minute=0, second=0, microsecond=0)
+            minute=0, second=0, microsecond=0)
         start_ts = end_ts - timedelta(hours=1)
+
         statement = (select(
                 self.model.api_key,
                 self.model.device_id, self.model.service_id,
@@ -206,7 +207,9 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 self.model.start_count)).
             having(func.sum(self.model.code_count) < 2).
             order_by(func.max(self.model.timestamp)))
+
         result = await db.execute(statement=statement)
+
         return result.unique().scalars().all()
 
 
