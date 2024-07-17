@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, date
 from celery import Celery
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import update
 
 from core.config import settings
 from db.session import async_session
@@ -113,6 +114,27 @@ async def get_number(
     return number_
 
 
+async def update_report_info(
+    db, device_id: int, api_key: str,
+    info_1: str = None, info_2: str = None, info_3: str = None
+) -> None:
+    values = {}
+    if info_1:
+        values['info_1'] = info_1
+    if info_1:
+        values['info_2'] = info_2
+    if info_1:
+        values['info_3'] = info_3
+    statement = (
+        update(models.Report).
+        where(models.Report.device_id == device_id and
+              models.Report.api_key == api_key).
+        values(**values)
+    )
+    await db.execute(statement)
+    await db.commit()
+
+
 async def event_handler(data: schemas.WebhookRequest):
     async with async_session() as db:
         api_key = data.get('api_key')
@@ -121,9 +143,9 @@ async def event_handler(data: schemas.WebhookRequest):
         device_operator = data.get('operator')
         service_alias = data.get('service')
         number = data.get('number')
-        number_info_1 = data.get('info_1')
-        number_info_2 = data.get('info_2')
-        number_info_3 = data.get('info_3')
+        info_1 = data.get('info_1')
+        info_2 = data.get('info_2')
+        info_3 = data.get('info_3')
         report_status = data.get('status')
         check_status = report_status in (
             'start', 'number', 'bad', 'code', 'no_code')
@@ -155,9 +177,13 @@ async def event_handler(data: schemas.WebhookRequest):
             _ = await get_number(
                 db, number=number, api_key=api_key, proxy=proxy_url,
                 device_ext_id=device.ext_id, service_alias=service.alias,
-                info_1=number_info_1, info_2=number_info_2,
-                info_3=number_info_3
+                info_1=info_1, info_2=info_2, info_3=info_3
             )
+        
+        if not number and device:
+            await update_report_info(
+                db, device_id=device.id, api_key=api_key,
+                info_1=info_1, info_2=info_2, info_3=info_3)
 
 
 @celery.task(name="webhook")

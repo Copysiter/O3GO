@@ -396,6 +396,42 @@ window.initGrid = function() {
                             filterable: false,
                             format: '{0: yyyy-MM-dd HH:mm:ss}',
                         },
+                        {
+                            field: 'info_1',
+                            title: 'Info 1',
+                            sortable: false,
+                            filterable: {
+                                cell: {
+                                    inputWidth: 0,
+                                    showOperators: true,
+                                    operator: 'contains',
+                                },
+                            },
+                        },
+                        {
+                            field: 'info_2',
+                            title: 'Info 2',
+                            sortable: false,
+                            filterable: {
+                                cell: {
+                                    inputWidth: 0,
+                                    showOperators: true,
+                                    operator: 'contains',
+                                },
+                            },
+                        },
+                        {
+                            field: 'info_3',
+                            title: 'Info 3',
+                            sortable: false,
+                            filterable: {
+                                cell: {
+                                    inputWidth: 0,
+                                    showOperators: true,
+                                    operator: 'contains',
+                                },
+                            },
+                        },
                         {},
                     ]),
                 });

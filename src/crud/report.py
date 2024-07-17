@@ -1,7 +1,6 @@
 from datetime import date, datetime, timedelta
 from typing import List, Any
-from fastapi import HTTPException
-from sqlalchemy import select, func, tuple_
+from sqlalchemy import select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func, distinct
 
@@ -106,7 +105,13 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     distinct(Device.name), None).label('device_name'),
                 func.string_agg(
                     distinct(Device.operator), None).label('device_operator'),
-                func.bool_and(Device.root).label('device_root')
+                func.bool_and(Device.root).label('device_root'),
+                func.string_agg(
+                    distinct(self.model.info_1), None).label('info_1'),
+                func.string_agg(
+                    distinct(self.model.info_2), None).label('info_2'),
+                func.string_agg(
+                    distinct(self.model.info_3), None).label('info_3')
             ).join(Device, Device.id == self.model.device_id).
             where(
                 tuple_(self.model.api_key, self.model.device_id).in_(pks),
@@ -131,6 +136,9 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'timedelta': (datetime.utcnow() -
                                   row.timestamp).total_seconds(),
                     'ts_1': row.ts_1,
+                    'info_1': row.info_1,
+                    'info_2': row.info_2,
+                    'info_3': row.info_3,
                 }
             for c in ('start_count', 'number_count', 'code_count',
                       'no_code_count', 'bad_count'):
