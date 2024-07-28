@@ -161,7 +161,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def delete(self, db: AsyncSession, *, id: int) -> ModelType:
         statement = select(self.model).where(self.model.id == id)
         result = await db.execute(statement=statement)
-        if (db_obj := result.scalar_one_or_none()) is None:
+        if (db_obj := result.unique().scalar_one_or_none()) is None:
             await db.rollback()
             raise NoResultFound(
                 f'{self.model.__name__}(`id`=\'{id}\') does not exist')

@@ -219,5 +219,14 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
 
         return result.mappings().all()
 
+    async def get_api_keys(
+        self, db: AsyncSession
+    ) -> List[Any]:
+        statement = select(
+            self.model.api_key).distinct().order_by(self.model.api_key.asc())
+        result = await db.execute(statement=statement)
+
+        return result.mappings().all()
+
 
 report = CRUDReport(Report)

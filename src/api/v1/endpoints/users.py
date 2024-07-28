@@ -34,7 +34,7 @@ async def read_users(
         skip=skip, limit=limit
     )
     count = await crud.user.get_count(db, filters=filters)
-    return {'data': jsonable_encoder(users), 'total': count}
+    return {'data': users, 'total': count}
 
 
 @router.post(
@@ -138,4 +138,21 @@ async def update_user(
             detail='The user with this username does not exist in the system',
         )
     user = await crud.user.update(db, db_obj=user, obj_in=user_in)
+    return user
+
+
+@router.delete('/{id}', response_model=schemas.User)
+async def delete_device(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    id: int,
+    current_user: models.User = Depends(deps.get_current_active_superuser)
+) -> Any:
+    """
+    Delete an user.
+    """
+    user = await crud.user.get(db=db, id=id)
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    user = await crud.user.delete(db=db, id=id)
     return user

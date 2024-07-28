@@ -10,14 +10,6 @@ $(document).ready(function () {
     //     },
     // });
     const drawerRootTemplate = `<ul>
-    <li class='d-none'>
-    <a href='/users/' data-role='drawer-item' class='${
-        $('body').attr('data-id') == 'users' ? 'k-selected ' : ''
-    }d-flex align-items-center text-decoration-none p-0' id='users-icon'>
-    <span><i class='mdi mdi-account-circle fs-20'></i></span>
-    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='User'>Users</span>
-    </a>
-    </li>
     <li>
     <a href='/report/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'report' ? 'k-selected ' : ''
@@ -60,18 +52,18 @@ $(document).ready(function () {
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='numbers'>Numbers</span>
     </a>
     </li>
+     <li>
+    <a href='/users/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'users' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
+    <span><i class='mdi mdi-account-circle fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='users'>Users</span>
+    </a>
+    </li>
     <li>
     </ul>`;
 
     const drawerUserTemplate = `<ul>
-    <li class='d-none'>
-    <a href='/users/' data-role='drawer-item' class='${
-        $('body').attr('data-id') == 'users' ? 'k-selected ' : ''
-    }d-flex align-items-center text-decoration-none p-0' id='users-icon'>
-    <span><i class='mdi mdi-account-circle fs-20'></i></span>
-    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='User'>Users</span>
-    </a>
-    </li>
     <li>
     <a href='/report/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'report' ? 'k-selected ' : ''
