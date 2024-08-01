@@ -12,6 +12,7 @@ class DeviceBase(BaseModel):
     name: Optional[str] = None
     root: Optional[bool] = True
     operator: Optional[str] = None
+    api_key: Optional[str] = None
 
 
 # Properties to receive via API on creation

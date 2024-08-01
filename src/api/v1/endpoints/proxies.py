@@ -18,17 +18,26 @@ async def read_proxies(
     orders: List[schemas.Order] = Depends(deps.request_orders),
     skip: int = 0,
     limit: int = 100,
-    _: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Retrieve proxies.
     """
     if not orders:
         orders = [{'field': 'id', 'dir': 'desc'}]
-    proxies = await crud.proxy.get_rows(
-        db, filters=filters, orders=orders, skip=skip, limit=limit
-    )
-    count = await crud.proxy.get_count(db, filters=filters)
+    if crud.user.is_superuser(current_user):
+        proxies = await crud.proxy.get_rows(
+            db, filters=filters, orders=orders, skip=skip, limit=limit
+        )
+        count = await crud.proxy.get_count(db, filters=filters)
+    else:
+        proxies = await crud.proxy.get_rows_by_user(
+            db, filters=filters, orders=orders,
+            user=current_user, skip=skip, limit=limit
+        )
+        count = await crud.proxy.get_count_by_user(
+            db, filters=filters, user=current_user
+        )
     return {'data': jsonable_encoder(proxies), 'total': count}
 
 

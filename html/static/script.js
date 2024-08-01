@@ -19,7 +19,6 @@ $(document).ready(function () {
     </a>
     </li>
     <li>
-    <li>
     <a href='/devices/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'devices' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='routing-icon'>
@@ -44,7 +43,6 @@ $(document).ready(function () {
     </a>
     </li>
     <li>
-    <li>
     <a href='/numbers/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'numbers' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
@@ -52,7 +50,7 @@ $(document).ready(function () {
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='numbers'>Numbers</span>
     </a>
     </li>
-     <li>
+    <li>
     <a href='/users/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'users' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
@@ -60,7 +58,6 @@ $(document).ready(function () {
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='users'>Users</span>
     </a>
     </li>
-    <li>
     </ul>`;
 
     const drawerUserTemplate = `<ul>
@@ -73,7 +70,6 @@ $(document).ready(function () {
     </a>
     </li>
     <li>
-    <li>
     <a href='/devices/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'devices' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='routing-icon'>
@@ -90,15 +86,6 @@ $(document).ready(function () {
     </a>
     </li>
     <li>
-    <a href='/services/' data-role='drawer-item' class='${
-        $('body').attr('data-id') == 'services' ? 'k-selected ' : ''
-    }d-flex align-items-center text-decoration-none p-0' id='peers-icon'>
-    <span><i class='mdi mdi-cube fs-20'></i></span>
-    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='services'>Services</span>
-    </a>
-    </li>
-    <li>
-    <li>
     <a href='/numbers/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'numbers' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
@@ -106,7 +93,6 @@ $(document).ready(function () {
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='numbers'>Numbers</span>
     </a>
     </li>
-    <li>
     </ul>`;
 
     if (window.isAuth) {

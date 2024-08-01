@@ -6,7 +6,7 @@ from sqlalchemy.sql import func, distinct
 
 from core.config import settings  # noqa
 from crud.base import CRUDBase  # noqa
-from models import Report, Device, Service  # noqa
+from models import User, Report, Device, Service  # noqa
 from schemas import ReportCreate, ReportUpdate  # noqa
 
 
@@ -158,6 +158,26 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
         ).where(*filter_list)
         results = await db.execute(statement=statement)
         return results.scalar_one()
+
+    async def get_rows_by_user(
+            self, db: AsyncSession, *, user: User,
+            filters: list = None, orders: list = None,
+            skip: int = 0, limit: int = 100
+    ) -> List[Any]:
+        filters.append({
+            'field': 'api_key', 'operator': 'in', 'value': list(user.api_keys)
+        })
+        return await self.get_rows(
+            db, filters=filters, orders=orders, skip=skip, limit=limit
+        )
+
+    async def get_count_by_user(
+            self, db: AsyncSession, *, user: User, filters: dict = None
+    ) -> int:
+        filters.append({
+            'field': 'api_key', 'operator': 'in', 'value': list(user.api_keys)
+        })
+        return await self.get_count(db, filters=filters)
 
     async def get_by(
         self, db: AsyncSession, *, api_key: str,

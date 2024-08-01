@@ -1,13 +1,23 @@
 from typing import TYPE_CHECKING
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, BigInteger, String, DateTime  # noqa
+from sqlalchemy import Column, ForeignKey, Integer, BigInteger, String, DateTime  # noqa
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.associationproxy import AssociationProxy
 
 from db.base_class import Base  # noqa
 
 # if TYPE_CHECKING:
 #     from .reg import Reg  # noqa: F401
+
+
+class ProxyApiKeys(Base):
+    __table_args__ = {'extend_existing': True}
+    proxy_id = Column(BigInteger, ForeignKey(
+        'proxy.id', ondelete='CASCADE'), primary_key=True)
+    api_key = Column(String, primary_key=True)
+
+    proxy = relationship('Proxy', back_populates='keys')
 
 
 class Proxy(Base):
@@ -28,3 +38,9 @@ class Proxy(Base):
     ts_2 = Column(DateTime)
     ts_3 = Column(DateTime)
     # regs = relationship('Reg', back_populates='number', lazy='joined')
+
+    keys = relationship(
+        'ProxyApiKeys', back_populates='proxy', lazy='joined',
+        cascade='save-update, merge, delete, delete-orphan'
+    )
+    api_keys = AssociationProxy('keys', 'api_key')

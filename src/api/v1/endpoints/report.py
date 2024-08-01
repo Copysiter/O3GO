@@ -19,15 +19,24 @@ async def get_report(
     orders: List[schemas.Order] = Depends(deps.request_orders),
     skip: int = 0,
     limit: int = 100,
-    _: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Retrieve reports.
     """
-    report = await crud.report.get_rows(
-        db, filters=filters, orders=orders, skip=skip, limit=limit
-    )
-    count = await crud.report.get_count(db, filters=filters)
+    if crud.user.is_superuser(current_user):
+        report = await crud.report.get_rows(
+            db, filters=filters, orders=orders, skip=skip, limit=limit
+        )
+        count = await crud.report.get_count(db, filters=filters)
+    else:
+        report = await crud.report.get_rows_by_user(
+            db, filters=filters, orders=orders,
+            user=current_user, skip=skip, limit=limit
+        )
+        count = await crud.report.get_count_by_user(
+            db, filters=filters, user=current_user
+        )
     return {'data': jsonable_encoder(report), 'total': count}
 
 

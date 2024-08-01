@@ -28,7 +28,7 @@ def create_task(task_type):
 
 async def get_device(
     db: AsyncSession, ext_id: str = None,
-    root: bool = None, operator: str = None
+    root: bool = None, operator: str = None, api_key: str = None
 ) -> models.Device:
     device = await crud.device.get_by_ext_id(db, ext_id=ext_id)
     if not device:
@@ -39,6 +39,8 @@ async def get_device(
         obj_in['root'] = root
     if operator is not None:
         obj_in['operator'] = operator
+    if api_key is not None:
+        obj_in['api_key'] = api_key
 
     device = await crud.device.update(db=db, db_obj=device, obj_in=obj_in)
 
@@ -78,14 +80,23 @@ async def get_report(
     return report
 
 
-async def get_proxy(db: AsyncSession, url: str, status: str) -> models.Proxy:
+async def get_proxy(
+    db: AsyncSession, url: str,
+    status: str, api_key: str = None
+) -> models.Proxy:
     proxy = await crud.proxy.get_by_url(db, url=url)
     if not proxy:
         proxy = await crud.proxy.create(db, obj_in={'url': url})
-
-    obj_in = {f'{status}_count': getattr(proxy, f'{status}_count') + 1}
+    api_keys = list(proxy.api_keys)
+    if api_key not in api_keys:
+        api_keys.append(api_key)
+    obj_in = {
+        f'{status}_count': getattr(proxy, f'{status}_count') + 1,
+        'api_keys': api_keys
+    }
     if status == 'good':
         obj_in.update({'ts_1': datetime.utcnow()})
+    proxy.api_keys = []
 
     proxy = await crud.proxy.update(db=db, db_obj=proxy, obj_in=obj_in)
 
@@ -158,7 +169,7 @@ async def event_handler(data: schemas.WebhookRequest):
         if device_ext_id:
             device = await get_device(
                 db, ext_id=device_ext_id, root=device_root,
-                operator=device_operator
+                operator=device_operator, api_key=api_key
             )
 
         if check_status or number:
@@ -171,7 +182,8 @@ async def event_handler(data: schemas.WebhookRequest):
             )
 
         if proxy_url and check_proxy_status:
-            _ = await get_proxy(db, url=proxy_url, status=proxy_status)
+            _ = await get_proxy(
+                db, url=proxy_url, status=proxy_status, api_key=api_key)
 
         if number and device and service:
             _ = await get_number(

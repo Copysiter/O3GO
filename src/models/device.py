@@ -16,6 +16,7 @@ class Device(Base):
     name = Column(String, index=True)
     root = Column(Boolean, index=True)
     operator = Column(String, index=True)
+    api_key = Column(String, index=True)
     timestamp = Column(DateTime, nullable=False,
                        default=datetime.utcnow, onupdate=datetime.utcnow)
     reports = relationship('Report', back_populates='device')
