@@ -88,7 +88,7 @@ async def get_proxy(
     if not proxy:
         proxy = await crud.proxy.create(db, obj_in={'url': url})
     api_keys = list(proxy.api_keys)
-    if api_key not in api_keys:
+    if api_key and api_key not in api_keys:
         api_keys.append(api_key)
     obj_in = {
         f'{status}_count': getattr(proxy, f'{status}_count') + 1,
