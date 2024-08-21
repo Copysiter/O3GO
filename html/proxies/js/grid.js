@@ -215,6 +215,7 @@ window.initGrid = function() {
                 }
             },
             excel: {
+                fileName: 'o3go_proxies.xlsx',
                 allPages: true
             },
             columns: [
