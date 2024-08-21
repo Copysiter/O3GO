@@ -223,6 +223,7 @@ window.initGrid = function() {
                 allPages: true,
                 filterable: true
             },
+            /*
             excelExport: function(e){
              var sheet = e.workbook.sheets[0];
              for (var i = 0; i < sheet.rows.length; i++) {
@@ -231,6 +232,7 @@ window.initGrid = function() {
                 }
               }
             },
+            */
             columns: [
                 {
                     field: 'id',
