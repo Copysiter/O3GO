@@ -21,6 +21,10 @@ window.initGrid = function() {
             });
         };
 
+        stripFunnyChars = function (value) {
+            return (value+'').replace(/[\x09-\x10]/g, '') ? value : '';
+        }
+
         $('#proxies-grid').kendoGrid({
             dataSource: {
                 transport: {
@@ -219,32 +223,14 @@ window.initGrid = function() {
                 allPages: true,
                 filterable: true
             },
-            /*
-            excelExport: function(e) {
-                var sheet = e.workbook.sheets[0];
-                var template = kendo.template(this.columns[1].template);
-                for (var i = 1; i < sheet.rows.length; i++) {
-                    var row = sheet.rows[i];
-                    var dataItem = {
-                        UnitPrice: row.cells[1].value
-                    };
-                    row.cells[1].value = template(dataItem);
+            excelExport: function(e){
+             var sheet = e.workbook.sheets[0];
+             for (var i = 0; i < sheet.rows.length; i++) {
+                for (var ci = 0; ci < sheet.rows[i].cells.length; ci++) {
+                    sheet.rows[i].cells[ci].value = stripFunnyChars(sheet.rows[i].cells[ci].value)
                 }
+              }
             },
-            */
-            /*
-            excelExport: function(e) {
-                var sheet = e.workbook.sheets[0];
-                var template = kendo.template(this.columns[2].template);
-                for (var i = 1; i < sheet.rows.length; i++) {
-                    var row = sheet.rows[i];
-                    var dataItem = {
-                        stringData: row.cells[2].value
-                    };
-                }
-                row.cells[2].value = template(dataItem);
-            },
-            */
             columns: [
                 {
                     field: 'id',
@@ -275,7 +261,7 @@ window.initGrid = function() {
                             operator: 'eq',
                         },
                     },
-                    exportable: { excel: false }
+                    exportable: { excel: true }
                 },
                 {
                     field: 'good_count',
