@@ -87,6 +87,15 @@ window.initToolbar = function() {
                     grid.addRow();
                 },
             },
+            {
+                type: 'button',
+                text: 'Export to Excel',
+                icon: 'excel',
+                click: function (e) {
+                    let grid = $('#proxies-grid').data('kendoGrid');
+                    grid.saveAsExcel();
+                },
+            },
         ],
     });
 }

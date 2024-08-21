@@ -90,7 +90,7 @@ window.initGrid = function() {
                     },
                 },
                 // data: fakedata,
-                pageSize: 100,
+                pageSize: 1,
                 serverPaging: true, // true
                 serverFiltering: true, // true
                 serverSorting: true, // true
@@ -213,6 +213,9 @@ window.initGrid = function() {
                 } else {
                     toolbar.hide($('#delete'));
                 }
+            },
+            excel: {
+                allPages: true
             },
             columns: [
                 {
