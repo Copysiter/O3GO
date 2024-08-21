@@ -261,7 +261,8 @@ window.initGrid = function() {
                             operator: 'eq',
                         },
                     },
-                    exportable: { excel: true }
+                    exportable: { excel: true },
+                    encoded: false
                 },
                 {
                     field: 'good_count',
