@@ -90,7 +90,7 @@ window.initGrid = function() {
                     },
                 },
                 // data: fakedata,
-                pageSize: 1,
+                pageSize: 100,
                 serverPaging: true, // true
                 serverFiltering: true, // true
                 serverSorting: true, // true
