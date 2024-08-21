@@ -114,8 +114,8 @@ window.initGrid = function() {
                                 validation: { required: true },
                             },
                             timestamp: { type: 'date', editable: false },
-                            // good_count: { type: 'number', editable: false },
-                            // bad_count: { type: 'number', editable: false },
+                            good_count: { type: 'number', editable: false },
+                            bad_count: { type: 'number', editable: false },
                             ts_1: { type: 'date', editable: false },
                             actions: { type: 'object', editable: false },
                         },
@@ -275,7 +275,7 @@ window.initGrid = function() {
                             operator: 'eq',
                         },
                     },
-                    exportable: { excel: true }
+                    exportable: { excel: false }
                 },
                 {
                     field: 'good_count',
