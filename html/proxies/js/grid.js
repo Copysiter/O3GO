@@ -114,8 +114,8 @@ window.initGrid = function() {
                                 validation: { required: true },
                             },
                             timestamp: { type: 'date', editable: false },
-                            good_count: { type: 'number', editable: false },
-                            bad_count: { type: 'number', editable: false },
+                            // good_count: { type: 'number', editable: false },
+                            // bad_count: { type: 'number', editable: false },
                             ts_1: { type: 'date', editable: false },
                             actions: { type: 'object', editable: false },
                         },
@@ -219,6 +219,19 @@ window.initGrid = function() {
                 allPages: true,
                 filterable: true
             },
+            /*
+            excelExport: function(e) {
+                var sheet = e.workbook.sheets[0];
+                var template = kendo.template(this.columns[1].template);
+                for (var i = 1; i < sheet.rows.length; i++) {
+                    var row = sheet.rows[i];
+                    var dataItem = {
+                        UnitPrice: row.cells[1].value
+                    };
+                    row.cells[1].value = template(dataItem);
+                }
+            },
+            */
             /*
             excelExport: function(e) {
                 var sheet = e.workbook.sheets[0];
