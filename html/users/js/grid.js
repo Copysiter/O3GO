@@ -118,8 +118,8 @@ $(document).ready(function () {
                                 type: 'string',
                                 editable: true
                             },
-                            balance: { type: 'number', editable: true },
-                            balance_lock: { type: 'number', editable: true },
+                            // balance: { type: 'number', editable: true },
+                            // balance_lock: { type: 'number', editable: true },
                             is_active: { type: 'boolean', editable: true },
                             is_superuser: { editable: true },
                             actions: { type: 'object', editable: false },
@@ -286,6 +286,7 @@ $(document).ready(function () {
                         },
                     },
                 },
+                /*
                 {
                     field: 'balance',
                     title: 'Balance',
@@ -310,6 +311,7 @@ $(document).ready(function () {
                         },
                     },
                 },
+                */
                 {
                     command: [
                         {

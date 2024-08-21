@@ -1,6 +1,4 @@
-﻿from typing import List
-
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, BigInteger, String  # noqa
+﻿from sqlalchemy import Boolean, Column, ForeignKey, Integer, BigInteger, String  # noqa
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.associationproxy import AssociationProxy
 

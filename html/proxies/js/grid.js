@@ -238,6 +238,7 @@ window.initGrid = function() {
                     title: '#',
                     // width: 33,
                     filterable: false,
+                    exportable: { excel: true }
                 },
                 {
                     field: 'name',
@@ -249,6 +250,7 @@ window.initGrid = function() {
                             operator: 'eq',
                         },
                     },
+                    exportable: { excel: true }
                 },
                 {
                     field: 'url',
@@ -260,12 +262,14 @@ window.initGrid = function() {
                             operator: 'eq',
                         },
                     },
+                    exportable: { excel: true }
                 },
                 {
                     field: 'good_count',
                     title: 'Good',
                     // width: 33,
                     filterable: false,
+                    exportable: { excel: true },
                     template: '<div class="text-green text-right">#: good_count #</div>'
                 },
                 {
@@ -273,6 +277,7 @@ window.initGrid = function() {
                     title: 'Bad',
                     // width: 33,
                     filterable: false,
+                    exportable: { excel: true },
                     template: '<div class="text-red text-right">#: bad_count #</div>'
                 },
                 {
@@ -287,6 +292,7 @@ window.initGrid = function() {
                     //         operator: 'eq',
                     //     },
                     // },
+                    exportable: { excel: true },
                     format: '{0: yyyy-MM-dd HH:mm:ss}',
                 },
                 {
@@ -294,6 +300,7 @@ window.initGrid = function() {
                     title: 'Last Used Successful',
                     // width: 33,
                     filterable: false,
+                    exportable: { excel: true },
                     format: '{0: yyyy-MM-dd HH:mm:ss}',
                 },
                 {
