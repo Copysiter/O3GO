@@ -33,7 +33,9 @@ class CRUDProxy(CRUDBase[Proxy, ProxyCreate, ProxyUpdate]):
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
-        db_obj.keys = [ProxyApiKeys(api_key=key) for key in update_data['api_keys']]
+        if update_data.get('api_keys'):
+            db_obj.keys = [ProxyApiKeys(api_key=key)
+                           for key in update_data['api_keys']]
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
