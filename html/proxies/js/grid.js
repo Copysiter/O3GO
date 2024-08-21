@@ -216,8 +216,22 @@ window.initGrid = function() {
             },
             excel: {
                 fileName: 'o3go_proxies.xlsx',
-                allPages: true
+                allPages: true,
+                filterable: true
             },
+            /*
+            excelExport: function(e) {
+                var sheet = e.workbook.sheets[0];
+                var template = kendo.template(this.columns[2].template);
+                for (var i = 1; i < sheet.rows.length; i++) {
+                    var row = sheet.rows[i];
+                    var dataItem = {
+                        stringData: row.cells[2].value
+                    };
+                }
+                row.cells[2].value = template(dataItem);
+            },
+            */
             columns: [
                 {
                     field: 'id',
