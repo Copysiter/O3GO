@@ -1,10 +1,13 @@
-.switchRow {
-    display: flex;
-    justify-content: flex-end;
+.k-multiselect[aria-controls="services_listbox"] {
+    width: auto !important;
 }
-/* .edit-btn-color {
-    border-color: rgba(0, 0, 0, 0.08);
-    color: #424242;
-    background-color: #e4e4e4;
-    background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.02));
-} */
+.k-multiselect[aria-controls="services_listbox"] .k-input-values {
+    max-width: 170px !important;
+    height: 28px !important;
+}
+.k-multiselect[aria-controls="services_listbox"] .k-input-values > span ~ input {
+    display: none !important;
+}
+.k-multiselect[aria-controls="services_listbox"] .k-input-values ~ span {
+    display: none !important;
+}

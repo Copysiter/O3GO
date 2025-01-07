@@ -37,7 +37,7 @@ async def get_service_option(
     """
     Retrieve service options.
     """
-    rows = await crud.device.get_rows(db)
+    rows = await crud.service.get_rows(db)
     return JSONResponse([{
         'text': rows[i].name if rows[i].name else rows[i].alias,
         'value': rows[i].id

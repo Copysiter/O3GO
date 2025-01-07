@@ -4,9 +4,11 @@ window.initToolbar = function() {
             {
                 template: "<div class='k-window-title ps-6'>Report</div>",
             },
+            { type: 'spacer'},
             {
-                type: 'spacer',
+                template: "<select id='services' />",
             },
+            { type: "separator" },
             {
                 template: "<input id='period-ddl' class='datepicker' />",
             },
@@ -30,6 +32,68 @@ window.initToolbar = function() {
                 },
             },
         ],
+    });
+
+    $("#services").kendoMultiSelect({
+        placeholder: 'Select services',
+        dataSource: new kendo.data.DataSource({
+            transport: {
+                read: {
+                    url: `http://${api_base_url}/api/v1/options/service`,
+                    type: 'GET',
+                    beforeSend: function (request) {
+                        request.setRequestHeader(
+                            'Authorization',
+                            `${token_type} ${access_token}`
+                        );
+                    },
+                },
+            },
+        }),
+        autoWidth: true,
+        tagMode: 'single',
+        dataTextField: 'text',
+        dataValueField: 'value',
+        valuePrimitive: true,
+        downArrow: true,
+        animation: false,
+        autoClose: false,
+        messages: {
+            singleTag: "service(s) selected!",
+        },
+        change: function (e) {
+            let grid = $("#report-grid").data("kendoGrid")
+            let filters = grid.dataSource.filter().filters
+            const index = filters.findIndex(obj => obj.field == 'service_id');
+            const values = e.sender.value()
+            const value = JSON.stringify(values)
+            if (index !== -1) {
+                if (values.length > 0) {
+                    filters[index].value = value;
+                } else {
+                    filters.splice(index, 1);
+                }
+            } else {
+                if (values.length > 0) {
+                    filters.push({
+                        field: 'service_id',
+                        operator: 'overlaps',
+                        value: value
+                    });
+                }
+            }
+            grid.dataSource.filter(filters);
+            for (let i = 0; i < grid.columns.length; i++) {
+                const column = grid.columns[i]
+                if ('service_id' in column) {
+                    if (values.length < 1 || values.includes(column.service_id)) {
+                        grid.showColumn(i);
+                    } else {
+                        grid.hideColumn(i);
+                    }
+                }
+            }
+        },
     });
 
     $("#period-ddl").kendoDropDownList({
@@ -61,13 +125,19 @@ window.initToolbar = function() {
                 let daterangepicker = $("#daterangepicker").data("kendoDateRangePicker");
                 daterangepicker.enable(true);
             } else {
-                daterangepicker.enable(false);
-                $("#report-grid").data("kendoGrid").clearSelection();
-                $("#report-grid").data("kendoGrid").dataSource.filter({
+                let grid = $("#report-grid").data("kendoGrid")
+                const service_filter = grid.dataSource.filter().filters.find(obj => obj.field == 'service_id');
+                let filters = [{
                     field: 'period',
                     operator: 'eq',
                     value: e.dataItem.value,
-                });
+                }]
+                if (service_filter != undefined) {
+                    filters.push(service_filter)
+                }
+                daterangepicker.enable(false);
+                $("#report-grid").data("kendoGrid").clearSelection();
+                $("#report-grid").data("kendoGrid").dataSource.filter(filters);
             }
         },
     });
@@ -83,7 +153,9 @@ window.initToolbar = function() {
                 let end_dt = kendo.parseDate(range.end, "yyyy-MM-dd h:mm:ss tt");
                 let begin = kendo.toString(begin_dt, "yyyy-MM-dd 00:00:00");
                 let end = kendo.toString(end_dt, "yyyy-MM-dd 23:59:59");
-                $("#report-grid").data("kendoGrid").dataSource.filter([{
+                let grid = $("#report-grid").data("kendoGrid")
+                const service_filter = grid.dataSource.filter().filters.find(obj => obj.field == 'service_id');
+                let filters = [{
                     field: 'date',
                     operator: 'gte',
                     value: begin,
@@ -91,7 +163,11 @@ window.initToolbar = function() {
                     field: 'date',
                     operator: 'lte',
                     value: end,
-                }]);
+                }]
+                if (service_filter != undefined) {
+                    filters.push(service_filter)
+                }
+                $("#report-grid").data("kendoGrid").dataSource.filter(filters);
             }
         }
     });
@@ -100,4 +176,6 @@ window.initToolbar = function() {
     let rangePicker = document.getElementById("daterangepicker");
     rangePicker.children[1].innerHTML = "&mdash;";
     rangePicker.children[1].style.marginTop = "5px";
+
+    $('#services').triggerHandler('change');
 }

@@ -33,9 +33,9 @@ window.initGrid = function() {
         })
             .done(function (result) {
                 data = result.data;
-                console.log(data);
                 data.forEach((obj) => {
                     service_columns.push({
+                        service_id: obj.id,
                         title: obj.name,
                         headerTemplate: '<span>' + (obj.name ? obj.name : obj.alias) + '</span>',
                         headerAttributes: {
@@ -124,7 +124,6 @@ window.initGrid = function() {
                                     item['code_count_' + obj.id] > 0 &&
                                     item['number_count_' + obj.id] > 0
                                 ) {
-                                    console.log(item['code_count_' + obj.id]/item['number_count_' + obj.id]*100)
                                     return (item['code_count_' + obj.id]/item['number_count_' + obj.id]*100).toFixed(1);
                                 } else {
                                     return 0;

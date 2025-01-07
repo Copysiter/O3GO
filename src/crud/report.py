@@ -1,3 +1,5 @@
+import json
+
 from datetime import date, datetime, timedelta
 from typing import List, Any
 from sqlalchemy import select, tuple_
@@ -45,6 +47,9 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'value': filters[i]['value']
                 })
             elif filters[i]['field'] in self.model.__table__.c:
+                if filters[i]['field'] == 'service_id' \
+                        and isinstance(filters[i]['value'], str):
+                    filters[i]['value'] = json.loads(filters[i]['value'])
                 filter_list.append(filters[i])
 
         return filter_list
