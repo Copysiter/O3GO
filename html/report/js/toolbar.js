@@ -28,7 +28,10 @@ window.initToolbar = function() {
                 type: 'button',
                 text: 'Clear Filter',
                 click: function (e) {
-                    $('#report-grid').data('kendoGrid').dataSource.filter({});
+                    let grid = $("#report-grid").data("kendoGrid")
+                    let filters = grid.dataSource.filter().filters
+                    filters = filters.filter(obj => ['service_id', 'period', 'date'].includes(obj.field));
+                    grid.dataSource.filter(filters);
                 },
             },
         ],
