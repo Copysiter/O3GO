@@ -41,10 +41,20 @@ class CRUDProxy(CRUDBase[Proxy, ProxyCreate, ProxyUpdate]):
         await db.refresh(db_obj)
         return db_obj
 
+    async def get_all_by_user(
+        self, db: AsyncSession, *, user: User,
+        filters: list = None, orders: list = None
+    ) -> List[Proxy]:
+        filters.append({
+            'field': 'api_keys', 'relationship': Proxy.keys,
+            'operator': 'overlaps', 'value': list(user.api_keys)
+        })
+        return await self.get_all(db, filters=filters, orders=orders)
+
     async def get_rows_by_user(
-            self, db: AsyncSession, *, user: User,
-            filters: list = None, orders: list = None,
-            skip: int = 0, limit: int = 100
+        self, db: AsyncSession, *, user: User,
+        filters: list = None, orders: list = None,
+        skip: int = 0, limit: int = 100
     ) -> List[Proxy]:
         filters.append({
             'field': 'api_keys', 'relationship': Proxy.keys,
@@ -55,7 +65,7 @@ class CRUDProxy(CRUDBase[Proxy, ProxyCreate, ProxyUpdate]):
         )
 
     async def get_count_by_user(
-            self, db: AsyncSession, *, user: User, filters: dict = None
+        self, db: AsyncSession, *, user: User, filters: dict = None
     ) -> int:
         filters.append({
             'field': ProxyApiKeys.api_key, 'relationship': Proxy.keys,

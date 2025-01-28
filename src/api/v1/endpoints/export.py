@@ -19,11 +19,15 @@ router = APIRouter()
 
 @router.get('/proxies')
 async def export_proxies(
-        *,
-        db: AsyncSession = Depends(deps.get_db),
-        filters: List[schemas.Filter] = Depends(deps.request_filters),
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    filters: List[schemas.Filter] = Depends(deps.request_filters),
+    current_user: models.User = Depends(deps.get_current_active_user)
 ):
-    proxies = await crud.proxy.get_all(db=db, filters=filters)
+    if crud.user.is_superuser(current_user):
+        proxies = await crud.proxy.get_all(db=db, filters=filters)
+    else:
+        proxies = await crud.proxy.get_all_by_user(db=db, filters=filters)
 
     output = BytesIO()
     workbook = openpyxl.Workbook()
@@ -87,8 +91,12 @@ async def export_numbers(
     *,
     db: AsyncSession = Depends(deps.get_db),
     filters: List[schemas.Filter] = Depends(deps.request_filters),
+    current_user: models.User = Depends(deps.get_current_active_user)
 ):
-    numbers = await crud.number.get_all(db=db, filters=filters)
+    if crud.user.is_superuser(current_user):
+        numbers = await crud.number.get_all(db=db, filters=filters)
+    else:
+        numbers = await crud.number.get_all_by_user(db=db, filters=filters)
 
     output = BytesIO()
     workbook = openpyxl.Workbook()
@@ -153,7 +161,8 @@ async def export_numbers(
 async def export_report(
     *,
     db: AsyncSession = Depends(deps.get_db),
-    filters: List[schemas.Filter] = Depends(deps.request_filters)
+    filters: List[schemas.Filter] = Depends(deps.request_filters),
+    current_user: models.User = Depends(deps.get_current_active_user)
 ):
     COLUMN_NAMES_MAP = {
         'api_key': 'API Key',
@@ -169,7 +178,10 @@ async def export_report(
         'info_2': 'Info 2',
         'info_3': 'Info 3'
     }
-    reports = await crud.report.get_all(db=db, filters=filters)
+    if crud.user.is_superuser(current_user):
+        reports = await crud.report.get_all(db=db, filters=filters)
+    else:
+        reports = await crud.report.get_all_by_user(db=db, filters=filters)
 
     output = BytesIO()
     workbook = openpyxl.Workbook()

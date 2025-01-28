@@ -40,6 +40,15 @@ class CRUDNumber(CRUDBase[Number, NumberCreate, NumberUpdate]):
         results = await db.execute(statement=statement)
         return results.unique().scalar_one_or_none()
 
+    async def get_all_by_user(
+        self, db: AsyncSession, *, user: User,
+        filters: list = None, orders: list = None
+    ) -> List[Number]:
+        filters.append({
+            'field': 'api_key', 'operator': 'in', 'value': list(user.api_keys)
+        })
+        return await self.get_all(db, filters=filters, orders=orders)
+
     async def get_rows_by_user(
         self, db: AsyncSession, *, user: User,
         filters: list = None, orders: list = None,

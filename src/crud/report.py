@@ -153,6 +153,15 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 stats[pk][f'{service_map.get(row.service_id)}_{c}'] = getattr(row, c)
         return list(stats.values())
 
+    async def get_all_by_user(
+        self, db: AsyncSession, *, user: User,
+        filters: list = None, orders: list = None
+    ) -> List[Any]:
+        filters.append({
+            'field': 'api_key', 'operator': 'in', 'value': list(user.api_keys)
+        })
+        return await self.get_all(db, filters=filters, orders=orders)
+
     async def get_rows(
         self, db: AsyncSession, *, skip=0, limit=100,
         filters: list = None, orders: list = None

@@ -227,9 +227,38 @@ window.optimize_grid = function (grids) {
 };
 
 window.exportToExcel = function(url) {
+    let token = window.isAuth;
+    let { access_token, token_type } = token;
+
     kendo.confirm(`<div style='padding:5px 10px 0 10px;'>Download Excel file?</div>`).done(function() {
-        console.log(url);
-        window.open(url, '_blank');
+        // console.log(url);
+        // window.open(url, '_blank');
+        // Отправляем запрос с заголовком Authorization
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `${token_type} ${access_token}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to download file');
+            }
+            // Получаем URL из ответа, если сервер перенаправляет на скачивание
+            return response.blob().then(blob => {
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = response.headers.get('Content-Disposition').match(/filename=(.+)/)[1] || 'file.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+            });
+        })
+        .catch(error => {
+            console.error('Error downloading file:', error);
+        });
     }).fail(function() {
 
     });
