@@ -51,13 +51,6 @@ $(document).ready(function () {
     </a>
     </li>
     <li>
-    <a href='/campaigns/' data-role='drawer-item' class='${
-        $('body').attr('data-id') == 'campaigns' ? 'k-selected ' : ''
-    }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
-    <span><i class='mdi mdi-target fs-24'></i></span>
-    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='campaigns'>Campaigns</span>
-    </a>
-    </li>
     <a href='/users/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'users' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
@@ -232,3 +225,12 @@ window.optimize_grid = function (grids) {
         $(`${grid} .k-grid-content thead`).addClass('k-grid-header');
     });
 };
+
+window.exportToExcel = function(url) {
+    kendo.confirm(`<div style='padding:5px 10px 0 10px;'>Download Excel file?</div>`).done(function() {
+        console.log(url);
+        window.open(url, '_blank');
+    }).fail(function() {
+
+    });
+}

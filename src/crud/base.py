@@ -109,6 +109,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 order_list.append(field.asc())
         return order_list
 
+    async def get_all(
+        self, db: AsyncSession, *, filters: list = None, orders: list = None
+    ) -> List[ModelType]:
+        filter_list = self.get_filters(filters) if filters else []
+        order_list = self.get_orders(orders) if orders else []
+        statement = (select(self.model).
+                     where(*filter_list).
+                     order_by(*order_list))
+        results = await db.execute(statement=statement)
+        return results.unique().scalars().all()
+
     async def get_rows(
         self, db: AsyncSession, *, skip=0, limit=100,
         filters: list = None, orders: list = None

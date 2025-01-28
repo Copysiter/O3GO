@@ -92,8 +92,20 @@ window.initToolbar = function() {
                 text: 'Export to Excel',
                 icon: 'excel',
                 click: function (e) {
-                    let grid = $('#proxies-grid').data('kendoGrid');
-                    grid.saveAsExcel();
+                    // const grid = $('#proxies-grid').data('kendoGrid');
+                    // grid.saveAsExcel();
+                    const grid = $('#proxies-grid').data('kendoGrid');
+                    const filter = grid.dataSource.filter();
+                    const params = new URLSearchParams();
+                    if (filter != undefined) {
+                        filter.filters.forEach((filter, index) => {
+                            for (const [key, value] of Object.entries(filter)) {
+                                params.append(`filters[${index}][${key}]`, value);
+                            }
+                        });
+                    }
+                    const exportURL = `http://${api_base_url}/api/v1/export/proxies?${params.toString()}`;
+                    exportToExcel(exportURL)
                 },
             },
         ],

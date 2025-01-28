@@ -23,8 +23,6 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'operator': 'gte',
                     'value': date.today() - timedelta(days=d)
                 })
-                # filter_list.append(
-                # self.model.date >= date.today() - timedelta(days=d))
                 if d > 0:
                     filter_list.append({
                         'field': 'date',
@@ -76,15 +74,94 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
 
         return order_list
 
+    async def get_all(
+        self, db: AsyncSession, *, filters: list = None, orders: list = None
+    ) -> List[Any]:
+        order_list = self.get_orders(self.order_modify(orders or []))
+        filter_list = self.get_filters(self.filter_modify(filters or []))
+
+        statement = select(Service.id, Service.name, Service.alias)
+        rows = await db.execute(statement=statement)
+        service_map = {}
+        for row in rows.mappings().all():
+            service_map[row['id']] = (
+                row['name'] or row['alias'].title()
+            ).replace(' ', '_')
+
+        statement = (select(
+                     self.model.api_key, self.model.device_id).
+                     join(Device, Device.id == self.model.device_id).
+                     where(*filter_list).
+                     group_by(self.model.api_key, self.model.device_id).
+                     order_by(*order_list))
+
+        rows = (await db.execute(statement=statement)).all()
+        pks = [(row[0], row[1]) for row in rows]
+
+        statement = select(
+            self.model.api_key,
+            self.model.device_id, self.model.service_id,
+            func.sum(self.model.start_count).label('start_count'),
+            func.sum(self.model.number_count).label('number_count'),
+            func.sum(self.model.code_count).label('code_count'),
+            func.sum(self.model.no_code_count).label('no_code_count'),
+            func.sum(self.model.bad_count).label('bad_count'),
+            func.max(self.model.timestamp).label('timestamp'),
+            func.max(self.model.ts_1).label('ts_1'),
+            func.string_agg(
+                distinct(Device.ext_id), None).label('device_ext_id'),
+            func.string_agg(
+                distinct(Device.name), None).label('device_name'),
+            func.string_agg(
+                distinct(Device.operator), None).label('device_operator'),
+            func.bool_and(Device.root).label('device_root'),
+            func.string_agg(
+                distinct(self.model.info_1), None).label('info_1'),
+            func.string_agg(
+                distinct(self.model.info_2), None).label('info_2'),
+            func.string_agg(
+                distinct(self.model.info_3), None).label('info_3')
+        ).join(Device, Device.id == self.model.device_id).where(
+            tuple_(self.model.api_key, self.model.device_id).in_(pks), *filter_list
+        ).group_by(
+            self.model.api_key, self.model.device_id, self.model.service_id
+        ).order_by(*order_list)
+
+        rows = await db.execute(statement=statement)
+
+        stats = {}
+        for row in rows.mappings().all():
+            pk = (row.api_key, row.device_id)
+            if pk not in stats:
+                stats[pk] = {
+                    'api_key': row.api_key,
+                    'device_id': row.device_id,
+                    'device_ext_id': row.device_ext_id,
+                    'device_name': row.device_name,
+                    'device_operator': row.device_operator,
+                    'device_root': row.device_root,
+                    'timestamp': row.timestamp,
+                    'timedelta': (datetime.utcnow() -
+                                  row.timestamp).total_seconds(),
+                    'ts_1': row.ts_1,
+                    'info_1': row.info_1,
+                    'info_2': row.info_2,
+                    'info_3': row.info_3,
+                }
+            for c in ('start_count', 'number_count', 'code_count',
+                      'no_code_count', 'bad_count'):
+                stats[pk][f'{service_map.get(row.service_id)}_{c}'] = getattr(row, c)
+        return list(stats.values())
+
     async def get_rows(
         self, db: AsyncSession, *, skip=0, limit=100,
         filters: list = None, orders: list = None
     ) -> List[Any]:
-        order_list = self.get_orders(self.order_modify(orders))
-        filter_list = self.get_filters(self.filter_modify(filters))
+        order_list = self.get_orders(self.order_modify(orders or []))
+        filter_list = self.get_filters(self.filter_modify(filters or []))
 
         statement = (select(
-                        self.model.api_key, self.model.device_id).
+                     self.model.api_key, self.model.device_id).
                      join(Device, Device.id == self.model.device_id).
                      where(*filter_list).
                      group_by(self.model.api_key, self.model.device_id).

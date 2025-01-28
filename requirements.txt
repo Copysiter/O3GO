@@ -29,3 +29,4 @@ httpx==0.25.0
 pytest==7.4.2
 pytest-asyncio==0.21.1
 flake8==6.1.0
+openpyxl==3.1.5

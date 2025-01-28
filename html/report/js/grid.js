@@ -23,6 +23,10 @@ window.initGrid = function() {
             });
         };
 
+        stripFunnyChars = function (value) {
+            return (value+'').replace(/[\x09-\x10]/g, '') ? value : '';
+        }
+
         $.ajax({
             type: 'GET',
             url: `http://${api_base_url}/api/v1/services/?filters[0][field]=is_active&filters[0][operator]=istrue`,
@@ -286,6 +290,19 @@ window.initGrid = function() {
                         pageSizes: [100, 250, 500],
                     },
                     change: function (e) {},
+                    excel: {
+                        fileName: 'o3go_report.xlsx',
+                        allPages: true,
+                        filterable: true
+                    },
+                    excelExport: function(e){
+                        var sheet = e.workbook.sheets[0];
+                        for (var i = 0; i < sheet.rows.length; i++) {
+                            for (var ci = 0; ci < sheet.rows[i].cells.length; ci++) {
+                                sheet.rows[i].cells[ci].value = stripFunnyChars(sheet.rows[i].cells[ci].value)
+                            }
+                        }
+                    },
                     columns: [
                         {
                             field: 'alert',
