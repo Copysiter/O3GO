@@ -1,5 +1,4 @@
-﻿from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession  # noqa
+﻿from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession  # noqa
 
 from core.config import settings  # noqa
 
@@ -12,7 +11,7 @@ engine = create_async_engine(
     max_overflow=settings.DATABASE_MAX_OVERFLOW
 )
 
-async_session = sessionmaker(
+async_session = async_sessionmaker(
     bind=engine, class_=AsyncSession, expire_on_commit=False,
     autocommit=False, autoflush=False
 )
