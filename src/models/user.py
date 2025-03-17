@@ -23,7 +23,8 @@ class User(Base):
     is_superuser = Column(Boolean(), default=False)
 
     keys = relationship(
-        'UserApiKeys', back_populates='user', lazy='joined',
-        cascade='save-update, merge, delete, delete-orphan'
+        'UserApiKeys', back_populates='user',
+        cascade='save-update, merge, delete, delete-orphan',
+        lazy='joined'
     )
     api_keys = AssociationProxy('keys', 'api_key')

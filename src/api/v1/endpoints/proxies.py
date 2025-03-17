@@ -58,7 +58,7 @@ async def create_proxy(
     proxy = await crud.proxy.create(
         db=db, obj_in=proxy_in
     )
-    return proxy
+    return jsonable_encoder(proxy)
 
 
 @router.post('/delete', response_model=List[schemas.Proxy])
@@ -75,7 +75,7 @@ async def delete_proxies(
     for id in data.ids:
         proxy = await crud.proxy.delete(db=db, id=id)
         proxies.append(proxy)
-    return proxies
+    return jsonable_encoder(proxies)
 
 
 @router.put('/{id}', response_model=schemas.Proxy)
@@ -93,7 +93,7 @@ async def update_proxy(
     if not proxy:
         raise HTTPException(status_code=404, detail='Proxy not found')
     proxy = await crud.proxy.update(db=db, db_obj=proxy, obj_in=proxy_in)
-    return proxy
+    return jsonable_encoder(proxy)
 
 
 @router.get('/{id}', response_model=schemas.Proxy)
@@ -109,7 +109,7 @@ async def read_proxy(
     proxy = await crud.proxy.get(db=db, id=id)
     if not proxy:
         raise HTTPException(status_code=404, detail='Proxy not found')
-    return proxy
+    return jsonable_encoder(proxy)
 
 
 @router.delete('/{id}', response_model=schemas.Proxy)
@@ -126,4 +126,4 @@ async def delete_proxy(
     if not proxy:
         raise HTTPException(status_code=404, detail='Proxy not found')
     proxy = await crud.proxy.delete(db=db, id=id)
-    return proxy
+    return jsonable_encoder(proxy)

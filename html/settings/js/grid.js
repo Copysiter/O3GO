@@ -1,40 +1,61 @@
 window.initGrid = function() {
     let timer = null;
-    let resizeColumn = false;
     let showLoader = true;
-    // let { access_token, token_type } =
-    //     window.storageToken.options.offlineStorage.getItem();
     let token = window.isAuth;
+    const TYPES_MAP = ['TEXT', 'INTEGER', 'BOOLEAN', 'DROPDOWN', 'PROXIES']
     try {
         let { access_token, token_type } = token;
 
         var popup;
-        autoFitColumn = function (grid) {
-            setTimeout(function () {
-                // grid.autoFitColumn('id');
-                grid.autoFitColumn('name');
-                grid.autoFitColumn('login');
-                grid.autoFitColumn('balance');
-                grid.autoFitColumn('balance_lock');
-                grid.autoFitColumn('is_superuser');
-                grid.autoFitColumn('connections');
-            });
-        };
 
         stripFunnyChars = function (value) {
             return (value+'').replace(/[\x09-\x10]/g, '') ? value : '';
         }
 
-        $('#numbers-grid').kendoGrid({
+        $('#settings-grid').kendoGrid({
             dataSource: {
                 transport: {
                     read: {
-                        url: `http://${api_base_url}/api/v1/numbers/`,
+                        url: `http://${api_base_url}/api/v1/settings/`,
                         type: 'GET',
                         beforeSend: function (request) {
                             request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
                         },
                         dataType: 'json',
+                    },
+                    create: {
+                        url: `http://${api_base_url}/api/v1/settings/`,
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        beforeSend: function (request) {
+                            request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
+                        },
+                    },
+                    update: {
+                        url: function (options) {
+                            console.log(options);
+                            return `http://${api_base_url}/api/v1/settings/${options.id}`;
+                        },
+                        type: 'PUT',
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        beforeSend: function (request) {
+                            request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
+                        },
+                    },
+                    destroy: {
+                        url: function (options) {
+                            console.log(options);
+                            return `http://${api_base_url}/api/v1/settings/${options.id}`;
+                        },
+
+                        type: 'DELETE',
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        beforeSend: function (request) {
+                            request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
+                        },
                     },
                     // parameterMap: function (options, type) {
                     //     return kendo.stringify(options);
@@ -72,16 +93,29 @@ window.initGrid = function() {
                     model: {
                         id: 'id',
                         fields: {
-                            id: { type: 'number',},
-                            number: {type: 'string'},
-                            service_alias: {type: 'string'},
-                            api_key: {type: 'string'},
-                            device_ext_id: {type: 'string'},
-                            proxy: {type: 'string'},
-                            info_1: {type: 'string'},
-                            info_2: {type: 'string'},
-                            info_3: {type: 'string'},
-                            timestamp: { type: 'date', editable: false },
+                            id: { type: 'number', editable: false },
+                            key: {
+                                type: 'string',
+                                editable: true,
+                                validation: { required: true },
+                            },
+                            type: {
+                                type: 'number',
+                                editable: true,
+                                validation: { required: true },
+                            },
+                            description: {
+                                type: 'string',
+                                editable: true,
+                            },
+                            options: {
+                                type: 'string',
+                                editable: true,
+                            },
+                            is_active: {
+                                type: 'boolean',
+                                editable: true,
+                            }
                         },
                     },
                 },
@@ -97,6 +131,39 @@ window.initGrid = function() {
             selectable: 'multiple, row',
             persistSelection: true,
             sortable: true,
+            edit: function (e) {
+                form.data('kendoForm').setOptions({
+                    formData: e.model,
+                });
+                popup.setOptions({
+                    title: e.model.id ? 'Edit Variable' : 'New Variable',
+                });
+                popup.center();
+            },
+            editable: {
+                mode: 'popup',
+                template: kendo.template($('#settings-popup-editor').html()),
+                window: {
+                    width: 480,
+                    maxHeight: '90%',
+                    animation: false,
+                    appendTo: '#app-root',
+                    visible: false,
+                    open: function (e) {
+                        form = showEditForm();
+                        popup = e.sender;
+                        popup.center();
+                        setTimeout(() => {
+                            $('#type').data('kendoDropDownList').trigger('change');
+                        });
+                    },
+                },
+            },
+            save: function (e) {
+                // setTimeout(function () {
+                //     initSettingGroupsGrid();
+                // })
+            },
             dataBinding: function (e) {
                 clearTimeout(timer);
             },
@@ -140,89 +207,43 @@ window.initGrid = function() {
                 refresh: true,
                 pageSizes: [100, 250, 500],
             },
-            change: function (e) {},
-            excel: {
-                fileName: 'o3go_numbers.xlsx',
-                allPages: true,
-                filterable: true
-            },
-            excelExport: function(e){
-                var sheet = e.workbook.sheets[0];
-                for (var i = 0; i < sheet.rows.length; i++) {
-                    for (var ci = 0; ci < sheet.rows[i].cells.length; ci++) {
-                        sheet.rows[i].cells[ci].value = stripFunnyChars(sheet.rows[i].cells[ci].value)
-                    }
-                }
+            change: function (e) {
+                // let toolbar = $('#settings-toolbar').data('kendoToolBar');
+                // let rows = this.select();
+                // if (rows.length > 0) {
+                //     toolbar.show($('#delete'));
+                // } else {
+                //     toolbar.hide($('#delete'));
+                // }
             },
             columns: [
+                {
+                    field: 'is_active',
+                    title: '&nbsp;',
+                    // width: 44,
+                    template: "<div class='marker block #=is_active == 1 ? 'green' : 'red'#'><i></i></div>",
+                    filterable: false,
+                },
                 {
                     field: 'id',
                     title: '#',
                     // width: 33,
-                    filterable: false,
+                    filterable: false
                 },
                 {
-                    field: 'number',
-                    title: 'Number',
+                    field: 'key',
+                    title: 'Key',
                     filterable: {
                         cell: {
                             inputWidth: 0,
                             showOperators: true,
                             operator: 'eq',
                         },
-                    },
-                },
-                {
-                    field: 'service_alias',
-                    title: 'Service',
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'api_key',
-                    title: 'API Key',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'device_ext_id',
-                    title: 'Devicce ID',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'setting_group_id',
-                    title: 'Setting Group',
-                    // width: 33,
-                    filterable: false,
-                    template: (obj) => {
-                        if (obj.setting_group) {
-                            return obj.setting_group.name ? obj.setting_group.name : obj.setting_group.id;
-                        }
-                        return "";
                     }
                 },
                 {
-                    field: 'proxy',
-                    title: 'Proxy',
-                    // width: 33,
+                    field: 'type',
+                    title: 'Type',
                     filterable: {
                         cell: {
                             inputWidth: 0,
@@ -230,56 +251,40 @@ window.initGrid = function() {
                             operator: 'eq',
                         },
                     },
+                    template: (obj) => {
+                        return TYPES_MAP[obj.type];
+                    }
                 },
                 {
-                    field: 'info_1',
-                    title: 'Info 1',
-                    // width: 33,
+                    field: 'description',
+                    title: 'Description',
                     filterable: {
                         cell: {
                             inputWidth: 0,
                             showOperators: true,
                             operator: 'eq',
                         },
-                    },
+                    }
                 },
                 {
-                    field: 'info_2',
-                    title: 'Info 2',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
+                    command: [
+                        {
+                            name: 'edit',
+                            iconClass: {
+                                edit: 'k-icon k-i-edit',
+                                update: '',
+                                cancel: '',
+                            },
+                            text: {
+                                edit: '',
+                                update: 'Save',
+                                cancel: 'Cancel',
+                            },
                         },
-                    },
-                },
-                {
-                    field: 'info_3',
-                    title: 'Info 3',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'timestamp',
-                    title: 'Timestamp',
-                    // width: 33,
-                    filterable: false,
-                    // filterable: {
-                    //     cell: {
-                    //         inputWidth: 0,
-                    //         showOperators: true,
-                    //         operator: 'eq',
-                    //     },
-                    // },
-                    format: '{0: yyyy-MM-dd HH:mm:ss}',
+                        { name: 'destroy', text: '' },
+                    ],
+                    title: '',
+                    // width: 86,
                 },
                 {},
             ],
@@ -301,7 +306,7 @@ window.initGrid = function() {
             }
         };
 
-        $('#numbers-grid').on('dblclick', "td[role='gridcell']", function (e) {
+        $('#settings-grid').on('dblclick', "td[role='gridcell']", function (e) {
             var text = $(this).find('.text');
             if (text.length) text.selectText();
             else $(this).selectText();
@@ -312,11 +317,12 @@ window.initGrid = function() {
                 selectedDataItems = [];
                 selectedItemIds = [];
                 selectedItemImsi = [];
-                $('#numbers-grid').data('kendoGrid').clearSelection();
+                $('#settings-grid').data('kendoGrid').clearSelection();
+                $('#settings-toolbar').data('kendoToolBar').hide($('#delete'));
             }
         });
     } catch (error) {
         console.warn(error);
     }
-    window.optimize_grid(['#numbers-grid']);
+    window.optimize_grid(['#settings-grid']);
 }

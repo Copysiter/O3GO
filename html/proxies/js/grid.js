@@ -9,17 +9,6 @@ window.initGrid = function() {
         let { access_token, token_type } = token;
 
         var popup;
-        autoFitColumn = function (grid) {
-            setTimeout(function () {
-                // grid.autoFitColumn('id');
-                grid.autoFitColumn('name');
-                grid.autoFitColumn('login');
-                grid.autoFitColumn('balance');
-                grid.autoFitColumn('balance_lock');
-                grid.autoFitColumn('is_superuser');
-                grid.autoFitColumn('connections');
-            });
-        };
 
         stripFunnyChars = function (value) {
             return (value+'').replace(/[\x09-\x10]/g, '') ? value : '';
@@ -117,10 +106,10 @@ window.initGrid = function() {
                                 editable: true,
                                 validation: { required: true },
                             },
-                            timestamp: { type: 'date', editable: false },
+                            // timestamp: { type: 'date', editable: false },
                             good_count: { type: 'number', editable: false },
                             bad_count: { type: 'number', editable: false },
-                            ts_1: { type: 'date', editable: false },
+                            // ts_1: { type: 'date', editable: false },
                             actions: { type: 'object', editable: false },
                         },
                     },
@@ -250,6 +239,19 @@ window.initGrid = function() {
                         },
                     },
                     exportable: { excel: true }
+                },
+                {
+                    field: 'group',
+                    title: 'Group',
+                    // width: 33,
+                    filterable: false,
+                    exportable: { excel: true },
+                    template: (obj) => {
+                        if (obj.group && obj.group.name) {
+                            return obj.group.name
+                        }
+                        return ""
+                    }
                 },
                 {
                     field: 'url',

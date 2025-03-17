@@ -1,4 +1,4 @@
-window.initGrid = function() {
+window.initProxyGroupsGrid = function() {
     let timer = null;
     let resizeColumn = false;
     let showLoader = true;
@@ -9,32 +9,56 @@ window.initGrid = function() {
         let { access_token, token_type } = token;
 
         var popup;
-        autoFitColumn = function (grid) {
-            setTimeout(function () {
-                // grid.autoFitColumn('id');
-                grid.autoFitColumn('name');
-                grid.autoFitColumn('login');
-                grid.autoFitColumn('balance');
-                grid.autoFitColumn('balance_lock');
-                grid.autoFitColumn('is_superuser');
-                grid.autoFitColumn('connections');
-            });
-        };
 
         stripFunnyChars = function (value) {
             return (value+'').replace(/[\x09-\x10]/g, '') ? value : '';
         }
 
-        $('#numbers-grid').kendoGrid({
+        $('#proxy-groups-grid').kendoGrid({
             dataSource: {
                 transport: {
                     read: {
-                        url: `http://${api_base_url}/api/v1/numbers/`,
+                        url: `http://${api_base_url}/api/v1/proxy_groups/`,
                         type: 'GET',
                         beforeSend: function (request) {
                             request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
                         },
                         dataType: 'json',
+                    },
+                    create: {
+                        url: `http://${api_base_url}/api/v1/proxy_groups/`,
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        beforeSend: function (request) {
+                            request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
+                        },
+                    },
+                    update: {
+                        url: function (options) {
+                            console.log(options);
+                            return `http://${api_base_url}/api/v1/proxy_groups/${options.id}`;
+                        },
+
+                        type: 'PUT',
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        beforeSend: function (request) {
+                            request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
+                        },
+                    },
+                    destroy: {
+                        url: function (options) {
+                            console.log(options);
+                            return `http://${api_base_url}/api/v1/proxy_groups/${options.id}`;
+                        },
+
+                        type: 'DELETE',
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        beforeSend: function (request) {
+                            request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
+                        },
                     },
                     // parameterMap: function (options, type) {
                     //     return kendo.stringify(options);
@@ -72,16 +96,11 @@ window.initGrid = function() {
                     model: {
                         id: 'id',
                         fields: {
-                            id: { type: 'number',},
-                            number: {type: 'string'},
-                            service_alias: {type: 'string'},
-                            api_key: {type: 'string'},
-                            device_ext_id: {type: 'string'},
-                            proxy: {type: 'string'},
-                            info_1: {type: 'string'},
-                            info_2: {type: 'string'},
-                            info_3: {type: 'string'},
-                            timestamp: { type: 'date', editable: false },
+                            name: {
+                                type: 'string',
+                                editable: true
+                            },
+                            actions: { type: 'object', editable: false },
                         },
                     },
                 },
@@ -97,6 +116,34 @@ window.initGrid = function() {
             selectable: 'multiple, row',
             persistSelection: true,
             sortable: true,
+            edit: function (e) {
+                form.data('kendoForm').setOptions({
+                    formData: e.model,
+                });
+                popup.setOptions({
+                    title: e.model.id ? 'Edit Proxy Group' : 'New Proxy Group',
+                });
+                popup.center();
+            },
+            editable: {
+                mode: 'popup',
+                template: kendo.template($('#proxy-groups-popup-editor').html()),
+                window: {
+                    width: 480,
+                    maxHeight: '90%',
+                    animation: false,
+                    appendTo: '#app-root',
+                    visible: false,
+                    open: function (e) {
+                        form = showProxyGroupsEditForm();
+                        popup = e.sender;
+                        popup.center();
+                    },
+                },
+            },
+            save: function (e) {
+
+            },
             dataBinding: function (e) {
                 clearTimeout(timer);
             },
@@ -140,18 +187,13 @@ window.initGrid = function() {
                 refresh: true,
                 pageSizes: [100, 250, 500],
             },
-            change: function (e) {},
-            excel: {
-                fileName: 'o3go_numbers.xlsx',
-                allPages: true,
-                filterable: true
-            },
-            excelExport: function(e){
-                var sheet = e.workbook.sheets[0];
-                for (var i = 0; i < sheet.rows.length; i++) {
-                    for (var ci = 0; ci < sheet.rows[i].cells.length; ci++) {
-                        sheet.rows[i].cells[ci].value = stripFunnyChars(sheet.rows[i].cells[ci].value)
-                    }
+            change: function (e) {
+                let toolbar = $('#proxy-groups-toolbar').data('kendoToolBar');
+                let rows = this.select();
+                if (rows.length > 0) {
+                    toolbar.show($('#delete'));
+                } else {
+                    toolbar.hide($('#delete'));
                 }
             },
             columns: [
@@ -160,10 +202,11 @@ window.initGrid = function() {
                     title: '#',
                     // width: 33,
                     filterable: false,
+                    exportable: { excel: true }
                 },
                 {
-                    field: 'number',
-                    title: 'Number',
+                    field: 'name',
+                    title: 'Name',
                     filterable: {
                         cell: {
                             inputWidth: 0,
@@ -173,113 +216,36 @@ window.initGrid = function() {
                     },
                 },
                 {
-                    field: 'service_alias',
-                    title: 'Service',
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'api_key',
-                    title: 'API Key',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'device_ext_id',
-                    title: 'Devicce ID',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'setting_group_id',
-                    title: 'Setting Group',
+                    field: 'count',
+                    title: 'Count',
                     // width: 33,
                     filterable: false,
                     template: (obj) => {
-                        if (obj.setting_group) {
-                            return obj.setting_group.name ? obj.setting_group.name : obj.setting_group.id;
+                        if (obj.proxies !== undefined) {
+                            return obj.proxies.split("\n").length;
                         }
-                        return "";
+                        return 0
                     }
                 },
                 {
-                    field: 'proxy',
-                    title: 'Proxy',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
+                    command: [
+                        {
+                            name: 'edit',
+                            iconClass: {
+                                edit: 'k-icon k-i-edit',
+                                update: '',
+                                cancel: '',
+                            },
+                            text: {
+                                edit: '',
+                                update: 'Save',
+                                cancel: 'Cancel',
+                            },
                         },
-                    },
-                },
-                {
-                    field: 'info_1',
-                    title: 'Info 1',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'info_2',
-                    title: 'Info 2',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'info_3',
-                    title: 'Info 3',
-                    // width: 33,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'eq',
-                        },
-                    },
-                },
-                {
-                    field: 'timestamp',
-                    title: 'Timestamp',
-                    // width: 33,
-                    filterable: false,
-                    // filterable: {
-                    //     cell: {
-                    //         inputWidth: 0,
-                    //         showOperators: true,
-                    //         operator: 'eq',
-                    //     },
-                    // },
-                    format: '{0: yyyy-MM-dd HH:mm:ss}',
+                        { name: 'destroy', text: '' },
+                    ],
+                    title: '',
+                    // width: 86,
                 },
                 {},
             ],
@@ -301,7 +267,7 @@ window.initGrid = function() {
             }
         };
 
-        $('#numbers-grid').on('dblclick', "td[role='gridcell']", function (e) {
+        $('#proxy-groups-grid').on('dblclick', "td[role='gridcell']", function (e) {
             var text = $(this).find('.text');
             if (text.length) text.selectText();
             else $(this).selectText();
@@ -312,11 +278,12 @@ window.initGrid = function() {
                 selectedDataItems = [];
                 selectedItemIds = [];
                 selectedItemImsi = [];
-                $('#numbers-grid').data('kendoGrid').clearSelection();
+                $('#proxy-groups-grid').data('kendoGrid').clearSelection();
+                $('#proxy-groups-toolbar').data('kendoToolBar').hide($('#delete'));
             }
         });
     } catch (error) {
         console.warn(error);
     }
-    window.optimize_grid(['#numbers-grid']);
+    window.optimize_grid(['#proxy-groups-grid']);
 }

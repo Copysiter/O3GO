@@ -496,3 +496,20 @@ td[role='gridcell'] .badge:first-child {
 .k-form-field .k-colorpicker {
     width: 100% !important;
 }
+
+.k-tabstrip-item.k-state-active {
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    border-bottom: none !important;
+}
+.k-tabstrip-item.k-state-active .k-link {
+    background: #fafafa !important;
+}
+.k-tabstrip-content:focus, .k-tabstrip-content.k-state-focused, .k-tabstrip > .k-content:focus, .k-tabstrip > .k-content.k-state-focused {
+    outline: none !important;
+}
+.k-tabstrip-content, .k-tabstrip > .k-content {
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+.k-tabstrip-items-wrapper {
+    border-color: transparent !important;
+}

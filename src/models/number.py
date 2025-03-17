@@ -20,6 +20,8 @@ class Number(Base):
                            ForeignKey('service.alias', ondelete='CASCADE'))
     device_ext_id = Column(String,
                            ForeignKey('device.ext_id', ondelete='CASCADE'))
+    setting_group_id = Column(BigInteger,
+                           ForeignKey('setting_group.id', ondelete='CASCADE'))
     proxy = Column(String, index=True)
     timestamp = Column(
         DateTime, nullable=False, default=datetime.utcnow, index=True)
@@ -27,4 +29,5 @@ class Number(Base):
     info_2 = Column(String, index=True)
     info_3 = Column(String, index=True)
 
+    setting_group = relationship('SettingGroup', back_populates='numbers', lazy='joined')
     regs = relationship('Reg', back_populates='number', lazy='joined')

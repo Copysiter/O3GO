@@ -51,6 +51,14 @@ $(document).ready(function () {
     </a>
     </li>
     <li>
+    <a href='/settings/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'settings' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='settings-icon'>
+    <span><i class='mdi mdi-tune-vertical fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='settings'>Settings</span>
+    </a>
+    </li>
+    <li>
     <a href='/users/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'users' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='reports-icon'>
@@ -93,6 +101,14 @@ $(document).ready(function () {
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='numbers'>Numbers</span>
     </a>
     </li>
+    <li>
+    <a href='/settings/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'settings' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='settings-icon'>
+    <span><i class='mdi mdi-tune-vertical fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='settings'>Settings</span>
+    </a>
+    </li>
     </ul>`;
 
     if (window.isAuth) {
@@ -133,7 +149,7 @@ $(document).ready(function () {
                 swipeToOpen: false,
                 //template: user === 'Root' ? drawerRootTemplate : drawerUserTemplate,
                 template: is_superuser ? drawerRootTemplate : drawerUserTemplate,
-                itemClick: function(e) {            
+                itemClick: function(e) {
                     shouldPrevent = true;
                 },
                 show: function (e) {

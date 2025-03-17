@@ -1,14 +1,10 @@
-from typing import TYPE_CHECKING
 from datetime import datetime
 
-from sqlalchemy import Column, ForeignKey, Integer, BigInteger, String, DateTime  # noqa
+from sqlalchemy import Column, ForeignKey, Integer, BigInteger, String, DateTime, text, desc  # noqa
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.associationproxy import AssociationProxy
 
 from db.base_class import Base  # noqa
-
-# if TYPE_CHECKING:
-#     from .reg import Reg  # noqa: F401
 
 
 class ProxyApiKeys(Base):
@@ -20,9 +16,27 @@ class ProxyApiKeys(Base):
     proxy = relationship('Proxy', back_populates='keys')
 
 
+class ProxyGroup(Base):
+    id = Column(BigInteger, primary_key=True, index=True)
+    name = Column(String, index=True)
+
+    proxies = relationship(
+        'Proxy',
+        back_populates='group',
+        cascade='all, delete-orphan',
+        order_by='asc(Proxy.url)',
+        lazy='joined'
+    )
+    values = relationship(
+        'SettingValue',
+        back_populates='proxy_group',
+        cascade='all, delete-orphan'
+    )
+
 class Proxy(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     name = Column(String, index=True)
+    group_id = Column(BigInteger, ForeignKey('proxy_group.id', ondelete='CASCADE'))
     url = Column(String, nullable=False, unique=True, index=True)
     good_count = Column(Integer, default=0)
     bad_count = Column(Integer, default=0)
@@ -40,7 +54,14 @@ class Proxy(Base):
     # regs = relationship('Reg', back_populates='number', lazy='joined')
 
     keys = relationship(
-        'ProxyApiKeys', back_populates='proxy', lazy='joined',
-        cascade='save-update, merge, delete, delete-orphan'
+        'ProxyApiKeys',
+        back_populates='proxy',
+        cascade='save-update, merge, delete, delete-orphan',
+        lazy='joined'
+    )
+    group = relationship(
+        'ProxyGroup',
+        back_populates='proxies',
+        lazy='joined'
     )
     api_keys = AssociationProxy('keys', 'api_key')

@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from .reg import Reg
+from .setting import SettingGroup
 
 
 # Shared properties
@@ -12,6 +13,7 @@ class NumberBase(BaseModel):
     service_alias: Optional[str] = None
     proxy: Optional[str] = None
     device_ext_id: Optional[str] = None
+    setting_group_id: Optional[int] = None
     api_key: str
     info_1: Optional[str] = None
     info_2: Optional[str] = None
@@ -41,6 +43,7 @@ class NumberInDBBase(NumberBase):
 # Properties to return to client
 class Number(NumberInDBBase):
     regs: List[Reg]
+    setting_group: Optional[SettingGroup]
 
 
 class NumberInDB(NumberInDBBase):

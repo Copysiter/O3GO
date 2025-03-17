@@ -1,12 +1,13 @@
 ﻿from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 
 # Shared properties
 class ProxyBase(BaseModel):
     name: Optional[str] = None
+    group_id: Optional[int] = None
     url: Optional[str] = None
     good_count: Optional[int] = None
     bad_count: Optional[int] = None
@@ -41,7 +42,10 @@ class ProxyInDBBase(ProxyBase):
 
 # Additional properties to return via API
 class Proxy(ProxyInDBBase):
-    pass
+    group: Optional['ProxyGroup'] = None
+
+    class Config:
+        from_attributes = True
 
 
 # Additional properties stored in DB

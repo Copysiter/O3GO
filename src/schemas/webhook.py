@@ -8,6 +8,7 @@ from .user import User
 # Shared properties
 class WebhookRequest(BaseModel):
     api_key: Optional[str] = None
+    setting_group_id: Optional[int] = None
     device_id: Optional[str] = None
     root: Optional[bool] = None
     operator: Optional[str] = None
