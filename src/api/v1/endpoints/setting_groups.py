@@ -30,8 +30,9 @@ def to_dict(setting_group: models.SettingGroup) -> dict:
             case schemas.setting.Type.BOOLEAN:
                 value = item.bool_val
             case schemas.setting.Type.PROXY:
-                setting_group[f'{item.setting.key}_name'] = item.proxy_group.name
-                value = item.proxy_group_id
+                setting_group[f'{item.setting.key}_name'] = \
+                    item.proxy_group.name if item.proxy_group else ''
+                value = item.proxy_group_id or None
         setting_group[item.setting.key] = value
     setting_group.update({'api_keys': api_keys})
     return setting_group
@@ -51,7 +52,7 @@ async def get_values(
             )
             match setting.type:
                 case schemas.setting.Type.TEXT:
-                    setting_value.str_val = value
+                    setting_value.str_val = value or None
                 case schemas.setting.Type.INTEGER:
                     setting_value.int_val = value
                 case schemas.setting.Type.BOOLEAN:
@@ -59,7 +60,7 @@ async def get_values(
                 case schemas.setting.Type.DROPDOWN:
                     setting_value.str_val = value
                 case schemas.setting.Type.PROXY:
-                    setting_value.proxy_group_id = value
+                    setting_value.proxy_group_id = value or None
             values.append(setting_value)
     return values
 
