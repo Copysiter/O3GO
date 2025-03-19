@@ -7,6 +7,11 @@ function showEditForm(model) {
         buttonsTemplate: '',
         items: [
             {
+                field: 'name',
+                label: 'Name',
+                colSpan: 12,
+            },
+            {
                 field: 'key',
                 label: 'Key',
                 colSpan: 6,

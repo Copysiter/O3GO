@@ -22,6 +22,7 @@ class SettingGroupApiKeys(Base):
 class Setting(Base):
     """Справочник параметров (настроек)"""
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    name = Column(String(255))
     key = Column(String(255), nullable=False, index=True, unique=True)
     type = Column(SmallInteger, nullable=False)
     description = Column(Text, nullable=True)
@@ -44,9 +45,10 @@ class Setting(Base):
 class SettingOption(Base):
     """Вариант значения параметра, если тип dropdown"""
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+    name = Column(String(255))
+    value = Column(String(255), nullable=False)
     setting_id = Column(
         BigInteger, ForeignKey('setting.id', ondelete='CASCADE'))
-    value = Column(String(255), nullable=False)
 
     setting = relationship('Setting', back_populates='options')
 

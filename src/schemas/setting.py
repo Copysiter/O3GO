@@ -19,8 +19,9 @@ class Type(Enum):
 
 class SettingOption(BaseModel):
     id: Optional[int] = None
-    setting_id: int
+    name: Optional[str] = None
     value: str
+    setting_id: int
 
     class Config:
         from_attributes = True
@@ -28,6 +29,7 @@ class SettingOption(BaseModel):
 
 # Shared properties
 class SettingBase(BaseModel):
+    name: Optional[str] = None
     key: Optional[str] = None
     type: Optional[int] = None
     description: Optional[str] = None
@@ -59,7 +61,9 @@ class Setting(SettingInDBBase):
 
     @field_serializer("options")
     def serialize_options(self, options: List[SettingOption]) -> str:
-        return "\n".join(option.value for option in options)
+        return '\n'.join(
+            f'{option.name} | {option.value}' for option in options
+        )
 
 
 # Additional properties stored in DB

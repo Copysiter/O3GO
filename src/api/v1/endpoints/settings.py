@@ -54,14 +54,14 @@ async def create_setting(
         )
     options = []
     if setting_in.type == schemas.setting.Type.DROPDOWN:
-        options = setting_in.options.split()
+        for row in setting_in.options.split('\n'):
+            options.append(list(map(lambda x: x.strip(), row.split('|'))))
     setting_in.options = [
-        models.SettingOption(value=option) for option in options
+        models.SettingOption(name=row[0], value=row[-1]) for row in options
     ]
     setting = await crud.setting.create(
         db=db, obj_in=setting_in
     )
-    # setting.options = [option.value for option in setting.options]
 
     return setting
 
@@ -82,9 +82,10 @@ async def update_setting(
         raise HTTPException(status_code=404, detail='Setting not found')
     options = []
     if setting_in.type == schemas.setting.Type.DROPDOWN:
-        options = setting_in.options.split()
+        for row in setting_in.options.split('\n'):
+            options.append(list(map(lambda x: x.strip(), row.split('|'))))
     setting_in.options = [
-        models.SettingOption(value=option) for option in options
+        models.SettingOption(name=row[0], value=row[-1]) for row in options
     ]
     setting = await crud.setting.update(db=db, db_obj=setting, obj_in=setting_in)
 

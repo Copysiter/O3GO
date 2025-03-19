@@ -33,7 +33,7 @@ window.initSettingGroupsGrid = function() {
                     case 0:
                         form_items.push({
                             field: objKey,
-                            label: `${obj.description ? obj.description : objKey}:`,
+                            label: `${obj.name ? obj.name : (obj.description ? obj.description : objKey)}:`,
                             colSpan: 12,
                         });
                         field = {
@@ -44,7 +44,7 @@ window.initSettingGroupsGrid = function() {
                     case 1:
                         form_items.push({
                             field: objKey,
-                            label: `${obj.description ? obj.description : objKey}:`,
+                            label: `${obj.name ? obj.name : (obj.description ? obj.description : objKey)}:`,
                             editor: 'NumericTextBox',
                             editorOptions: {
                                 format: "n0"
@@ -61,7 +61,7 @@ window.initSettingGroupsGrid = function() {
                             field: `${objKey}_label`,
                             colSpan: 6,
                             label: false,
-                            editor: `<div class='mt-3'>${obj.description ? obj.description : objKey}:</div>`,
+                            editor: `<div class='mt-3'>${obj.name ? obj.name : (obj.description ? obj.description : objKey)}:</div>`,
                         });
                         form_items.push({
                             field: objKey,
@@ -78,15 +78,22 @@ window.initSettingGroupsGrid = function() {
                         }
                     break;
                     case 3:
+                        let options = [];
+                        obj.options.split("\n").forEach((option) => {
+                            let row = option.split("|");
+                            options.push({
+                                text: row[0].trim(), value: row[row.length - 1].trim()
+                            });
+                        });
                         form_items.push({
                             field: objKey,
-                            label: `${obj.description ? obj.description : objKey}:`,
+                            label: `${obj.name ? obj.name : (obj.description ? obj.description : objKey)}:`,
                             colSpan: 12,
                             editor: "DropDownList",
                             editorOptions: {
-                                dataSource: obj.options.split("\n"),
-                                // dataTextField: "text",
-                                // dataValueField: "value",
+                                dataSource: options,
+                                dataTextField: "text",
+                                dataValueField: "value",
                                 valuePrimitive: true,
                             }
                         });
@@ -98,7 +105,7 @@ window.initSettingGroupsGrid = function() {
                     case 4:
                         form_items.push({
                             field: objKey,
-                            label: `${obj.description ? obj.description : objKey}:`,
+                            label: `${obj.name ? obj.name : (obj.description ? obj.description : objKey)}:`,
                             editor: 'DropDownList',
                             editorOptions: {
                                 dataSource: new kendo.data.DataSource({
@@ -132,7 +139,7 @@ window.initSettingGroupsGrid = function() {
                 }
                 let column = {
                     field: objKey,
-                    title: objKey,
+                    title: `${obj.name ? obj.name : objKey}`,
                     sortable: false,
                     filterable: false,
                 }

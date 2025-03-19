@@ -94,6 +94,10 @@ window.initGrid = function() {
                         id: 'id',
                         fields: {
                             id: { type: 'number', editable: false },
+                            name: {
+                                type: 'string',
+                                editable: true
+                            },
                             key: {
                                 type: 'string',
                                 editable: true,
@@ -229,6 +233,17 @@ window.initGrid = function() {
                     title: '#',
                     // width: 33,
                     filterable: false
+                },
+                {
+                    field: 'name',
+                    title: 'Name',
+                    filterable: {
+                        cell: {
+                            inputWidth: 0,
+                            showOperators: true,
+                            operator: 'eq',
+                        },
+                    }
                 },
                 {
                     field: 'key',
