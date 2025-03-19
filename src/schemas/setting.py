@@ -62,7 +62,7 @@ class Setting(SettingInDBBase):
     @field_serializer("options")
     def serialize_options(self, options: List[SettingOption]) -> str:
         return '\n'.join(
-            f'{option.name} | {option.value}' for option in options
+            f'{option.name or option.value} | {option.value}' for option in options
         )
 
 
