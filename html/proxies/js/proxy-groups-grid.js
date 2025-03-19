@@ -222,7 +222,7 @@ window.initProxyGroupsGrid = function() {
                     filterable: false,
                     template: (obj) => {
                         if (obj.proxies !== undefined) {
-                            return obj.proxies.split("\n").length;
+                            return (obj.proxies && obj.proxies.trim() !== "" ? obj.proxies.split("\n").length : 0);
                         }
                         return 0
                     }

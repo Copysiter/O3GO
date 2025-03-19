@@ -60,11 +60,14 @@ async def create_proxy_group(
     """
     Create new proxy group.
     """
+    proxies = []
     if proxy_group_in.proxies:
-        proxy_group_in.proxies = [
-            models.Proxy(url=url)
-            for url in proxy_group_in.proxies.split()
-        ]
+        for url in proxy_group_in.proxies.split():
+            proxy = await crud.proxy.get_by(db=db, url=url)
+            if not proxy:
+                proxy = models.Proxy(url=url)
+            proxies.append(proxy)
+    proxy_group_in.proxies = proxies
     proxy_group = await crud.proxy_group.create(
         db=db, obj_in=proxy_group_in
     )
@@ -90,7 +93,10 @@ async def update_proxy_group(
             if url in proxy_urls:
                 proxies.append(proxy_urls[url])
             else:
-                proxies.append(models.Proxy(url=url))
+                proxy = await crud.proxy.get_by(db=db, url=url)
+                if not proxy:
+                    proxy = models.Proxy(url=url)
+                proxies.append(proxy)
     proxy_group_in.proxies = proxies
     if not proxy_group:
         raise HTTPException(status_code=404, detail='Proxy Group not found')
