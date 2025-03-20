@@ -93,7 +93,7 @@ window.initGrid = function() {
                     model: {
                         id: 'id',
                         fields: {
-                            id: { type: 'number', editable: false },
+                            order: { type: 'number', editable: true },
                             name: {
                                 type: 'string',
                                 editable: true
@@ -229,7 +229,7 @@ window.initGrid = function() {
                     filterable: false,
                 },
                 {
-                    field: 'id',
+                    field: 'order',
                     title: '#',
                     // width: 33,
                     filterable: false
@@ -268,6 +268,30 @@ window.initGrid = function() {
                     },
                     template: (obj) => {
                         return TYPES_MAP[obj.type];
+                    }
+                },
+                {
+                    field: 'default',
+                    title: 'Default Value',
+                    filterable: false,
+                    template: (obj) => {
+                        switch (obj.type) {
+                            case 0:
+                                return obj.str_default || ''
+                            break;
+                            case 1:
+                                return obj.int_default || ''
+                            break;
+                            case 2:
+                                return obj.bool_default || ''
+                            break;
+                            case 3:
+                                return obj.str_default || ''
+                            break;
+                            case 4:
+                                return obj.proxy_group || ''
+                            break;
+                        }
                     }
                 },
                 {

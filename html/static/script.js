@@ -1,14 +1,6 @@
 $(document).ready(function () {
-    // window.storageToken = new kendo.data.DataSource({
-    //     offlineStorage: {
-    //         getItem: function () {
-    //             return JSON.parse(sessionStorage.getItem('token'));
-    //         },
-    //         setItem: function (item) {
-    //             sessionStorage.setItem('token', JSON.stringify(item));
-    //         },
-    //     },
-    // });
+    kendo.cultures.current.numberFormat[","] = '';
+
     const drawerRootTemplate = `<ul>
     <li>
     <a href='/report/' data-role='drawer-item' class='${

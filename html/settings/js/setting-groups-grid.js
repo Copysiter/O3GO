@@ -25,10 +25,16 @@ window.initSettingGroupsGrid = function() {
             },
         }).done(function (result) {
             let data = result.data;
-            console.log(data)
+            let count = 1;
             data.forEach((obj) => {
                 const objKey = obj.key
                 let field;
+                form_items.push({
+                    field: `sep${count}`,
+                    colSpan: 12,
+                    label: false,
+                    editor: "<div class='separator mx-n15 mt-n3'></div>",
+                });
                 switch (obj.type) {
                     case 0:
                         form_items.push({
@@ -39,6 +45,7 @@ window.initSettingGroupsGrid = function() {
                         field = {
                             type: 'string',
                             editable: true,
+                            defaultValue: obj.str_default
                         };
                     break;
                     case 1:
@@ -51,9 +58,13 @@ window.initSettingGroupsGrid = function() {
                             },
                             colSpan: 12
                         });
+                        console.log('int_default:', obj.int_default);
+                        console.log('obj.setting:', obj.setting);
+                        console.log('obj:', obj);
                         field = {
                             type: 'number',
                             editable: true,
+                            defaultValue: obj.int_default
                         }
                     break;
                     case 2:
@@ -75,6 +86,7 @@ window.initSettingGroupsGrid = function() {
                         field = {
                             type: 'boolean',
                             editable: true,
+                            defaultValue: obj.bool_default
                         }
                     break;
                     case 3:
@@ -100,6 +112,7 @@ window.initSettingGroupsGrid = function() {
                         field = {
                             type: 'string',
                             editable: true,
+                            defaultValue: obj.str_default
                         }
                     break;
                     case 4:
@@ -128,12 +141,14 @@ window.initSettingGroupsGrid = function() {
                                 downArrow: true,
                                 animation: false,
                                 autoClose: false,
+                                value: 4
                             },
                             colSpan: 12,
                         });
                         field = {
                             type: 'number',
                             editable: true,
+                            defaultValue: obj.proxy_group_default
                         }
                     break;
                 }
@@ -148,26 +163,10 @@ window.initSettingGroupsGrid = function() {
                         return obj[objKey + '_name'];
                     }
                 }
-                console.log(column.template);
                 setting_columns.push(column);
                 setting_fields[objKey] = field;
+                count ++;
             });
-
-            console.log(Object.assign({}, {
-                id: { type: 'number', editable: false },
-                name: {
-                    type: 'string',
-                    editable: true,
-                    validation: { required: true },
-                },
-                timestamp: {
-                    type: 'date'
-                },
-                description: {
-                    type: 'string',
-                    editable: true,
-                }
-            }, setting_fields));
 
             $('#setting-groups-grid').kendoGrid({
                 dataSource: {
@@ -256,6 +255,11 @@ window.initSettingGroupsGrid = function() {
                                     type: 'string',
                                     editable: true,
                                     validation: { required: true },
+                                },
+                                check_period: {
+                                    type: 'number',
+                                    defaultValue: 1800,
+                                    editable: true
                                 },
                                 timestamp: {
                                     type: 'date'
@@ -359,7 +363,6 @@ window.initSettingGroupsGrid = function() {
                     {
                         field: 'id',
                         title: '#',
-                        // width: 33,
                         filterable: false
                     },
                     {
@@ -372,24 +375,14 @@ window.initSettingGroupsGrid = function() {
                                 operator: 'eq',
                             },
                         }
-                    }].concat(setting_columns).concat([{
-                        field: 'timestamp',
-                        title: 'Timestamp',
-                        format: '{0: yyyy-MM-dd HH:mm:ss}',
+                    },
+                    {
+                        field: 'check_period',
+                        title: 'Check Period',
                         filterable: false
                     },
                     {
-                        field: 'description',
-                        title: 'Description',
-                        filterable: {
-                            cell: {
-                                inputWidth: 0,
-                                showOperators: true,
-                                operator: 'eq',
-                            },
-                        }
-                    },
-                    {
+                        title: '',
                         command: [
                             {
                                 name: 'edit',
@@ -406,8 +399,22 @@ window.initSettingGroupsGrid = function() {
                             },
                             { name: 'destroy', text: '' },
                         ],
-                        title: '',
-                        // width: 86,
+                    }].concat(setting_columns).concat([{
+                        field: 'timestamp',
+                        title: 'Timestamp',
+                        format: '{0: yyyy-MM-dd HH:mm:ss}',
+                        filterable: false
+                    },
+                    {
+                        field: 'description',
+                        title: 'Description',
+                        filterable: {
+                            cell: {
+                                inputWidth: 0,
+                                showOperators: true,
+                                operator: 'eq',
+                            },
+                        }
                     },
                     {},
                 ]),

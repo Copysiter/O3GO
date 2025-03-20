@@ -9,7 +9,16 @@ function showSettingGroupsEditForm(model) {
             {
                 field: 'name',
                 label: 'Name',
-                colSpan: 12,
+                colSpan: 6,
+            },
+            {
+                field: 'check_period',
+                label: 'Check Period (sec.)',
+                editor: 'NumericTextBox',
+                editorOptions: {
+                    format: "n0"
+                },
+                colSpan: 6
             },
             {
                 field: 'api_keys',
@@ -50,7 +59,7 @@ function showSettingGroupsEditForm(model) {
             },
         ].concat(form_items).concat([
             {
-                field: 'sep1',
+                field: `sep${form_items.length + 1}`,
                 colSpan: 12,
                 label: false,
                 editor: "<div class='separator mx-n15 mt-n3'></div>",
@@ -66,7 +75,7 @@ function showSettingGroupsEditForm(model) {
                 colSpan: 12,
             },
             {
-                field: 'sep2',
+                field: `sep${form_items.length + 2}`,
                 colSpan: 12,
                 label: false,
                 editor: "<div class='separator mx-n15 mt-n3'></div>",
@@ -87,7 +96,7 @@ function showSettingGroupsEditForm(model) {
                 colSpan: 6,
             },
             {
-                field: 'sep3',
+                field: `sep${form_items.length + 3}`,
                 colSpan: 12,
                 label: false,
                 editor: "<div class='separator mx-n15 mt-n3'></div>",

@@ -2,7 +2,7 @@ from typing import Any, List  # noqa
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status  # noqa
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy import select, func, text
 from sqlalchemy import asc, desc
 
 from api import deps  # noqa
@@ -16,27 +16,17 @@ async def get_settings(
     *,
     db: AsyncSession = Depends(deps.get_db),
     api_key: str,
-    period: str = '30m',
     _=Depends(deps.check_api_key)
 ) -> Any:
     """Get settings"""
-    match period[-1].lower():
-        case 's':
-            ts = datetime.utcnow() - timedelta(seconds=int(period[:-1]))
-        case 'm':
-            ts = datetime.utcnow() - timedelta(minutes=int(period[:-1]))
-        case 'h':
-            ts = datetime.utcnow() - timedelta(hours=int(period[:-1]))
-        case 'd':
-            ts = datetime.utcnow() - timedelta(days=int(period[:-1]))
-        case _:
-            ts = datetime.utcnow() - timedelta(seconds=int(period[:-1]))
     stmt = (
         select(models.SettingGroup).join(
             models.Number,
             models.Number.setting_group_id == models.SettingGroup.id
         ).where(
-            models.Number.timestamp > ts
+            models.Number.timestamp > func.now() - text(
+                "make_interval(secs := coalesce(setting_group.check_period, 0))"
+            )
         ).where(
             models.SettingGroupApiKeys.api_key == api_key
         ).order_by(

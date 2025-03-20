@@ -25,7 +25,9 @@ async def read_settings(
     Retrieve settings.
     """
     if not orders:
-        orders = [{'field': 'id', 'dir': 'desc'}]
+        orders = [
+            {'field': 'order', 'dir': 'asc'}, {'field': 'id', 'dir': 'asc'}
+        ]
     settings = await crud.setting.get_rows(
         db, filters=filters, orders=orders, skip=skip, limit=limit
     )

@@ -25,9 +25,19 @@ class Setting(Base):
     name = Column(String(255))
     key = Column(String(255), nullable=False, index=True, unique=True)
     type = Column(SmallInteger, nullable=False)
+    proxy_group_default = Column(
+        BigInteger, ForeignKey('proxy_group.id', ondelete='CASCADE'))
+    str_default = Column(String, nullable=True)
+    int_default = Column(Integer, nullable=True)
+    bool_default = Column(Boolean, nullable=True)
     description = Column(Text, nullable=True)
+    order = Column(Integer, index=True)
     is_active = Column(Boolean, default=True, index=True)
 
+    proxy_group = relationship(
+        'ProxyGroup',
+        back_populates='settings'
+    )
     options = relationship(
         'SettingOption',
         back_populates='setting',
@@ -45,8 +55,8 @@ class Setting(Base):
 class SettingOption(Base):
     """Вариант значения параметра, если тип dropdown"""
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    name = Column(String(255))
-    value = Column(String(255), nullable=False)
+    name = Column(String(255), index=True)
+    value = Column(String(255), nullable=False, index=True)
     setting_id = Column(
         BigInteger, ForeignKey('setting.id', ondelete='CASCADE'))
 
@@ -56,10 +66,11 @@ class SettingOption(Base):
 class SettingGroup(Base):
     """Группа настроек (конкретные значения параметров)"""
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    name = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=False, index=True)
+    check_period = Column(Integer, index=True)
     description = Column(Text, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
     is_active = Column(Boolean, default=True, index=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
 
     values = relationship(
         'SettingValue',

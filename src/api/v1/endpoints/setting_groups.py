@@ -110,7 +110,9 @@ async def create_setting_group(
     ]
     setting_group = await crud.setting_group.create(db, obj_in={
         'name': setting_group_in.name,
+        'check_period': setting_group_in.check_period,
         'description': setting_group_in.description,
+        'is_active': setting_group_in.is_active,
         'values': values,
         'keys': keys
     })
@@ -140,6 +142,7 @@ async def update_setting_group(
     setting_group = await crud.setting_group.update(
         db=db, db_obj=setting_group, obj_in={
             'name': setting_group_in.name,
+            'check_period': setting_group_in.check_period,
             'description': setting_group_in.description,
             'is_active': setting_group_in.is_active,
             'values': values,

@@ -32,8 +32,13 @@ class SettingBase(BaseModel):
     name: Optional[str] = None
     key: Optional[str] = None
     type: Optional[int] = None
+    proxy_group_default: Optional[int] = None
+    str_default: Optional[str] = None
+    int_default: Optional[int] = None
+    bool_default: Optional[bool] = None
     description: Optional[str] = None
     options: Optional[str] = ''
+    order: Optional[int] = None
     is_active: Optional[bool] = None
 
 
@@ -94,6 +99,7 @@ class SettingValue(BaseModel):
 
 class SettingGroupBase(BaseModel):
     name: Optional[str] = None
+    check_period: Optional[int] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
 

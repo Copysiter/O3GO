@@ -27,6 +27,11 @@ class ProxyGroup(Base):
         order_by='asc(Proxy.url)',
         lazy='joined'
     )
+    settings = relationship(
+        'Setting',
+        back_populates='proxy_group',
+        cascade='all, delete-orphan'
+    )
     values = relationship(
         'SettingValue',
         back_populates='proxy_group',
