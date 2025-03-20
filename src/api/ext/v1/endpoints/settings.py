@@ -24,11 +24,13 @@ async def get_settings(
             models.Number,
             models.Number.setting_group_id == models.SettingGroup.id
         ).where(
+            models.SettingGroup.is_active == True
+        ).where(
+            models.SettingGroupApiKeys.api_key == api_key
+        ).where(
             models.Number.timestamp > func.now() - text(
                 "make_interval(secs := coalesce(setting_group.check_period, 0))"
             )
-        ).where(
-            models.SettingGroupApiKeys.api_key == api_key
         ).order_by(
             desc(models.Number.timestamp)
         ).limit(1)
