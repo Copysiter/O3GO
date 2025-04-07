@@ -75,6 +75,11 @@ async def get_settings(
                 proxy = s.proxy_group.proxies[0] \
                     if s.proxy_group.proxies else None
                 value = proxy.url if proxy else None
+                if proxy:
+                    proxy.timestamp = datetime.utcnow()
+                    db.add(proxy)
+                    await db.commit()
+                    await db.refresh(proxy)
             case schemas.setting.Type.DROPDOWN:
                 value = s.str_val
         settings[key] = value
