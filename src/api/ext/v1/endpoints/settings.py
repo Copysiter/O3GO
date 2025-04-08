@@ -40,11 +40,13 @@ async def get_settings(
 
     if not setting_group:
         stmt = (
-            select(models.SettingGroup).where(
-                models.SettingGroupApiKeys.api_key == api_key
-            ).join(
+            select(models.SettingGroup).join(
                 models.SettingGroupApiKeys,
                 models.SettingGroup.id == models.SettingGroupApiKeys.group_id
+            ).where(
+                models.SettingGroup.is_active == True
+            ).where(
+                models.SettingGroupApiKeys.api_key == api_key
             ).order_by(
                 asc(models.SettingGroup.timestamp)
             ).limit(1)
