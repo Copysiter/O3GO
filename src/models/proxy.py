@@ -24,8 +24,8 @@ class ProxyGroup(Base):
         'Proxy',
         back_populates='group',
         cascade='all, delete-orphan',
-        order_by='asc(Proxy.timestamp)',
-        lazy='joined'
+        # order_by='asc(Proxy.timestamp)',
+        # lazy='select'
     )
     settings = relationship(
         'Setting',

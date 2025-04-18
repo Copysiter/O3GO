@@ -2,8 +2,7 @@ from typing import Any, List  # noqa
 
 from fastapi import APIRouter, Depends, HTTPException, status  # noqa
 from fastapi.encoders import jsonable_encoder
-from pyasn1.debug import Printer
-from sqlalchemy.orm import class_mapper
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api import deps  # noqa

@@ -37,18 +37,14 @@ async def get_settings(
     result = await db.execute(stmt)
     setting_group = result.scalars().first()
 
-    if not setting_group:
+    if True or not setting_group:
         stmt = (
-            select(models.SettingGroup).join(
-                models.SettingGroupApiKeys,
-                models.SettingGroup.id == models.SettingGroupApiKeys.group_id
-            ).where(
-                models.SettingGroup.is_active == True
-            ).where(
-                models.SettingGroupApiKeys.api_key == api_key
-            ).order_by(
-                asc(models.SettingGroup.timestamp)
-            ).limit(1)
+            select(models.SettingGroup)
+            .join(models.SettingGroupApiKeys)
+            .where(models.SettingGroup.is_active == True)
+            .where(models.SettingGroupApiKeys.api_key == api_key)
+            .order_by(asc(models.SettingGroup.timestamp))
+            .limit(1)
         )
 
         result = await db.execute(stmt)
@@ -73,8 +69,14 @@ async def get_settings(
             case schemas.setting.Type.BOOLEAN:
                 value = s.bool_val
             case schemas.setting.Type.PROXY:
-                proxy = s.proxy_group.proxies[0] \
-                    if s.proxy_group.proxies else None
+                # proxy = s.proxy_group.proxies[0] \
+                #     if s.proxy_group.proxies else None
+                proxy = await db.scalar(
+                    select(models.Proxy)
+                    .where(models.Proxy.group_id == s.proxy_group_id)
+                    .order_by(models.Proxy.timestamp)
+                    .limit(1)
+                )
                 value = proxy.url if proxy else None
                 if proxy:
                     proxy.timestamp = datetime.utcnow()
