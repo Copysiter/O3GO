@@ -20,20 +20,19 @@ async def get_settings(
 ) -> Any:
     """Get settings"""
     stmt = (
-        select(models.SettingGroup).join(
-            models.Number,
-            models.Number.setting_group_id == models.SettingGroup.id
-        ).where(
-            models.SettingGroup.is_active == True
-        ).where(
-            models.SettingGroupApiKeys.api_key == api_key
-        ).where(
-            models.Number.timestamp > func.now() - text(
+        select(models.SettingGroup)
+        .join(models.Number)
+        .join(models.SettingGroup.keys)
+        .where(models.SettingGroup.is_active.is_(True))
+        .where(models.SettingGroupApiKeys.api_key == api_key)
+        .where(
+            models.Number.timestamp >
+            func.now() - text(
                 "make_interval(secs := coalesce(setting_group.check_period, 0))"
             )
-        ).order_by(
-            desc(models.Number.timestamp)
-        ).limit(1)
+        )
+        .order_by(desc(models.Number.timestamp))
+        .limit(1)
     )
     result = await db.execute(stmt)
     setting_group = result.scalars().first()
