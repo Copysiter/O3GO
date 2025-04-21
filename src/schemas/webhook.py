@@ -20,6 +20,9 @@ class WebhookRequest(BaseModel):
     info_1: Optional[str] = None
     info_2: Optional[str] = None
     info_3: Optional[str] = None
+    info_4: Optional[str] = None
+    info_5: Optional[str] = None
+    info_6: Optional[str] = None
 
 
 class WebhookResponse(BaseModel):

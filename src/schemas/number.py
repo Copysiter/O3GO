@@ -18,6 +18,9 @@ class NumberBase(BaseModel):
     info_1: Optional[str] = None
     info_2: Optional[str] = None
     info_3: Optional[str] = None
+    info_4: Optional[str] = None
+    info_5: Optional[str] = None
+    info_6: Optional[str] = None
 
 
 # Properties to receive on number creation
@@ -64,3 +67,6 @@ class NumberFilter(BaseModel):
     where_info_1: Optional[str] = None
     where_info_2: Optional[str] = None
     where_info_3: Optional[str] = None
+    where_info_4: Optional[str] = None
+    where_info_5: Optional[str] = None
+    where_info_6: Optional[str] = None

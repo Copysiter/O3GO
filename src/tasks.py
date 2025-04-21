@@ -106,7 +106,8 @@ async def get_proxy(
 async def get_number(
     db, number: str, setting_group_id: int, api_key: str, proxy: str,
     device_ext_id: str, service_alias: str,
-    info_1: str, info_2: str, info_3: str
+    info_1: str, info_2: str, info_3: str,
+    info_4: str, info_5: str, info_6: str,
 ) -> models.Number:
     number_ = await crud.number.get_by_number(db, number=number)
 
@@ -120,7 +121,10 @@ async def get_number(
             'device_ext_id': device_ext_id,
             'info_1': info_1,
             'info_2': info_2,
-            'info_3': info_3
+            'info_3': info_3,
+            'info_4': info_4,
+            'info_5': info_5,
+            'info_6': info_6
         })
 
     return number_
@@ -159,6 +163,9 @@ async def event_handler(data: schemas.WebhookRequest):
         info_1 = data.get('info_1')
         info_2 = data.get('info_2')
         info_3 = data.get('info_3')
+        info_4 = data.get('info_4')
+        info_5 = data.get('info_5')
+        info_6 = data.get('info_6')
         report_status = data.get('status')
         check_status = report_status in (
             'start', 'number', 'bad', 'code', 'no_code')
@@ -192,7 +199,8 @@ async def event_handler(data: schemas.WebhookRequest):
                 db, number=number, setting_group_id=setting_group_id,
                 api_key=api_key, proxy=proxy_url,
                 device_ext_id=device.ext_id, service_alias=service.alias,
-                info_1=info_1, info_2=info_2, info_3=info_3
+                info_1=info_1, info_2=info_2, info_3=info_3,
+                info_4 = info_4, info_5 = info_5, info_6 = info_6
             )
         
         if not number and device:

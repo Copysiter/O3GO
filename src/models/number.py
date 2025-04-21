@@ -28,6 +28,9 @@ class Number(Base):
     info_1 = Column(String, index=True)
     info_2 = Column(String, index=True)
     info_3 = Column(String, index=True)
+    info_4 = Column(String, index=True)
+    info_5 = Column(String, index=True)
+    info_6 = Column(String, index=True)
 
     setting_group = relationship('SettingGroup', back_populates='numbers', lazy='joined')
     regs = relationship('Reg', back_populates='number', lazy='joined')

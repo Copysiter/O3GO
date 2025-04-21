@@ -268,6 +268,42 @@ window.initGrid = function() {
                     },
                 },
                 {
+                    field: 'info_4',
+                    title: 'Info 4',
+                    // width: 33,
+                    filterable: {
+                        cell: {
+                            inputWidth: 0,
+                            showOperators: true,
+                            operator: 'eq',
+                        },
+                    },
+                },
+                {
+                    field: 'info_5',
+                    title: 'Info 5',
+                    // width: 33,
+                    filterable: {
+                        cell: {
+                            inputWidth: 0,
+                            showOperators: true,
+                            operator: 'eq',
+                        },
+                    },
+                },
+                {
+                    field: 'info_6',
+                    title: 'Info 6',
+                    // width: 33,
+                    filterable: {
+                        cell: {
+                            inputWidth: 0,
+                            showOperators: true,
+                            operator: 'eq',
+                        },
+                    },
+                },
+                {
                     field: 'timestamp',
                     title: 'Timestamp',
                     // width: 33,
