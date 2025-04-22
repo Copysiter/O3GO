@@ -250,7 +250,7 @@ window.initSettingGroupsGrid = function() {
                         model: {
                             id: 'id',
                             fields: Object.assign({}, {
-                                id: { type: 'number', editable: false },
+                                id: { type: 'number', editable: false, nullable: true },
                                 name: {
                                     type: 'string',
                                     editable: true,
@@ -385,6 +385,27 @@ window.initSettingGroupsGrid = function() {
                         title: '',
                         command: [
                             {
+                                name: "copy",
+                                iconClass: 'k-icon k-i-overlap',
+                                text: "",
+                                click: function(e) {
+                                    e.preventDefault();
+
+                                    let grid = this;
+                                    let originalItem = grid.dataItem($(e.currentTarget).closest("tr"));
+                                    let newItem = $.extend({}, originalItem.toJSON());
+                                    delete newItem.id;
+
+                                    let insertedItem = grid.dataSource.insert(0, newItem); // 👈 вставка в начало
+                                    let row = grid.table.find("tr[data-uid='" + insertedItem.uid + "']")
+
+                                    grid.editRow(row);
+                                    grid.select(row);
+
+                                    row[0].scrollIntoView({ behavior: "instant", block: "center" });
+                                }
+                            },
+                            {
                                 name: 'edit',
                                 iconClass: {
                                     edit: 'k-icon k-i-edit',
@@ -395,7 +416,7 @@ window.initSettingGroupsGrid = function() {
                                     edit: '',
                                     update: 'Save',
                                     cancel: 'Cancel',
-                                },
+                                }
                             },
                             { name: 'destroy', text: '' },
                         ],
