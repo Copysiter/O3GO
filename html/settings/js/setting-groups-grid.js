@@ -428,27 +428,6 @@ window.initSettingGroupsGrid = function() {
                                     cancel: 'Cancel',
                                 }
                             },
-                            {
-                                name: "visible",
-                                iconClass: 'k-icon k-i-checkbox-checked',
-                                text: "",
-                                click: function(e) {
-                                    e.preventDefault();
-
-                                    // let grid = this;
-                                    // let originalItem = grid.dataItem($(e.currentTarget).closest("tr"));
-                                    // let newItem = $.extend({}, originalItem.toJSON());
-                                    // delete newItem.id;
-                                    //
-                                    // let insertedItem = grid.dataSource.insert(0, newItem); // 👈 вставка в начало
-                                    // let row = grid.table.find("tr[data-uid='" + insertedItem.uid + "']")
-                                    //
-                                    // grid.editRow(row);
-                                    // grid.select(row);
-                                    //
-                                    // row[0].scrollIntoView({ behavior: "instant", block: "center" });
-                                }
-                            },
                             { name: 'destroy', text: '' },
                         ],
                     }].concat(setting_columns).concat([{
