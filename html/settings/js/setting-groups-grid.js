@@ -350,7 +350,17 @@ window.initSettingGroupsGrid = function() {
                     pageSizes: [100, 250, 500],
                 },
                 change: function (e) {
-
+                    let toolbar = $('#setting-groups-toolbar').data('kendoToolBar');
+                    let rows = this.select();
+                    if (rows.length > 0) {
+                        toolbar.show($('#enable'));
+                        toolbar.show($('#disable'));
+                        toolbar.show($('#delete'));
+                    } else {
+                        toolbar.hide($('#enable'));
+                        toolbar.hide($('#disable'));
+                        toolbar.hide($('#delete'));
+                    }
                 },
                 columns: [
                     {
@@ -416,6 +426,27 @@ window.initSettingGroupsGrid = function() {
                                     edit: '',
                                     update: 'Save',
                                     cancel: 'Cancel',
+                                }
+                            },
+                            {
+                                name: "visible",
+                                iconClass: 'k-icon k-i-checkbox-checked',
+                                text: "",
+                                click: function(e) {
+                                    e.preventDefault();
+
+                                    // let grid = this;
+                                    // let originalItem = grid.dataItem($(e.currentTarget).closest("tr"));
+                                    // let newItem = $.extend({}, originalItem.toJSON());
+                                    // delete newItem.id;
+                                    //
+                                    // let insertedItem = grid.dataSource.insert(0, newItem); // 👈 вставка в начало
+                                    // let row = grid.table.find("tr[data-uid='" + insertedItem.uid + "']")
+                                    //
+                                    // grid.editRow(row);
+                                    // grid.select(row);
+                                    //
+                                    // row[0].scrollIntoView({ behavior: "instant", block: "center" });
                                 }
                             },
                             { name: 'destroy', text: '' },

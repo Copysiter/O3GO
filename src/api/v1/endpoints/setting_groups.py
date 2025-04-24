@@ -3,6 +3,7 @@ from typing import Any, List  # noqa
 from fastapi import APIRouter, Depends, HTTPException, status  # noqa
 from fastapi.encoders import jsonable_encoder
 
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api import deps  # noqa
@@ -117,6 +118,44 @@ async def create_setting_group(
     })
 
     return jsonable_encoder(to_dict(setting_group))
+
+
+@router.post('/delete', response_model=List[schemas.SettingGroup])
+async def delete_proxies(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    data: schemas.SettingGroupIds,
+    # _: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Delete an setting groups.
+    """
+    setting_groups = []
+    for id in data.ids:
+        setting_group = await crud.setting_group.delete(db=db, id=id)
+        setting_groups.append(to_dict(setting_group))
+    return jsonable_encoder(setting_groups)
+
+
+@router.put('/status', response_model=List)
+async def update_status(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    data: schemas.SettingGroupStatusIds,
+    # _: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Update setting groups status.
+    """
+    stmt = (
+        update(models.SettingGroup)
+        .where(models.SettingGroup.id.in_(data.ids))
+        .values(is_active=data.is_active)
+        .returning(models.SettingGroup.id, models.SettingGroup.name)
+    )
+    result = await db.execute(stmt)
+    await db.commit()
+    return result.unique().scalars().all()
 
 
 @router.put('/{id}', response_model=schemas.SettingGroup)

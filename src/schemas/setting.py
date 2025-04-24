@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 from .enum import Enum
 from .proxy_group import ProxyGroup
-from models import SettingGroupApiKeys
 
 
 @dataclass
@@ -146,3 +145,12 @@ class SettingGroupInDB(SettingGroupInDBBase):
 class SettingGroupRows(BaseModel):
     data: List[SettingGroup]
     total: int
+
+
+class SettingGroupIds(BaseModel):
+    ids: List[int]
+
+
+class SettingGroupStatusIds(BaseModel):
+    ids: List[int]
+    is_active: bool

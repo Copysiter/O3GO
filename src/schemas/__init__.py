@@ -12,6 +12,7 @@ from .report import Report, ReportCreate, ReportInDB, ReportUpdate, ReportRows  
 from .setting import (
     Setting, SettingCreate, SettingInDB, SettingUpdate, SettingRows,  # noqa
     SettingGroup, SettingGroupCreate, SettingGroupInDB, SettingGroupUpdate, SettingGroupRows,  # noqa
+    SettingGroupIds, SettingGroupStatusIds  # noqa
 )
 from .webhook import WebhookRequest, WebhookResponse  # noqa
 from .option import OptionStr, OptionInt, OptionBool  # noqa
