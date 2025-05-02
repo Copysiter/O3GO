@@ -85,7 +85,7 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
         service_map = {}
         for row in rows.mappings().all():
             service_map[row['id']] = (
-                row['name'] or row['alias'].title()
+                row['name'] or row.get('alias', '').title()
             ).replace(' ', '_')
 
         statement = (select(
