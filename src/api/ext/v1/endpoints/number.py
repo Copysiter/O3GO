@@ -16,13 +16,13 @@ async def get_number(
     db: AsyncSession = Depends(deps.get_db),
     _=Depends(deps.check_api_key),
     filter: schemas.NumberFilter = Depends(),
-    *, service: str, last_minutes: int | None = None
+    *, last_minutes: int | None = None, limit: int | None = None
 ) -> Any:
     """
     Get number.
     """
     numbers = await crud.number.get_by_service(
-        db=db, service=service, last_minutes=last_minutes,
+        db=db, last_minutes=last_minutes, limit=limit,
         filter=filter.model_dump()
     )
     # if not number:
