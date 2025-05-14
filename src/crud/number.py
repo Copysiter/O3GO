@@ -17,10 +17,10 @@ class CRUDNumber(CRUDBase[Number, NumberCreate, NumberUpdate]):
         return results.unique().scalar_one_or_none()
 
     async def get_by_service(
-        self, db: AsyncSession, service: int,
-        last_minutes: int | None = None, filter: dict | None = None
+        self, db: AsyncSession, last_minutes: int | None = None,
+        filter: dict | None = None, limit: int = None
     ) -> Optional[Number]:
-        where = [not_(self.model.regs.any(Reg.service == service))]
+        where = []
         if last_minutes:
             timestamp = datetime.utcnow() - timedelta(minutes=last_minutes)
             where.append(self.model.timestamp >= timestamp)
@@ -34,11 +34,11 @@ class CRUDNumber(CRUDBase[Number, NumberCreate, NumberUpdate]):
                     k = k.replace('where_', '')
                 if v is not None:
                     where.append(getattr(self.model, k) == v)
-        statement = (select(self.model).
-                     where(*where).
-                     order_by(func.random()).limit(1))
+        statement = select(self.model).where(*where)
+        if limit:
+            statement = statement.limit(limit)
         results = await db.execute(statement=statement)
-        return results.unique().scalar_one_or_none()
+        return results.unique().scalars().all()
 
     async def get_all_by_user(
         self, db: AsyncSession, *, user: User,
