@@ -126,6 +126,29 @@ async def get_number(
             'info_5': info_5,
             'info_6': info_6
         })
+    else:
+        obj_in = {}
+        update_fields = {
+            'setting_group_id': setting_group_id,
+            'api_key': api_key,
+            'proxy': proxy,
+            'device_ext_id': device_ext_id,
+            'service_alias': service_alias,
+            'info_1': info_1,
+            'info_2': info_2,
+            'info_3': info_3,
+            'info_4': info_4,
+            'info_5': info_5,
+            'info_6': 'updated'  # костыль
+        }
+
+        for field, value in update_fields.items():
+            if value:
+                obj_in.update({field: value})
+
+        number_ = await crud.number.update(
+            db=db, db_obj=number_, obj_in=obj_in
+        )
 
     return number_
 
@@ -206,7 +229,9 @@ async def event_handler(data: schemas.WebhookRequest):
         if not number and device:
             await update_report_info(
                 db, device_id=device.id, api_key=api_key,
-                info_1=info_1, info_2=info_2, info_3=info_3)
+                info_1=info_1, info_2=info_2, info_3=info_3,
+                info_4=info_4, info_5=info_5, info_6=info_6
+            )
 
 
 @celery.task(name="webhook")
