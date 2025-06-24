@@ -154,9 +154,9 @@ async def update_report_info(
     values = {}
     if info_1:
         values['info_1'] = info_1
-    if info_1:
+    if info_2:
         values['info_2'] = info_2
-    if info_1:
+    if info_3:
         values['info_3'] = info_3
     statement = (
         update(models.Report).
@@ -223,8 +223,7 @@ async def event_handler(data: schemas.WebhookRequest):
         if not number and device:
             await update_report_info(
                 db, device_id=device.id, api_key=api_key,
-                info_1=info_1, info_2=info_2, info_3=info_3,
-                info_4=info_4, info_5=info_5, info_6=info_6
+                info_1=info_1, info_2=info_2, info_3=info_3
             )
 
 
