@@ -15,29 +15,34 @@ router = APIRouter()
 async def get_settings(
     *,
     db: AsyncSession = Depends(deps.get_db),
-    api_key: str,
+    api_key: str | None = None,
+    id: int | None = None,
     _=Depends(deps.check_api_key)
 ) -> Any:
     """Get settings"""
-    stmt = (
-        select(models.SettingGroup)
-        .join(models.Number)
-        .join(models.SettingGroup.keys)
-        .where(models.SettingGroup.is_active.is_(True))
-        .where(models.SettingGroupApiKeys.api_key == api_key)
-        .where(
-            models.Number.timestamp >
-            func.now() - text(
-                "make_interval(secs := coalesce(setting_group.check_period, 0))"
-            )
-        )
-        .order_by(desc(models.Number.timestamp))
-        .limit(1)
-    )
-    result = await db.execute(stmt)
-    setting_group = result.scalars().first()
+    # stmt = (
+    #     select(models.SettingGroup)
+    #     .join(models.Number)
+    #     .join(models.SettingGroup.keys)
+    #     .where(models.SettingGroup.is_active.is_(True))
+    #     .where(models.SettingGroupApiKeys.api_key == api_key)
+    #     .where(
+    #         models.Number.timestamp >
+    #         func.now() - text(
+    #             "make_interval(secs := coalesce(setting_group.check_period, 0))"
+    #         )
+    #     )
+    #     .order_by(desc(models.Number.timestamp))
+    #     .limit(1)
+    # )
+    # result = await db.execute(stmt)
+    # setting_group = result.scalars().first()
 
-    if True or not setting_group:
+    setting_group = None
+
+    if id:
+        setting_group = await crud.setting_group.get(db, id=id)
+    elif api_key:
         stmt = (
             select(models.SettingGroup)
             .join(models.SettingGroupApiKeys)
