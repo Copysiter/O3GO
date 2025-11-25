@@ -6,7 +6,7 @@ from .device import Device, DeviceCreate, DeviceInDB, DeviceUpdate, DeviceRows  
 from .service import Service, ServiceCreate, ServiceInDB, ServiceUpdate, ServiceRows  # noqa
 from .proxy_group import ProxyGroup, ProxyGroupCreate, ProxyGroupInDB, ProxyGroupUpdate, ProxyGroupRows  # noqa
 from .proxy import Proxy, ProxyCreate, ProxyInDB, ProxyUpdate, ProxyRows, ProxyIds  # noqa
-from .number import Number, NumberCreate, NumberInDB, NumberUpdate, NumberRows, NumberFilter  # noqa
+from .number import Number, NumberCreate, NumberInDB, NumberUpdate, NumberRows, NumberExt, NumberFilter  # noqa
 from .reg import Reg, RegCreate, RegInDB, RegUpdate, RegRows  # noqa
 from .report import Report, ReportCreate, ReportInDB, ReportUpdate, ReportRows  # noqa
 from .setting import (
