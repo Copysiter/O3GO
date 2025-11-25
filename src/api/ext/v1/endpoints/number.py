@@ -12,7 +12,7 @@ import crud, models, schemas  # noqa
 router = APIRouter()
 
 
-@router.get('/get', response_model=List[schemas.Number])
+@router.get('/get', response_model=List[schemas.NumberExt])
 async def get_number(
     db: AsyncSession = Depends(deps.get_db),
     _=Depends(deps.check_api_key),

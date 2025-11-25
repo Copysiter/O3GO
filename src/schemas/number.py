@@ -49,6 +49,28 @@ class Number(NumberInDBBase):
     setting_group: Optional[SettingGroup]
 
 
+# External API schema - без вложенных объектов
+class NumberExt(BaseModel):
+    """Схема для external API - только основные поля без связанных объектов"""
+    id: int
+    number: Optional[str] = None
+    service_alias: Optional[str] = None
+    proxy: Optional[str] = None
+    device_ext_id: Optional[str] = None
+    setting_group_id: Optional[int] = None
+    api_key: str
+    info_1: Optional[str] = None
+    info_2: Optional[str] = None
+    info_3: Optional[str] = None
+    info_4: Optional[str] = None
+    info_5: Optional[str] = None
+    info_6: Optional[str] = None
+    timestamp: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
 class NumberInDB(NumberInDBBase):
     pass
 
