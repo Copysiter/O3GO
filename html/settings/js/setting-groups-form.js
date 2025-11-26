@@ -28,7 +28,7 @@ function showSettingGroupsEditForm(model) {
                     dataSource: new kendo.data.DataSource({
                         transport: {
                             read: {
-                                url: `http://${api_base_url}/api/v1/options/api_key`,
+                                url: `${api_base_url}/api/v1/options/api_key`,
                                 type: 'GET',
                                 beforeSend: function (request) {
                                     request.setRequestHeader(

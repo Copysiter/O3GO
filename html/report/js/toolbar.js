@@ -49,7 +49,7 @@ window.initToolbar = function() {
                             }
                         });
                     }
-                    const exportURL = `http://${api_base_url}/api/v1/export/report?${params.toString()}`;
+                    const exportURL = `${api_base_url}/api/v1/export/report?${params.toString()}`;
                     exportToExcel(exportURL)
                 },
             },
@@ -61,7 +61,7 @@ window.initToolbar = function() {
         dataSource: new kendo.data.DataSource({
             transport: {
                 read: {
-                    url: `http://${api_base_url}/api/v1/options/service`,
+                    url: `${api_base_url}/api/v1/options/service`,
                     type: 'GET',
                     beforeSend: function (request) {
                         request.setRequestHeader(

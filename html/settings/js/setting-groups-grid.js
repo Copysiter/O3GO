@@ -18,7 +18,7 @@ window.initSettingGroupsGrid = function() {
 
         $.ajax({
             type: 'GET',
-            url: `http://${api_base_url}/api/v1/settings/?filters[0][field]=is_active&filters[0][operator]=istrue`,
+            url: `${api_base_url}/api/v1/settings/?filters[0][field]=is_active&filters[0][operator]=istrue`,
             headers: {
                 Authorization: `${token_type} ${access_token}`,
                 accept: 'application/json',
@@ -124,7 +124,7 @@ window.initSettingGroupsGrid = function() {
                                 dataSource: new kendo.data.DataSource({
                                     transport: {
                                         read: {
-                                            url: `http://${api_base_url}/api/v1/options/proxy_group`,
+                                            url: `${api_base_url}/api/v1/options/proxy_group`,
                                             type: 'GET',
                                             beforeSend: function (request) {
                                                 request.setRequestHeader(
@@ -172,7 +172,7 @@ window.initSettingGroupsGrid = function() {
                 dataSource: {
                     transport: {
                         read: {
-                            url: `http://${api_base_url}/api/v1/setting_groups/`,
+                            url: `${api_base_url}/api/v1/setting_groups/`,
                             type: 'GET',
                             beforeSend: function (request) {
                                 request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
@@ -180,7 +180,7 @@ window.initSettingGroupsGrid = function() {
                             dataType: 'json',
                         },
                         create: {
-                            url: `http://${api_base_url}/api/v1/setting_groups/`,
+                            url: `${api_base_url}/api/v1/setting_groups/`,
                             type: 'POST',
                             dataType: 'json',
                             contentType: 'application/json',
@@ -191,7 +191,7 @@ window.initSettingGroupsGrid = function() {
                         update: {
                             url: function (options) {
                                 console.log(options);
-                                return `http://${api_base_url}/api/v1/setting_groups/${options.id}`;
+                                return `${api_base_url}/api/v1/setting_groups/${options.id}`;
                             },
 
                             type: 'PUT',
@@ -204,7 +204,7 @@ window.initSettingGroupsGrid = function() {
                         destroy: {
                             url: function (options) {
                                 console.log(options);
-                                return `http://${api_base_url}/api/v1/setting_groups/${options.id}`;
+                                return `${api_base_url}/api/v1/setting_groups/${options.id}`;
                             },
 
                             type: 'DELETE',

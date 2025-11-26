@@ -134,7 +134,7 @@ function showEditForm(model) {
                     dataSource: new kendo.data.DataSource({
                             transport: {
                                 read: {
-                                    url: `http://${api_base_url}/api/v1/options/proxy_group`,
+                                    url: `${api_base_url}/api/v1/options/proxy_group`,
                                     type: 'GET',
                                     beforeSend: function (request) {
                                         request.setRequestHeader(

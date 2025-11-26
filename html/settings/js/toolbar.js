@@ -64,7 +64,7 @@ window.initToolbar = function() {
                         }
                         kendo.confirm("<div style='padding:5px 10px 0 10px;'>Are you sure you want to enable setting groups?</div>").done(function() {
                             $.ajax({
-                                url: `http://${api_base_url}/api/v1/setting_groups/status`,
+                                url: `${api_base_url}/api/v1/setting_groups/status`,
                                 type: "PUT",
                                 data: JSON.stringify({ ids: ids, is_active: true}),
                                 processData: false,
@@ -110,7 +110,7 @@ window.initToolbar = function() {
                         }
                         kendo.confirm("<div style='padding:5px 10px 0 10px;'>Are you sure you want to disable setting groups</div>").done(function() {
                             $.ajax({
-                                url: `http://${api_base_url}/api/v1/setting_groups/status`,
+                                url: `${api_base_url}/api/v1/setting_groups/status`,
                                 type: "PUT",
                                 data: JSON.stringify({ ids: ids, is_active: false }),
                                 processData: false,
@@ -152,7 +152,7 @@ window.initToolbar = function() {
                         }
                         kendo.confirm("<div style='padding:5px 10px 0 10px;'>Are you sure you want to delete setting groups?</div>").done(function() {
                             $.ajax({
-                                url: `http://${api_base_url}/api/v1/setting_groups/delete`,
+                                url: `${api_base_url}/api/v1/setting_groups/delete`,
                                 type: "POST",
                                 data: JSON.stringify({ ids: ids }),
                                 processData: false,
