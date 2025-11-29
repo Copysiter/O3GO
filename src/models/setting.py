@@ -85,7 +85,6 @@ class SettingGroup(Base):
         lazy='joined', join_depth=1
     )
     api_keys = AssociationProxy('keys', 'api_key')
-    numbers = relationship('Number', back_populates='setting_group')
 
 
 class SettingValue(Base):

@@ -32,5 +32,5 @@ class Number(Base):
     info_5 = Column(String, index=True)
     info_6 = Column(String, index=True)
 
-    setting_group = relationship('SettingGroup', back_populates='numbers', lazy='joined')
+    setting_group = relationship('SettingGroup', lazy='joined')
     regs = relationship('Reg', back_populates='number', lazy='joined')
