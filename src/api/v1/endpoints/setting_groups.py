@@ -1,4 +1,4 @@
-from typing import Any, List, Dict  # noqa
+from typing import Any, List  # noqa
 
 from fastapi import APIRouter, Depends, HTTPException, status  # noqa
 from fastapi.encoders import jsonable_encoder
@@ -64,7 +64,7 @@ async def get_values(
             values.append(setting_value)
     return values
 
-@router.get('/', response_model=Dict[str, Any])
+@router.get('/', response_model=schemas.SettingGroupRows)
 async def read_setting_groups(
     db: AsyncSession = Depends(deps.get_db),
     filters: List[schemas.Filter] = Depends(deps.request_filters),
@@ -81,8 +81,8 @@ async def read_setting_groups(
     setting_groups = await crud.setting_group.get_rows(
         db, filters=filters, orders=orders, skip=skip, limit=limit
     )
-    for i in range(len(setting_groups)):
-        setting_groups[i] = to_dict(setting_groups[i])
+    # for i in range(len(setting_groups)):
+    #     setting_groups[i] = to_dict(setting_groups[i])
     count = await crud.setting_group.get_count(db, filters=filters)
     return {
         'data': jsonable_encoder(setting_groups),
