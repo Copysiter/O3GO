@@ -1,4 +1,4 @@
-from typing import Any, List  # noqa
+from typing import Any, List, Dict  # noqa
 
 from fastapi import APIRouter, Depends, HTTPException, status  # noqa
 from fastapi.encoders import jsonable_encoder
@@ -64,7 +64,7 @@ async def get_values(
             values.append(setting_value)
     return values
 
-@router.get('/', response_model=schemas.SettingGroupRows)
+@router.get('/', response_model=Dict[str, Any])
 async def read_setting_groups(
     db: AsyncSession = Depends(deps.get_db),
     filters: List[schemas.Filter] = Depends(deps.request_filters),
