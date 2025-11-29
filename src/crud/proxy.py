@@ -23,7 +23,7 @@ class CRUDProxy(CRUDBase[Proxy, ProxyCreate, ProxyUpdate]):
 
     async def update(
         self, db: AsyncSession, *, db_obj: Proxy,
-        obj_in: Union[ProxyUpdate, Dict[str, Any]]
+        obj_in: Union[ProxyUpdate, Dict[str, Any]], commit: bool = True
     ) -> Proxy:
         obj_data = jsonable_encoder(db_obj)
         if isinstance(obj_in, dict):
@@ -37,7 +37,10 @@ class CRUDProxy(CRUDBase[Proxy, ProxyCreate, ProxyUpdate]):
             db_obj.keys = [ProxyApiKeys(api_key=key)
                            for key in update_data['api_keys']]
         db.add(db_obj)
-        await db.commit()
+        if commit:
+            await db.commit()
+        else:
+            await db.flush()
         await db.refresh(db_obj)
         return db_obj
 

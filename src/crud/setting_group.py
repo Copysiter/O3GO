@@ -13,7 +13,7 @@ from schemas.setting import SettingGroupCreate, SettingGroupUpdate # noqa
 class CRUDSettingGroup(CRUDBase[SettingGroup, SettingGroupCreate, SettingGroupUpdate]):
     async def update(
         self, db: AsyncSession, *, db_obj: SettingGroup,
-        obj_in: Union[SettingGroupUpdate, Dict[str, Any]]
+        obj_in: Union[SettingGroupUpdate, Dict[str, Any]], commit: bool = True
     ) -> SettingGroup:
         if isinstance(obj_in, dict):
             update_data = obj_in
@@ -23,7 +23,10 @@ class CRUDSettingGroup(CRUDBase[SettingGroup, SettingGroupCreate, SettingGroupUp
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
         db.add(db_obj)
-        await db.commit()
+        if commit:
+            await db.commit()
+        else:
+            await db.flush()
         await db.refresh(db_obj)
         return db_obj
 
