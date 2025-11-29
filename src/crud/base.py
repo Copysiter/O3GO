@@ -158,7 +158,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def create(
         self, db: AsyncSession, *,
-        obj_in: Union[CreateSchemaType, Dict[str, Any]]
+        obj_in: Union[CreateSchemaType, Dict[str, Any]], commit: bool = True
     ) -> ModelType:
         if isinstance(obj_in, dict):
             obj_in_data = obj_in
@@ -166,13 +166,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             obj_in_data = obj_in.model_dump(exclude_unset=True)
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
-        await db.commit()
+        if commit:
+            await db.commit()
+        else:
+            await db.flush()
         await db.refresh(db_obj)
         return db_obj
 
     async def update(
         self, db: AsyncSession, *, db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+        obj_in: Union[UpdateSchemaType, Dict[str, Any]], commit: bool = True
     ) -> ModelType:
         obj_data = jsonable_encoder(db_obj)
         if isinstance(obj_in, dict):
@@ -183,11 +186,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
         db.add(db_obj)
-        await db.commit()
+        if commit:
+            await db.commit()
+        else:
+            await db.flush()
         await db.refresh(db_obj)
         return db_obj
 
-    async def delete(self, db: AsyncSession, *, id: int) -> ModelType:
+    async def delete(
+        self, db: AsyncSession, *, id: int, commit: bool = True
+    ) -> ModelType:
         statement = select(self.model).where(self.model.id == id)
         result = await db.execute(statement=statement)
         if (db_obj := result.unique().scalar_one_or_none()) is None:
@@ -195,5 +203,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             raise NoResultFound(
                 f'{self.model.__name__}(`id`=\'{id}\') does not exist')
         await db.delete(db_obj)
-        await db.commit()
+        if commit:
+            await db.commit()
+        else:
+            await db.flush()
         return db_obj

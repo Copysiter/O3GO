@@ -32,7 +32,9 @@ async def get_device(
 ) -> models.Device:
     device = await crud.device.get_by_ext_id(db, ext_id=ext_id)
     if not device:
-        device = await crud.device.create(db, obj_in={'ext_id': ext_id})
+        device = await crud.device.create(
+            db, obj_in={'ext_id': ext_id}, commit=False
+        )
 
     obj_in = {}
     if root is not None:
@@ -42,7 +44,9 @@ async def get_device(
     if api_key is not None:
         obj_in['api_key'] = api_key
 
-    device = await crud.device.update(db=db, db_obj=device, obj_in=obj_in)
+    device = await crud.device.update(
+        db=db, db_obj=device, obj_in=obj_in, commit=False
+    )
 
     return device
 
@@ -50,7 +54,9 @@ async def get_device(
 async def get_service(db: AsyncSession, alias: str = None) -> models.Service:
     service = await crud.service.get_by_alias(db, alias=alias)
     if not service:
-        service = await crud.service.create(db, obj_in={'alias': alias})
+        service = await crud.service.create(
+            db, obj_in={'alias': alias}, commit=False
+        )
 
     return service
 
@@ -69,13 +75,15 @@ async def get_report(
             'api_key': api_key,
             'device_id': device_id,
             'service_id': service_id
-        })
+        }, commit=False)
 
     obj_in = {f'{status}_count': getattr(report, f'{status}_count') + 1}
     if status == 'code':
         obj_in.update({'ts_1': datetime.utcnow()})
 
-    report = await crud.report.update(db=db, db_obj=report, obj_in=obj_in)
+    report = await crud.report.update(
+        db=db, db_obj=report, obj_in=obj_in, commit=False
+    )
 
     return report
 
@@ -86,7 +94,9 @@ async def get_proxy(
 ) -> models.Proxy:
     proxy = await crud.proxy.get_by_url(db, url=url)
     if not proxy:
-        proxy = await crud.proxy.create(db, obj_in={'url': url})
+        proxy = await crud.proxy.create(
+            db, obj_in={'url': url}, commit=False
+        )
     api_keys = list(proxy.api_keys)
     if api_key and api_key not in api_keys:
         api_keys.append(api_key)
@@ -98,7 +108,9 @@ async def get_proxy(
         obj_in.update({'ts_1': datetime.utcnow()})
     proxy.api_keys = []
 
-    proxy = await crud.proxy.update(db=db, db_obj=proxy, obj_in=obj_in)
+    proxy = await crud.proxy.update(
+        db=db, db_obj=proxy, obj_in=obj_in, commit=False
+    )
 
     return proxy
 
@@ -125,7 +137,7 @@ async def get_number(
             'info_4': info_4,
             'info_5': info_5,
             'info_6': info_6
-        })
+        }, commit=False)
     else:
         number_ = await crud.number.update(
             db=db, db_obj=number_, obj_in={
@@ -141,7 +153,7 @@ async def get_number(
                 'info_4': info_4,
                 'info_5': info_5,
                 'info_6': 'updated'
-            }
+            }, commit=False
         )
 
     return number_
@@ -160,71 +172,78 @@ async def update_report_info(
         values['info_3'] = info_3
     statement = (
         update(models.Report).
-        where(models.Report.device_id == device_id and
-              models.Report.api_key == api_key).
+        where(
+            (models.Report.device_id == device_id) &
+            (models.Report.api_key == api_key)
+        ).
         values(**values)
     )
     await db.execute(statement)
-    await db.commit()
 
 
 async def event_handler(data: schemas.WebhookRequest):
     async with async_session() as db:
-        api_key = data.get('api_key')
-        device_ext_id = data.get('device_id')
-        device_root = data.get('root')
-        device_operator = data.get('operator')
-        setting_group_id = data.get('setting_group_id')
-        service_alias = data.get('service')
-        number = data.get('number')
-        info_1 = data.get('info_1')
-        info_2 = data.get('info_2')
-        info_3 = data.get('info_3')
-        info_4 = data.get('info_4')
-        info_5 = data.get('info_5')
-        info_6 = data.get('info_6')
-        report_status = data.get('status')
-        check_status = report_status in (
-            'start', 'number', 'bad', 'code', 'no_code')
-        proxy_url = data.get('proxy')
-        proxy_status = data.get('proxy_status')
-        check_proxy_status = data.get('proxy_status') in ('good', 'bad')
+        try:
+            api_key = data.get('api_key')
+            device_ext_id = data.get('device_id')
+            device_root = data.get('root')
+            device_operator = data.get('operator')
+            setting_group_id = data.get('setting_group_id')
+            service_alias = data.get('service')
+            number = data.get('number')
+            info_1 = data.get('info_1')
+            info_2 = data.get('info_2')
+            info_3 = data.get('info_3')
+            info_4 = data.get('info_4')
+            info_5 = data.get('info_5')
+            info_6 = data.get('info_6')
+            report_status = data.get('status')
+            check_status = report_status in (
+                'start', 'number', 'bad', 'code', 'no_code')
+            proxy_url = data.get('proxy')
+            proxy_status = data.get('proxy_status')
+            check_proxy_status = data.get('proxy_status') in ('good', 'bad')
 
-        device, service = None, None
+            device, service = None, None
 
-        if device_ext_id:
-            device = await get_device(
-                db, ext_id=device_ext_id, root=device_root,
-                operator=device_operator, api_key=api_key
-            )
+            if device_ext_id:
+                device = await get_device(
+                    db, ext_id=device_ext_id, root=device_root,
+                    operator=device_operator, api_key=api_key
+                )
 
-        if check_status or number:
-            service = await get_service(db, alias=service_alias)
+            if check_status or number:
+                service = await get_service(db, alias=service_alias)
 
-        if check_status and device and service:
-            _ = await get_report(
-                db, api_key=api_key, device_id=device.id,
-                service_id=service.id, status=report_status
-            )
+            if check_status and device and service:
+                _ = await get_report(
+                    db, api_key=api_key, device_id=device.id,
+                    service_id=service.id, status=report_status
+                )
 
-        if proxy_url and check_proxy_status:
-            _ = await get_proxy(
-                db, url=proxy_url, status=proxy_status, api_key=api_key)
+            if proxy_url and check_proxy_status:
+                _ = await get_proxy(
+                    db, url=proxy_url, status=proxy_status, api_key=api_key)
 
-        if number and device and service:
-            _ = await get_number(
-                db, number=number, setting_group_id=setting_group_id,
-                api_key=api_key, proxy=proxy_url,
-                device_ext_id=device.ext_id, service_alias=service.alias,
-                info_1=info_1, info_2=info_2, info_3=info_3,
-                info_4 = info_4, info_5 = info_5, info_6 = info_6
-            )
-        
-        if not number and device:
-            await update_report_info(
-                db, device_id=device.id, api_key=api_key,
-                info_1=info_1, info_2=info_2, info_3=info_3
-            )
+            if number and device and service:
+                _ = await get_number(
+                    db, number=number, setting_group_id=setting_group_id,
+                    api_key=api_key, proxy=proxy_url,
+                    device_ext_id=device.ext_id, service_alias=service.alias,
+                    info_1=info_1, info_2=info_2, info_3=info_3,
+                    info_4 = info_4, info_5 = info_5, info_6 = info_6
+                )
+
+            if not number and device:
+                await update_report_info(
+                    db, device_id=device.id, api_key=api_key,
+                    info_1=info_1, info_2=info_2, info_3=info_3
+                )
+
+            await db.commit()
+        except Exception as e:
+            await db.rollback()
+            raise
 
 
 @celery.task(name="webhook")
