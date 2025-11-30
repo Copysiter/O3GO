@@ -42,13 +42,13 @@ class Setting(Base):
         'SettingOption',
         back_populates='setting',
         cascade='all, delete-orphan',
-        lazy='joined'
+        lazy='select'
     )
     values = relationship(
         'SettingValue',
         back_populates='setting',
         cascade='all, delete-orphan',
-        lazy='joined'
+        lazy='select'
     )
 
 
@@ -76,13 +76,13 @@ class SettingGroup(Base):
         'SettingValue',
         back_populates='group',
         cascade='all, delete-orphan',
-        lazy='joined'
+        lazy='select'
     )
     keys = relationship(
         'SettingGroupApiKeys',
         back_populates='group',
         cascade='save-update, merge, delete, delete-orphan',
-        lazy='joined', join_depth=1
+        lazy='select'
     )
     api_keys = AssociationProxy('keys', 'api_key')
 
@@ -104,13 +104,5 @@ class SettingValue(Base):
         'SettingGroup',
         back_populates='values'
     )
-    setting = relationship(
-        'Setting',
-        back_populates='values',
-        lazy='joined'
-    )
-    proxy_group = relationship(
-        'ProxyGroup',
-        back_populates='values',
-        lazy='joined'
-    )
+    setting = relationship('Setting', lazy='select')
+    proxy_group = relationship('ProxyGroup', lazy='select')

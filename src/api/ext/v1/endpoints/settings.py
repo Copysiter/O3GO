@@ -34,6 +34,7 @@ async def get_settings(
                     # Отключаем lazy='joined'
                     selectinload(models.SettingGroup.values)
                     .selectinload(models.SettingValue.setting)
+                    .selectinload(models.Setting.options)
                 )
                 .where(models.SettingGroup.id == id)
             )
@@ -58,6 +59,7 @@ async def get_settings(
                     # Отключаем lazy='joined'
                     selectinload(models.SettingGroup.values)
                     .selectinload(models.SettingValue.setting)
+                    .selectinload(models.Setting.options)
                 )
                 .where(models.SettingGroup.is_active == True)
                 .where(models.SettingGroupApiKeys.api_key == api_key)

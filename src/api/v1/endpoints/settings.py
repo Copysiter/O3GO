@@ -3,6 +3,7 @@ from typing import Any, List  # noqa
 from fastapi import APIRouter, Depends, HTTPException, status  # noqa
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from api import deps  # noqa
 
@@ -28,16 +29,19 @@ async def read_settings(
         orders = [
             {'field': 'order', 'dir': 'asc'}, {'field': 'id', 'dir': 'asc'}
         ]
+
+    # Используем метод с предзагрузкой
     settings = await crud.setting.get_rows(
         db, filters=filters, orders=orders, skip=skip, limit=limit
     )
     count = await crud.setting.get_count(db, filters=filters)
+
     return {'data': settings, 'total': count}
 
 
 @router.post(
     '/',
-    response_model=schemas.Setting,
+    response_model=dict,
     status_code=status.HTTP_201_CREATED
 )
 async def create_setting(
@@ -65,10 +69,13 @@ async def create_setting(
         db=db, obj_in=setting_in
     )
 
-    return setting
+    # Загружаем созданный объект с options для правильной сериализации
+    setting = await crud.setting.get(db=db, id=setting.id)
+    
+    return jsonable_encoder(setting)
 
 
-@router.put('/{id}', response_model=schemas.Setting)
+@router.put('/{id}', response_model=dict)
 async def update_setting(
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -90,11 +97,14 @@ async def update_setting(
         models.SettingOption(name=row[0], value=row[-1]) for row in options
     ]
     setting = await crud.setting.update(db=db, db_obj=setting, obj_in=setting_in)
+    
+    # Загружаем объект заново с options для правильной сериализации
+    setting = await crud.setting.get(db=db, id=id)
+    
+    return jsonable_encoder(setting)
 
-    return setting
 
-
-@router.get('/{id}', response_model=schemas.Setting)
+@router.get('/{id}', response_model=dict)
 async def read_setting(
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -107,10 +117,11 @@ async def read_setting(
     setting = await crud.setting.get(db=db, id=id)
     if not setting:
         raise HTTPException(status_code=404, detail='Setting not found')
-    return setting
+    
+    return jsonable_encoder(setting)
 
 
-@router.delete('/{id}', response_model=schemas.Setting)
+@router.delete('/{id}', response_model=dict)
 async def delete_setting(
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -123,5 +134,6 @@ async def delete_setting(
     setting = await crud.setting.get(db=db, id=id)
     if not setting:
         raise HTTPException(status_code=404, detail='Setting not found')
-    setting = await crud.setting.delete(db=db, id=id)
-    return setting
+    
+    await crud.setting.delete(db=db, id=id)
+    return {"message": "Setting deleted successfully", "id": id}
