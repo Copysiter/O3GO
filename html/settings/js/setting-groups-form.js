@@ -21,6 +21,34 @@ function showSettingGroupsEditForm(model) {
                 colSpan: 6
             },
             {
+                field: 'service',
+                label: 'Service',
+                editor: 'DropDownList',
+                editorOptions: {
+                    dataSource: new kendo.data.DataSource({
+                        transport: {
+                            read: {
+                                url: `${api_base_url}/api/v1/options/service?alias=true`,
+                                type: 'GET',
+                                beforeSend: function (request) {
+                                    request.setRequestHeader(
+                                        'Authorization',
+                                        `${token_type} ${access_token}`
+                                    );
+                                },
+                            },
+                        },
+                    }),
+                    dataTextField: 'text',
+                    dataValueField: 'value',
+                    valuePrimitive: true,
+                    downArrow: true,
+                    animation: false,
+                    autoClose: false,
+                },
+                colSpan: 12,
+            },
+            {
                 field: 'api_keys',
                 label: 'Api Keys',
                 editor: 'MultiSelect',

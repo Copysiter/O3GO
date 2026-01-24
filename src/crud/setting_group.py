@@ -35,7 +35,9 @@ class CRUDSettingGroup(
                 selectinload(SettingGroup.values)
                 .selectinload(SettingValue.setting),
                 selectinload(SettingGroup.values)
-                .selectinload(SettingValue.proxy_group)
+                .selectinload(SettingValue.proxy_group),
+                # Загружаем связанный сервис
+                selectinload(SettingGroup.service_obj)
             )
             .where(*filter_list)
             .order_by(*order_list)
@@ -53,6 +55,15 @@ class CRUDSettingGroup(
             group_dict = {
                 'id': sg.id,
                 'name': sg.name,
+                'service': sg.service,
+                'service_obj': {
+                    'id': sg.service_obj.id,
+                    'alias': sg.service_obj.alias,
+                    'name': sg.service_obj.name,
+                    'color_bg': sg.service_obj.color_bg,
+                    'color_txt': sg.service_obj.color_txt,
+                    'is_active': sg.service_obj.is_active
+                } if sg.service_obj else None,
                 'description': sg.description,
                 'check_period': sg.check_period,
                 'is_active': sg.is_active,
@@ -100,7 +111,8 @@ class CRUDSettingGroup(
                 selectinload(SettingGroup.values)
                 .selectinload(SettingValue.setting),
                 selectinload(SettingGroup.values)
-                .selectinload(SettingValue.proxy_group)
+                .selectinload(SettingValue.proxy_group),
+                selectinload(SettingGroup.service_obj)
             )
             .where(self.model.id == id)
         )

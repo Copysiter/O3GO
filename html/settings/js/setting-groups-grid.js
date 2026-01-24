@@ -387,6 +387,20 @@ window.initSettingGroupsGrid = function() {
                         }
                     },
                     {
+                        field: 'service',
+                        title: 'Service',
+                        filterable: false,
+                        exportable: { excel: true },
+                        template: (obj) => {
+                            if (
+                                obj.service_obj && obj.service_obj.name
+                            ) {
+                                return '<div class="badge px-8 py-2 rounded" style="color:' + obj.service_obj.color_txt + ';background:' + obj.service_obj.color_bg + ';">' + obj.service_obj.alias + '</div>'
+                            } else
+                                return '';
+                        }
+                    },
+                    {
                         field: 'check_period',
                         title: 'Check Period',
                         filterable: false

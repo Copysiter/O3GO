@@ -98,6 +98,7 @@ class SettingValue(BaseModel):
 
 class SettingGroupBase(BaseModel):
     name: Optional[str] = None
+    service: Optional[str] = None
     check_period: Optional[int] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None

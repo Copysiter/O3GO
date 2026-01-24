@@ -13,7 +13,8 @@ from db.base_class import Base
 class SettingGroupApiKeys(Base):
     __table_args__ = {'extend_existing': True}
     group_id = Column(BigInteger, ForeignKey(
-        'setting_group.id', ondelete='CASCADE'), primary_key=True)
+        'setting_group.id', ondelete='CASCADE'), primary_key=True
+    )
     api_key = Column(String, primary_key=True)
 
     group = relationship('SettingGroup', back_populates='keys')
@@ -26,7 +27,8 @@ class Setting(Base):
     key = Column(String(255), nullable=False, index=True, unique=True)
     type = Column(SmallInteger, nullable=False)
     proxy_group_default = Column(
-        BigInteger, ForeignKey('proxy_group.id', ondelete='CASCADE'))
+        BigInteger, ForeignKey('proxy_group.id', ondelete='CASCADE')
+    )
     str_default = Column(String, nullable=True)
     int_default = Column(Integer, nullable=True)
     bool_default = Column(Boolean, nullable=True)
@@ -58,7 +60,8 @@ class SettingOption(Base):
     name = Column(String(255), index=True)
     value = Column(String(255), nullable=False, index=True)
     setting_id = Column(
-        BigInteger, ForeignKey('setting.id', ondelete='CASCADE'))
+        BigInteger, ForeignKey('setting.id', ondelete='CASCADE')
+    )
 
     setting = relationship('Setting', back_populates='options')
 
@@ -67,6 +70,11 @@ class SettingGroup(Base):
     """Группа настроек (конкретные значения параметров)"""
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False, index=True)
+    service = Column(
+        String, ForeignKey('service.alias', ondelete='SET NULL'),
+        nullable=True, index=True
+    )
+
     check_period = Column(Integer, index=True)
     description = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True, index=True)
@@ -84,6 +92,7 @@ class SettingGroup(Base):
         cascade='save-update, merge, delete, delete-orphan',
         lazy='select'
     )
+    service_obj = relationship('Service', lazy='select')
     api_keys = AssociationProxy('keys', 'api_key')
 
 
@@ -93,9 +102,11 @@ class SettingValue(Base):
     group_id = Column(
         BigInteger, ForeignKey('setting_group.id', ondelete='CASCADE'))
     setting_id = Column(
-        BigInteger, ForeignKey('setting.id', ondelete='CASCADE'))
+        BigInteger, ForeignKey('setting.id', ondelete='CASCADE')
+    )
     proxy_group_id = Column(
-        BigInteger, ForeignKey('proxy_group.id', ondelete='CASCADE'))
+        BigInteger, ForeignKey('proxy_group.id', ondelete='CASCADE')
+    )
     str_val = Column(String, nullable=True)
     int_val = Column(Integer, nullable=True)
     bool_val = Column(Boolean, nullable=True)

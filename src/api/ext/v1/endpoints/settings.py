@@ -14,11 +14,12 @@ router = APIRouter()
 
 @router.get('/', response_model=dict)
 async def get_settings(
-        *,
-        db: AsyncSession = Depends(deps.get_db),
-        api_key: str | None = None,
-        id: int | None = None,
-        _=Depends(deps.check_api_key)
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    api_key: str | None = None,
+    id: int | None = None,
+    service: str | None = None,
+    _=Depends(deps.check_api_key)
 ) -> Any:
     """Get settings"""
 
@@ -63,9 +64,10 @@ async def get_settings(
                 )
                 .where(models.SettingGroup.is_active == True)
                 .where(models.SettingGroupApiKeys.api_key == api_key)
-                .order_by(asc(models.SettingGroup.timestamp))
-                .limit(1)
             )
+            if service:
+                stmt = stmt.where(models.SettingGroup.service == service)
+            stmt = stmt.order_by(asc(models.SettingGroup.timestamp)).limit(1)
             result = await db.execute(stmt)
             setting_group = result.scalar_one_or_none()
 
@@ -116,7 +118,7 @@ async def get_settings(
                     proxy_data[group_id] = first_proxy
 
         # Собираем настройки
-        settings = {'id': setting_group.id}
+        settings = {'id': setting_group.id, 'service': setting_group.service}
 
         for s in setting_group.values:
             key = s.setting.key

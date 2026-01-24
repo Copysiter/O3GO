@@ -105,6 +105,7 @@ async def create_setting_group(
     ]
     setting_group = await crud.setting_group.create(db, obj_in={
         'name': setting_group_in.name,
+        'service': setting_group_in.service,
         'check_period': setting_group_in.check_period,
         'description': setting_group_in.description,
         'is_active': setting_group_in.is_active,
@@ -119,6 +120,15 @@ async def create_setting_group(
     result = {
         'id': setting_group.id,
         'name': setting_group.name,
+        'service': setting_group.service,
+        'service_obj': {
+            'id': setting_group.service_obj.id,
+            'alias': setting_group.service_obj.alias,
+            'name': setting_group.service_obj.name,
+            'color_bg': setting_group.service_obj.color_bg,
+            'color_txt': setting_group.service_obj.color_txt,
+            'is_active': setting_group.service_obj.is_active
+        } if setting_group.service_obj else None,
         'description': setting_group.description,
         'check_period': setting_group.check_period,
         'is_active': setting_group.is_active,
@@ -231,6 +241,7 @@ async def update_setting_group(
     await crud.setting_group.update(
         db=db, db_obj=setting_group, obj_in={
             'name': setting_group_in.name,
+            'service': setting_group_in.service,
             'check_period': setting_group_in.check_period,
             'description': setting_group_in.description,
             'is_active': setting_group_in.is_active,
@@ -246,6 +257,15 @@ async def update_setting_group(
     result = {
         'id': updated_setting_group.id,
         'name': updated_setting_group.name,
+        'service': updated_setting_group.service,
+        'service_obj': {
+            'id': updated_setting_group.service_obj.id,
+            'alias': updated_setting_group.service_obj.alias,
+            'name': updated_setting_group.service_obj.name,
+            'color_bg': updated_setting_group.service_obj.color_bg,
+            'color_txt': updated_setting_group.service_obj.color_txt,
+            'is_active': updated_setting_group.service_obj.is_active
+        } if updated_setting_group.service_obj else None,
         'description': updated_setting_group.description,
         'check_period': updated_setting_group.check_period,
         'is_active': updated_setting_group.is_active,
@@ -293,6 +313,15 @@ async def read_setting_group(
     result = {
         'id': setting_group.id,
         'name': setting_group.name,
+        'service': setting_group.service,
+        'service_obj': {
+            'id': setting_group.service_obj.id,
+            'alias': setting_group.service_obj.alias,
+            'name': setting_group.service_obj.name,
+            'color_bg': setting_group.service_obj.color_bg,
+            'color_txt': setting_group.service_obj.color_txt,
+            'is_active': setting_group.service_obj.is_active
+        } if setting_group.service_obj else None,
         'description': setting_group.description,
         'check_period': setting_group.check_period,
         'is_active': setting_group.is_active,

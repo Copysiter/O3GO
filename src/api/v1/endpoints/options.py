@@ -31,7 +31,7 @@ async def get_device_options(
 @router.get('/service', response_model=List[schemas.OptionInt])
 async def get_service_option(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(deps.get_db), alias: bool | None,
     _: models.User = Depends(deps.get_current_active_user)
 ) -> Any:
     """
@@ -40,7 +40,7 @@ async def get_service_option(
     rows = await crud.service.get_rows(db)
     return JSONResponse([{
         'text': rows[i].name if rows[i].name else rows[i].alias,
-        'value': rows[i].id
+        'value': rows[i].alias if alias else rows[i].id
     } for i in range(len(rows))])
 
 
