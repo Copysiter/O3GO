@@ -16,15 +16,20 @@ class Number(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     number = Column(String, nullable=False, unique=True, index=True)
     api_key = Column(String, index=True)
-    service_alias = Column(String,
-                           ForeignKey('service.alias', ondelete='CASCADE'))
-    device_ext_id = Column(String,
-                           ForeignKey('device.ext_id', ondelete='CASCADE'))
-    setting_group_id = Column(BigInteger,
-                           ForeignKey('setting_group.id', ondelete='CASCADE'))
+    service_alias = Column(
+        String, ForeignKey('service.alias', ondelete='CASCADE')
+    )
+    device_ext_id = Column(
+        String, ForeignKey('device.ext_id', ondelete='CASCADE')
+    )
+    setting_group_id = Column(
+        BigInteger,
+        ForeignKey('setting_group.id', ondelete='CASCADE')
+    )
     proxy = Column(String, index=True)
     timestamp = Column(
-        DateTime, nullable=False, default=datetime.utcnow, index=True)
+        DateTime, nullable=False, default=datetime.utcnow, index=True
+    )
     info_1 = Column(String, index=True)
     info_2 = Column(String, index=True)
     info_3 = Column(String, index=True)
