@@ -154,6 +154,26 @@ window.initGrid = function() {
                                 }
                             }
                         }, {
+                            field: 'waiting_count_' + obj.id,
+                            title: "<span class='rotate'>waiting</span>",
+                            rowSpan: 2,
+                            sortable: true,
+                            filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
+                            headerAttributes: {
+                                class: 'rotate-cell',
+                                style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
+                            },
+                            template: function(item) {
+                                if (item.hasOwnProperty('waiting_count_' + obj.id)) {
+                                    return item['waiting_count_' + obj.id];
+                                } else {
+                                    return 0;
+                                }
+                            }
+                        }, {
                             field: 'bad_count_' + obj.id,
                             title: "<span class='rotate'>bad</span>",
                             rowSpan: 2,
@@ -169,6 +189,46 @@ window.initGrid = function() {
                             template: function(item) {
                                 if (item.hasOwnProperty('bad_count_' + obj.id)) {
                                     return item['bad_count_' + obj.id];
+                                } else {
+                                    return 0;
+                                }
+                            }
+                        }, {
+                            field: 'error_1_count_' + obj.id,
+                            title: "<span class='rotate'>error-1</span>",
+                            rowSpan: 2,
+                            sortable: true,
+                            filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
+                            headerAttributes: {
+                                class: 'rotate-cell',
+                                style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
+                            },
+                            template: function(item) {
+                                if (item.hasOwnProperty('error_1_count_' + obj.id)) {
+                                    return item['error_1_count_' + obj.id];
+                                } else {
+                                    return 0;
+                                }
+                            }
+                        }, {
+                            field: 'error_2_count_' + obj.id,
+                            title: "<span class='rotate'>error-2</span>",
+                            rowSpan: 2,
+                            sortable: true,
+                            filterable: false,
+                            attributes: {
+                                style: `background:\\${obj.color_bg}44;`,
+                            },
+                            headerAttributes: {
+                                class: 'rotate-cell',
+                                style: 'color:' + obj.color_txt + ';background:' + obj.color_bg + ';',
+                            },
+                            template: function(item) {
+                                if (item.hasOwnProperty('error_2_count_' + obj.id)) {
+                                    return item['error_2_count_' + obj.id];
                                 } else {
                                     return 0;
                                 }

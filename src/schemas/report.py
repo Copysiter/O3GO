@@ -13,7 +13,10 @@ class ReportBase(BaseModel):
     number_count: Optional[int] = 0
     code_count: Optional[int] = 0
     no_code_count: Optional[int] = 0
+    waiting_count: Optional[int] = 0
     bad_count: Optional[int] = 0
+    error_1_count: Optional[int] = 0
+    error_2_count: Optional[int] = 0
     info_1: Optional[str] = None
     info_2: Optional[str] = None
     info_3: Optional[str] = None

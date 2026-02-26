@@ -13,19 +13,29 @@ if TYPE_CHECKING:
 class Report(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     api_key = Column(String, index=True)
-    device_id = Column(BigInteger,
-                       ForeignKey('device.id', ondelete='CASCADE'))
-    service_id = Column(BigInteger,
-                        ForeignKey('service.id', ondelete='CASCADE'))
+    device_id = Column(
+        BigInteger, ForeignKey('device.id', ondelete='CASCADE')
+    )
+    service_id = Column(
+        BigInteger, ForeignKey('service.id', ondelete='CASCADE')
+    )
     start_count = Column(Integer, nullable=False, default=0)
     number_count = Column(Integer, nullable=False, default=0)
     code_count = Column(Integer, nullable=False, default=0)
     no_code_count = Column(Integer, nullable=False, default=0)
+    waiting_count = Column(Integer, nullable=False, default=0)
     bad_count = Column(Integer, nullable=False, default=0)
-    date = Column(
-        Date, nullable=False, default=date.today, index=True)
-    timestamp = Column(DateTime, nullable=False,
-                       default=datetime.utcnow, onupdate=datetime.utcnow)
+    error_1_count = Column(Integer, nullable=False, default=0)
+    error_2_count = Column(Integer, nullable=False, default=0)
+    account_count = Column(Integer, nullable=False, default=0)
+    account_ban_count = Column(Integer, nullable=False, default=0)
+    msg_send_count = Column(Integer, nullable=False, default=0)
+    msg_delivery_count = Column(Integer, nullable=False, default=0)
+    date = Column(Date, nullable=False, default=date.today, index=True)
+    timestamp = Column(
+        DateTime, nullable=False,
+        default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     info_1 = Column(String)
     info_2 = Column(String)
     info_3 = Column(String)
@@ -38,5 +48,7 @@ class Report(Base):
 
     device = relationship('Device', back_populates='reports', lazy='joined')
 
-    ix_report_unique = Index('ix_report_unique',
-                             api_key, device_id, service_id, date)
+    ix_report_unique = Index(
+        'ix_report_unique',
+        api_key, device_id, service_id, date
+    )
