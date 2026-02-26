@@ -31,7 +31,7 @@ async def get_device_options(
 @router.get('/service', response_model=List[schemas.OptionInt])
 async def get_service_option(
     *,
-    db: Session = Depends(deps.get_db), alias: bool | None,
+    db: Session = Depends(deps.get_db), alias: bool | None = None,
     _: models.User = Depends(deps.get_current_active_user)
 ) -> Any:
     """
