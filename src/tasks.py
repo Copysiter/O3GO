@@ -199,8 +199,9 @@ async def event_handler(data: schemas.WebhookRequest):
             info_6 = data.get('info_6')
             report_status = data.get('status')
             check_status = report_status in (
-                'start', 'number', 'waiting', 'bad',
-                'error_1', 'error_2', 'code', 'no_code'
+                'start', 'number', 'code', 'no_code', 'waiting',
+                'bad', 'error_1', 'error_2', 'account', 'account_ban',
+                'sent', 'delivered'
             )
             proxy_url = data.get('proxy')
             proxy_status = data.get('proxy_status')

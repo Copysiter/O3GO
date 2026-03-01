@@ -19,19 +19,45 @@ class Report(Base):
     service_id = Column(
         BigInteger, ForeignKey('service.id', ondelete='CASCADE')
     )
-    start_count = Column(Integer, nullable=False, default=0)
-    number_count = Column(Integer, nullable=False, default=0)
-    code_count = Column(Integer, nullable=False, default=0)
-    no_code_count = Column(Integer, nullable=False, default=0)
-    waiting_count = Column(Integer, nullable=False, default=0)
-    bad_count = Column(Integer, nullable=False, default=0)
-    error_1_count = Column(Integer, nullable=False, default=0)
-    error_2_count = Column(Integer, nullable=False, default=0)
-    account_count = Column(Integer, nullable=False, default=0)
-    account_ban_count = Column(Integer, nullable=False, default=0)
-    msg_send_count = Column(Integer, nullable=False, default=0)
-    msg_delivery_count = Column(Integer, nullable=False, default=0)
-    date = Column(Date, nullable=False, default=date.today, index=True)
+    start_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    number_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    code_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    no_code_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    waiting_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    bad_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    error_1_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    error_2_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    account_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    account_ban_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    sent_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    delivered_count = Column(
+        Integer, nullable=False, server_default='0', default=0
+    )
+    date = Column(
+        Date, nullable=False, default=date.today, index=True
+    )
     timestamp = Column(
         DateTime, nullable=False,
         default=datetime.utcnow, onupdate=datetime.utcnow

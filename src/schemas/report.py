@@ -17,6 +17,10 @@ class ReportBase(BaseModel):
     bad_count: Optional[int] = 0
     error_1_count: Optional[int] = 0
     error_2_count: Optional[int] = 0
+    account_count: Optional[int] = 0
+    account_ban_count: Optional[int] = 0
+    sent_count: Optional[int] = 0
+    delivered_count: Optional[int] = 0
     info_1: Optional[str] = None
     info_2: Optional[str] = None
     info_3: Optional[str] = None

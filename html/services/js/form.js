@@ -47,6 +47,44 @@ function showEditForm(model) {
                 editor: "<div class='separator mx-n15 mt-n3'></div>",
             },
             {
+                field: 'columns',
+                label: 'Columns',
+                editor: 'MultiSelect',
+                editorOptions: {
+                    dataSource: new kendo.data.DataSource({
+                        data: [
+                            {text: 'Start', value: 'start'},
+                            {text: 'Number', value: 'number'},
+                            {text: 'Code', value: 'code'},
+                            {text: 'Code, %', value: 'code_pct'},
+                            {text: 'No Code', value: 'no_code'},
+                            {text: 'Waiting', value: 'waiting'},
+                            {text: 'Bad', value: 'bad'},
+                            {text: 'Error 1', value: 'error_1'},
+                            {text: 'Error 2', value: 'error_2'},
+                            {text: 'Account', value: 'account'},
+                            {text: 'Account Ban', value: 'account_ban'},
+                            {text: 'Message Sent', value: 'sent'},
+                            {text: 'Message Delivered', value: 'delivered'},
+                            {text: 'Message Avg', value: 'sent_avg'}
+                        ]
+                    }),
+                    dataTextField: 'text',
+                    dataValueField: 'value',
+                    valuePrimitive: true,
+                    downArrow: true,
+                    animation: false,
+                    autoClose: false,
+                },
+                colSpan: 12,
+            },
+            {
+                field: 'sep3',
+                colSpan: 12,
+                label: false,
+                editor: "<div class='separator mx-n15 mt-n3'></div>",
+            },
+            {
                 field: 'text',
                 colSpan: 6,
                 label: false,
@@ -62,11 +100,11 @@ function showEditForm(model) {
                 colSpan: 6,
             },
             {
-                field: 'sep3',
+                field: 'sep4',
                 colSpan: 12,
                 label: false,
                 editor: "<div class='separator mx-n15 mt-n3'></div>",
-            },
+            }
         ],
         change: function (e) {},
     });

@@ -10,8 +10,7 @@ class CRUDService(CRUDBase[Service, ServiceCreate, ServiceUpdate]):
     async def get_by_alias(
         self, db: AsyncSession, *, alias: str
     ) -> Service:
-        statement = (select(self.model).
-                     where(self.model.alias == alias))
+        statement = (select(self.model).where(self.model.alias == alias))
         results = await db.execute(statement=statement)
         return results.unique().scalar_one_or_none()
 

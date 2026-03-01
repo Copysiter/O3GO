@@ -109,6 +109,10 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
             func.sum(self.model.bad_count).label('bad_count'),
             func.sum(self.model.error_1_count).label('error_1_count'),
             func.sum(self.model.error_2_count).label('error_2_count'),
+            func.sum(self.model.account_count).label('account_count'),
+            func.sum(self.model.account_ban_count).label('account_ban_count'),
+            func.sum(self.model.sent_count).label('sent_count'),
+            func.sum(self.model.delivered_count).label('delivered_count'),
             func.max(self.model.timestamp).label('timestamp'),
             func.max(self.model.ts_1).label('ts_1'),
             func.string_agg(
@@ -153,7 +157,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 }
             for c in (
                 'start_count', 'number_count', 'code_count', 'no_code_count',
-                'waiting_count', 'bad_count', 'error_1_count', 'error_2_count'
+                'waiting_count', 'bad_count', 'error_1_count', 'error_2_count',
+                'account_count', 'account_ban_count', 'sent_count', 'delivered_count',
             ):
                 stats[pk][f'{service_map.get(row.service_id)}_{c}'] = getattr(row, c)
         return list(stats.values())
@@ -196,6 +201,10 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 func.sum(self.model.bad_count).label('bad_count'),
                 func.sum(self.model.error_1_count).label('error_1_count'),
                 func.sum(self.model.error_2_count).label('error_2_count'),
+                func.sum(self.model.account_count).label('account_count'),
+                func.sum(self.model.account_ban_count).label('account_ban_count'),
+                func.sum(self.model.sent_count).label('sent_count'),
+                func.sum(self.model.delivered_count).label('delivered_count'),
                 func.max(self.model.timestamp).label('timestamp'),
                 func.max(self.model.ts_1).label('ts_1'),
                 func.string_agg(
@@ -241,7 +250,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 }
             for c in (
                 'start_count', 'number_count', 'code_count', 'no_code_count',
-                'waiting_count', 'bad_count', 'error_1_count', 'error_2_count'
+                'waiting_count', 'bad_count', 'error_1_count', 'error_2_count',
+                'account_count', 'account_ban_count', 'sent_count', 'delivered_count',
             ):
                 stats[pk][f'{c}_{row.service_id}'] = getattr(row, c)
         return list(stats.values())
@@ -312,6 +322,10 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 func.sum(self.model.bad_count).label('bad_count'),
                 func.sum(self.model.error_1_count).label('error_1_count'),
                 func.sum(self.model.error_2_count).label('error_2_count'),
+                func.sum(self.model.account_count).label('account_count'),
+                func.sum(self.model.account_ban_count).label('account_ban_count'),
+                func.sum(self.model.sent_count).label('sent_count'),
+                func.sum(self.model.delivered_count).label('delivered_count'),
                 func.max(self.model.timestamp).label('timestamp'),
                 func.max(self.model.ts_1).label('ts_1'),
                 func.string_agg(

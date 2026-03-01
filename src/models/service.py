@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
-from datetime import datetime
 
 from sqlalchemy import Column, ForeignKey, Integer, BigInteger, String, Boolean  # noqa
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from db.base_class import Base  # noqa
@@ -16,5 +16,6 @@ class Service(Base):
     name = Column(String, index=True)
     color_bg = Column(String, default='#d9d9d9')
     color_txt = Column(String, default='#424242')
+    columns = Column(JSONB, nullable=False, server_default='[]', default=[])
     is_active = Column(Boolean, default=True, index=True)
     # regs = relationship('Reg', back_populates='number', lazy='joined')
