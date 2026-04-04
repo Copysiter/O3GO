@@ -119,7 +119,7 @@ window.initSettingGroupsGrid = function() {
                         form_items.push({
                             field: objKey,
                             label: `${obj.name ? obj.name : (obj.description ? obj.description : objKey)}:`,
-                            editor: 'DropDownList',
+                            editor: 'ComboBox',
                             editorOptions: {
                                 dataSource: new kendo.data.DataSource({
                                     transport: {

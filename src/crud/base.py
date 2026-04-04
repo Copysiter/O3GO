@@ -114,9 +114,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> List[ModelType]:
         filter_list = self.get_filters(filters) if filters else []
         order_list = self.get_orders(orders) if orders else []
-        statement = (select(self.model).
-                     where(*filter_list).
-                     order_by(*order_list))
+        statement = select(self.model).where(*filter_list).order_by(*order_list)
         results = await db.execute(statement=statement)
         return results.unique().scalars().all()
 

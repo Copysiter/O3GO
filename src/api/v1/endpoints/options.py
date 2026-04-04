@@ -37,7 +37,7 @@ async def get_service_option(
     """
     Retrieve service options.
     """
-    rows = await crud.service.get_rows(db)
+    rows = await crud.service.get_all(db)
     return JSONResponse([{
         'text': rows[i].name if rows[i].name else rows[i].alias,
         'value': rows[i].alias if alias else rows[i].id
@@ -53,7 +53,7 @@ async def get_proxy_group_options(
     """
     Retrieve routing proxy options.
     """
-    rows = await crud.proxy_group.get_rows(
+    rows = await crud.proxy_group.get_all(
         db, orders=[{'field': 'id', 'dir': 'desc'}]
     )
     return JSONResponse([{
@@ -71,7 +71,7 @@ async def get_proxy_options(
     """
     Retrieve routing proxy options.
     """
-    rows = await crud.proxy.get_rows(db)
+    rows = await crud.proxy.get_all(db)
     return JSONResponse([{
         'text': rows[i].name if rows[i].name else rows[i].url,
         'value': rows[i].id
