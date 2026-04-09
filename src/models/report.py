@@ -86,5 +86,5 @@ class Report(Base):
           UniqueConstraint(
               'api_key', 'device_id', 'service_id', 'date',
               name='uq_report_unique'
-          )
+          ),
       )
