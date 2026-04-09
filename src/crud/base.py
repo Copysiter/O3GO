@@ -151,8 +151,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         statement = select(self.model)
         for attr, val in kwargs.items():
             statement = statement.where(getattr(self.model, attr) == val)
-        results = await db.execute(statement=statement)
-        return results.unique().scalar_one_or_none()
+        result = await db.execute(statement.limit(1))
+        return result.scalars().first()
 
     async def create(
         self, db: AsyncSession, *,

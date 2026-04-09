@@ -1,7 +1,10 @@
 from typing import TYPE_CHECKING
 from datetime import date, datetime
 
-from sqlalchemy import Column, ForeignKey, Integer, BigInteger, String, DateTime, Date, Index  # noqa
+from sqlalchemy import (
+    Column, ForeignKey, Integer, BigInteger, String, DateTime, Date, Index
+)
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from db.base_class import Base  # noqa
@@ -78,3 +81,10 @@ class Report(Base):
         'ix_report_unique',
         api_key, device_id, service_id, date
     )
+
+    __table_args__ = (
+          UniqueConstraint(
+              'api_key', 'device_id', 'service_id', 'date',
+              name='uq_report_unique'
+          )
+      )

@@ -299,8 +299,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                      where(self.model.device_id == device_id).
                      where(self.model.service_id == service_id).
                      where(self.model.date == date))
-        results = await db.execute(statement=statement)
-        return results.unique().scalar_one_or_none()
+        result = await db.execute(statement.limit(1))
+        return result.scalars().first()
 
     async def get_last(
         self, db: AsyncSession, *, device_id: int,
