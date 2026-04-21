@@ -23,6 +23,34 @@ function showEditForm(model) {
                 editor: "<div class='separator mx-n15'></div>",
             },
             {
+                field: 'cost_1',
+                label: 'Code Cost',
+                editor: 'NumericTextBox',
+                editorOptions: {
+                    min: 0,
+                    step: 0.01,
+                    format: "n2",
+                },
+                colSpan: 6,
+            },
+            {
+                field: 'cost_2',
+                label: 'Sent Cost',
+                editor: 'NumericTextBox',
+                editorOptions: {
+                    min: 0,
+                    step: 0.01,
+                    format: "n2",
+                },
+                colSpan: 6,
+            },
+            {
+                field: 'sep2',
+                colSpan: 12,
+                label: false,
+                editor: "<div class='separator mx-n15'></div>",
+            },
+            {
                 field: 'color_bg',
                 label: 'Background',
                 editor: function(container, options) {
@@ -41,7 +69,7 @@ function showEditForm(model) {
                 colSpan: 6
             },
             {
-                field: 'sep2',
+                field: 'sep3',
                 colSpan: 12,
                 label: false,
                 editor: "<div class='separator mx-n15 mt-n3'></div>",
@@ -58,6 +86,9 @@ function showEditForm(model) {
                             {text: 'Code', value: 'code'},
                             {text: 'Code, %', value: 'code_pct'},
                             {text: 'No Code', value: 'no_code'},
+                            {text: 'Cost', value: 'code_cost'},
+                            {text: 'Total', value: 'code_total'},
+                            {text: 'Code', value: 'code'},
                             {text: 'Waiting', value: 'waiting'},
                             {text: 'Bad', value: 'bad'},
                             {text: 'Error 1', value: 'error_1'},
@@ -66,7 +97,9 @@ function showEditForm(model) {
                             {text: 'Account Ban', value: 'account_ban'},
                             {text: 'Message Sent', value: 'sent'},
                             {text: 'Message Delivered', value: 'delivered'},
-                            {text: 'Message Avg', value: 'sent_avg'}
+                            {text: 'Message Avg', value: 'sent_avg'},
+                            {text: 'Cost', value: 'sent_cost'},
+                            {text: 'Total', value: 'sent_total'}
                         ]
                     }),
                     dataTextField: 'text',
@@ -79,7 +112,7 @@ function showEditForm(model) {
                 colSpan: 12,
             },
             {
-                field: 'sep3',
+                field: 'sep4',
                 colSpan: 12,
                 label: false,
                 editor: "<div class='separator mx-n15 mt-n3'></div>",
@@ -100,7 +133,7 @@ function showEditForm(model) {
                 colSpan: 6,
             },
             {
-                field: 'sep4',
+                field: 'sep5',
                 colSpan: 12,
                 label: false,
                 editor: "<div class='separator mx-n15 mt-n3'></div>",

@@ -28,6 +28,8 @@ window.initGrid = function() {
                 code: 'code',
                 code_pct: 'code, %',
                 no_code: 'no code',
+                code_cost: 'cost',
+                code_total: 'total',
                 waiting: 'waiting',
                 bad: 'bad',
                 error_1: 'error-1',
@@ -36,11 +38,11 @@ window.initGrid = function() {
                 account_ban: 'ban',
                 sent: 'sent',
                 sent_avg: 'sent, avg',
-                delivered: 'delivered'
+                delivered: 'delivered',
+                sent_cost: 'cost',
+                sent_total: 'total'
             };
             let data = result.data;
-
-            console.log(data);
 
             data.forEach((obj) => {
                 let columns = [];
@@ -73,6 +75,16 @@ window.initGrid = function() {
                                         return 0;
                                     }
                                 }
+                                if (key == 'code_total') {
+                                    if (
+                                        item.hasOwnProperty('code_cost_' + obj.id) &&
+                                        item.hasOwnProperty('code_count_' + obj.id)
+                                    ) {
+                                        return (item['code_cost_' + obj.id] * item['code_count_' + obj.id]).toFixed(2);
+                                    } else {
+                                        return 0;
+                                    }
+                                }
                                 if (key == 'sent_avg') {
                                     if (
                                         item.hasOwnProperty('sent_count_' + obj.id) &&
@@ -81,6 +93,16 @@ window.initGrid = function() {
                                         item['account_count_' + obj.id] > 0
                                     ) {
                                         return (item['sent_count_' + obj.id]/item['account_count_' + obj.id]).toFixed(1);
+                                    } else {
+                                        return 0;
+                                    }
+                                }
+                                if (key == 'sent_total') {
+                                    if (
+                                        item.hasOwnProperty('sent_cost_' + obj.id) &&
+                                        item.hasOwnProperty('sent_count_' + obj.id)
+                                    ) {
+                                        return (item['sent_cost_' + obj.id] * item['sent_count_' + obj.id]).toFixed(2);
                                     } else {
                                         return 0;
                                     }
@@ -143,7 +165,7 @@ window.initGrid = function() {
                         },
                     },
                     // data: fakedata,
-                    pageSize: 100,
+                    pageSize: 500,
                     serverPaging: true, // true
                     serverFiltering: true, // true
                     serverSorting: true, // true

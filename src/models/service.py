@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Integer, BigInteger, String, Boolean  # noqa
+from sqlalchemy import Column, ForeignKey, Float, BigInteger, String, Boolean  # noqa
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -14,6 +14,8 @@ class Service(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     alias = Column(String, unique=True, index=True)
     name = Column(String, index=True)
+    cost_1 = Column(Float, default=0)
+    cost_2 = Column(Float, default=0)
     color_bg = Column(String, default='#d9d9d9')
     color_txt = Column(String, default='#424242')
     columns = Column(JSONB, nullable=False, server_default='[]', default=[])

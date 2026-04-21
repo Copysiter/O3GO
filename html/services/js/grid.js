@@ -243,6 +243,16 @@ window.initGrid = function() {
                     },
                 },
                 {
+                    field: 'cost_1',
+                    title: 'Code Cost',
+                    filterable: false,
+                },
+                {
+                    field: 'cost_2',
+                    title: 'Sent Cost',
+                    filterable: false,
+                },
+                {
                     command: [
                         {
                             name: 'edit',

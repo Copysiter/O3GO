@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 class ServiceBase(BaseModel):
     alias: Optional[str] = None
     name: Optional[str] = None
+    cost_1: Optional[float] = 0
+    cost_2: Optional[float] = 0
     color_bg: Optional[str] = '#d9d9d9'
     color_txt: Optional[str] = '#424242'
     columns: Optional[List[str]] = Field(default_factory=list)
