@@ -86,8 +86,8 @@ function showEditForm(model) {
                             {text: 'Code', value: 'code'},
                             {text: 'Code, %', value: 'code_pct'},
                             {text: 'No Code', value: 'no_code'},
-                            {text: 'Cost', value: 'code_cost'},
-                            {text: 'Total', value: 'code_total'},
+                            {text: 'Code Cost', value: 'code_cost'},
+                            {text: 'Code Total', value: 'code_total'},
                             {text: 'Code', value: 'code'},
                             {text: 'Waiting', value: 'waiting'},
                             {text: 'Bad', value: 'bad'},
@@ -98,8 +98,8 @@ function showEditForm(model) {
                             {text: 'Message Sent', value: 'sent'},
                             {text: 'Message Delivered', value: 'delivered'},
                             {text: 'Message Avg', value: 'sent_avg'},
-                            {text: 'Cost', value: 'sent_cost'},
-                            {text: 'Total', value: 'sent_total'}
+                            {text: 'Sent Cost', value: 'sent_cost'},
+                            {text: 'Sent Total', value: 'sent_total'}
                         ]
                     }),
                     dataTextField: 'text',

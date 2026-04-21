@@ -77,10 +77,10 @@ window.initGrid = function() {
                                 }
                                 if (key == 'code_total') {
                                     if (
-                                        item.hasOwnProperty('code_cost_' + obj.id) &&
+                                        obj.cost_1 != undefined &&
                                         item.hasOwnProperty('code_count_' + obj.id)
                                     ) {
-                                        return (item['code_cost_' + obj.id] * item['code_count_' + obj.id]).toFixed(2);
+                                        return (obj.cost_1 * item['code_count_' + obj.id]).toFixed(2);
                                     } else {
                                         return 0;
                                     }
@@ -99,10 +99,10 @@ window.initGrid = function() {
                                 }
                                 if (key == 'sent_total') {
                                     if (
-                                        item.hasOwnProperty('sent_cost_' + obj.id) &&
+                                        obj.cost_2 != undefined &&
                                         item.hasOwnProperty('sent_count_' + obj.id)
                                     ) {
-                                        return (item['sent_cost_' + obj.id] * item['sent_count_' + obj.id]).toFixed(2);
+                                        return (obj.cost_2 * item['sent_count_' + obj.id]).toFixed(2);
                                     } else {
                                         return 0;
                                     }
