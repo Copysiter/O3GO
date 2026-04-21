@@ -75,6 +75,9 @@ window.initGrid = function() {
                                         return 0;
                                     }
                                 }
+                                if (key == 'code_cost') {
+                                    return obj.cost_1;
+                                }
                                 if (key == 'code_total') {
                                     if (
                                         obj.cost_1 != undefined &&
@@ -96,6 +99,9 @@ window.initGrid = function() {
                                     } else {
                                         return 0;
                                     }
+                                }
+                                if (key == 'sent_cost') {
+                                    return obj.cost_2;
                                 }
                                 if (key == 'sent_total') {
                                     if (
