@@ -43,6 +43,7 @@ window.initGrid = function() {
                 sent_total: 'total'
             };
             let data = result.data;
+            window.servicesData = data;
 
             data.forEach((obj) => {
                 let columns = [];
@@ -352,6 +353,63 @@ window.initGrid = function() {
                             },
                         },
                     }].concat(service_columns).concat([{
+                        service_id: 'total_cost',
+                        title: "Total Cost",
+                        headerTemplate: '<span>Total Cost</span>',
+                        headerAttributes: {
+                            style: 'background:#cfcfcf;',
+                        },
+                        filterable: {
+                            mode: 'menu',
+                        },
+                        columns: [{
+                            field: 'code_total',
+                            title: "<span class='rotate'>code cost</span>",
+                            sortable: false,
+                            filterable: false,
+                            headerAttributes: {
+                                class: 'rotate-cell',
+                                style: 'background:#cfcfcf;',
+                            },
+                            template: function(item) {
+                                let total = 0;
+                                if (servicesData) {
+                                    servicesData.forEach((obj) => {
+                                        if (obj.columns && obj.columns.includes('code_total') && obj.cost_1 != undefined) {
+                                            let fieldName = 'code_count_' + obj.id;
+                                            if (item.hasOwnProperty(fieldName) && item[fieldName]) {
+                                                total += obj.cost_1 * item[fieldName];
+                                            }
+                                        }
+                                    });
+                                }
+                                return total.toFixed(2);
+                            }
+                        }, {
+                            field: 'sent_total',
+                            title: "<span class='rotate'>sent cost</span>",
+                            sortable: false,
+                            filterable: false,
+                            headerAttributes: {
+                                class: 'rotate-cell',
+                                style: 'background:#cfcfcf;',
+                            },
+                            template: function(item) {
+                                let total = 0;
+                                if (servicesData) {
+                                    servicesData.forEach((obj) => {
+                                        if (obj.columns && obj.columns.includes('sent_total') && obj.cost_2 != undefined) {
+                                            let fieldName = 'sent_count_' + obj.id;
+                                            if (item.hasOwnProperty(fieldName) && item[fieldName]) {
+                                                total += obj.cost_2 * item[fieldName];
+                                            }
+                                        }
+                                    });
+                                }
+                                return total.toFixed(2);
+                            }
+                        }]
+                    }, {
                         field: 'timestamp',
                         title: 'Last Activity',
                         // width: 33,
