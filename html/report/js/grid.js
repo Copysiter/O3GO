@@ -277,12 +277,32 @@ window.initGrid = function() {
                         field: 'api_key',
                         title: 'API Key',
                         filterable: {
-                            cell: {
-                                inputWidth: 0,
-                                showOperators: true,
-                                operator: 'contains',
-                            },
-                        },
+                            multi: true,
+                            dataSource: new kendo.data.DataSource({
+                                transport: {
+                                    read: {
+                                        url: `${api_base_url}/api/v1/options/api_key`,
+                                        type: 'GET',
+                                        beforeSend: function (request) {
+                                            request.setRequestHeader(
+                                                'Authorization',
+                                                `${token_type} ${access_token}`
+                                            );
+                                        },
+                                    },
+                                },
+                            }),
+                            itemTemplate: function(e) {
+                                console.log(e);
+                                if (e.field == "all") {
+                                    //handle the check-all checkbox template
+                                    return "";
+                                } else {
+                                    //handle the other checkboxes
+                                    return "<div class=''><label class='d-flex align-items-center py-8 ps-3 border-bottom cursor-pointer'><input type='checkbox' name='" + e.field + "' value='#=value#' class='k-checkbox k-checkbox-md k-rounded-md'/><span class='ms-8'>#=text#</span></label></div>"
+                                }
+                            }
+                        }
                     },
                     {
                         field: 'device_name',
