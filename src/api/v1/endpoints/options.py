@@ -93,4 +93,7 @@ async def get_api_key_options(
     for key in await crud.setting_group.get_api_keys(db):
         api_keys.add(key.api_key)
 
-    return [{'text': api_key, 'value': api_key} for api_key in list(api_keys)]
+    return [
+        {'text': api_key, 'value': api_key}
+        for api_key in list(api_keys) if api_keys
+    ]

@@ -16,7 +16,7 @@ window.initGrid = function() {
 
         $.ajax({
             type: 'GET',
-            url: `${api_base_url}/api/v1/services/?filter[0][field]=is_active&filter[0][operator]=istrue`,
+            url: `${api_base_url}/api/v1/services/?filters[0][field]=is_active&filters[0][operator]=istrue`,
             headers: {
                 Authorization: `${token_type} ${access_token}`,
                 accept: 'application/json',
