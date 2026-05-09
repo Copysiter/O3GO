@@ -24,9 +24,22 @@ async def get_report(
     """
     Retrieve reports.
     """
-    for i in range(len(filters)):
-        if filters[i]["field"] == "api_key":
-            filters[i]["operator"] = "overlaps"
+    filtered_map: dict = {}
+    for f in filters:
+        field = f.get("field")
+        if field in filtered_map and filtered_map[field]["operator"] == "eq":
+            if isinstance(filtered_map[field]["value"], list):
+                filtered_map[field]["value"].append(f.get("value"))
+            else:
+                filtered_map[field].update({
+                    "field": field, "operator": "overlaps", "value": [
+                        filtered_map[field]["value"], f.get("value")
+                    ]
+                })
+        else:
+            filtered_map.update({field: f})
+
+    filters = list(filtered_map.values())
 
     if crud.user.is_superuser(current_user):
         report = await crud.report.get_rows(
