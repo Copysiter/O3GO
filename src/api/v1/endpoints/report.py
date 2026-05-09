@@ -24,6 +24,10 @@ async def get_report(
     """
     Retrieve reports.
     """
+    for i in range(len(filters)):
+        if filters[i]["field"] == "api_key":
+            filters[i]["operator"] == "overlaps"
+
     if crud.user.is_superuser(current_user):
         report = await crud.report.get_rows(
             db, filters=filters, orders=orders, skip=skip, limit=limit
