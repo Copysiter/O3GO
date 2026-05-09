@@ -82,7 +82,7 @@ async def get_proxy_options(
 async def get_api_key_options(
     *,
     db: Session = Depends(deps.get_db),
-    _: models.User = Depends(deps.get_current_active_user)
+    currant_user: models.User = Depends(deps.get_current_active_user)
 ) -> Any:
     """
     Retrieve api_key options.
@@ -92,6 +92,9 @@ async def get_api_key_options(
         api_keys.add(key.api_key)
     for key in await crud.setting_group.get_api_keys(db):
         api_keys.add(key.api_key)
+
+    if not currant_user.is_superuser:
+        api_keys &= set(currant_user.api_keys)
 
     return [
         {'text': api_key, 'value': api_key}

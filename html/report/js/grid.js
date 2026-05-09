@@ -164,7 +164,17 @@ window.initGrid = function() {
                                 delete data.pageSize;
                             }
                             if (data.hasOwnProperty('filter') && data.filter) {
-                                data.filter = data.filter.filters;
+                                function flattenFilters(filter) {
+                                    if (filter.filters) {
+                                        var result = [];
+                                        filter.filters.forEach(function(f) {
+                                            result = result.concat(flattenFilters(f));
+                                        });
+                                        return result;
+                                    }
+                                    return [filter];
+                                }
+                                data.filter = flattenFilters(data.filter);
                             }
 
                             if (type === 'read') return data;
