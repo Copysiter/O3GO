@@ -27,7 +27,7 @@ async def get_report(
     filtered_map: dict = {}
     for f in filters:
         field = f.get("field")
-        if field in filtered_map and filtered_map[field]["operator"] == "eq":
+        if field in filtered_map and f.get("operator") == "eq":
             if isinstance(filtered_map[field]["value"], list):
                 filtered_map[field]["value"].append(f.get("value"))
             else:
