@@ -98,5 +98,5 @@ async def get_api_key_options(
 
     return [
         {'text': api_key, 'value': api_key}
-        for api_key in list(api_keys) if api_key
+        for api_key in sorted(list(api_keys)) if api_key
     ]
