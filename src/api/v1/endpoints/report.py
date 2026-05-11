@@ -25,21 +25,26 @@ async def get_report(
     Retrieve reports.
     """
     filtered_map: dict = {}
+    other_filters: list = []
+
     for f in filters:
         field = f.get("field")
-        if field in filtered_map and f.get("operator") == "eq":
-            if isinstance(filtered_map[field]["value"], list):
-                filtered_map[field]["value"].append(f.get("value"))
+        if field == "api_key":
+            if field in filtered_map and f.get("operator") == "eq":
+                if isinstance(filtered_map[field]["value"], list):
+                    filtered_map[field]["value"].append(f.get("value"))
+                else:
+                    filtered_map[field].update({
+                        "field": field, "operator": "overlaps", "value": [
+                            filtered_map[field]["value"], f.get("value")
+                        ]
+                    })
             else:
-                filtered_map[field].update({
-                    "field": field, "operator": "overlaps", "value": [
-                        filtered_map[field]["value"], f.get("value")
-                    ]
-                })
+                filtered_map.update({field: f})
         else:
-            filtered_map.update({field: f})
+            other_filters.append(f)
 
-    filters = list(filtered_map.values())
+    filters = other_filters + list(filtered_map.values())
 
     if crud.user.is_superuser(current_user):
         report = await crud.report.get_rows(
