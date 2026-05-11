@@ -127,11 +127,17 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
             func.string_agg(
                 distinct(self.model.info_2), None).label('info_2'),
             func.string_agg(
-                distinct(self.model.info_3), None).label('info_3')
-        ).join(Device, Device.id == self.model.device_id).where(
+                distinct(self.model.info_3), None).label('info_3'),
+            Service.cost_1,
+            Service.cost_2
+        ).join(Device, Device.id == self.model.device_id).join(
+            Service, Service.id == self.model.service_id
+        ).where(
             tuple_(self.model.api_key, self.model.device_id).in_(pks), *filter_list
         ).group_by(
-            self.model.api_key, self.model.device_id, self.model.service_id
+            self.model.api_key, self.model.device_id,
+            self.model.service_id,
+            Service.cost_1, Service.cost_2
         ).order_by(*order_list)
 
         rows = await db.execute(statement=statement)
@@ -154,7 +160,15 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'info_1': row.info_1,
                     'info_2': row.info_2,
                     'info_3': row.info_3,
+                    'code_total': 0,
+                    'sent_total': 0,
                 }
+            if row.cost_1 is not None and row.code_count:
+                stats[pk][f'code_total_{row.service_id}'] = row.cost_1 * row.code_count
+                stats[pk]['code_total'] += row.cost_1 * row.code_count
+            if row.cost_2 is not None and row.sent_count:
+                stats[pk][f'sent_total_{row.service_id}'] = row.cost_2 * row.sent_count
+                stats[pk]['sent_total'] += row.cost_2 * row.sent_count
             for c in (
                 'start_count', 'number_count', 'code_count', 'no_code_count',
                 'waiting_count', 'bad_count', 'error_1_count', 'error_2_count',
@@ -219,14 +233,18 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 func.string_agg(
                     distinct(self.model.info_2), None).label('info_2'),
                 func.string_agg(
-                    distinct(self.model.info_3), None).label('info_3')
+                    distinct(self.model.info_3), None).label('info_3'),
+                Service.cost_1,
+                Service.cost_2
             ).join(Device, Device.id == self.model.device_id).
+            join(Service, Service.id == self.model.service_id).
             where(
                 tuple_(self.model.api_key, self.model.device_id).in_(pks),
                 *filter_list).
             group_by(
                 self.model.api_key, self.model.device_id,
-                self.model.service_id).
+                self.model.service_id,
+                Service.cost_1, Service.cost_2).
             order_by(*order_list))
         rows = await db.execute(statement=statement)
         stats = {}
@@ -247,7 +265,15 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'info_1': row.info_1,
                     'info_2': row.info_2,
                     'info_3': row.info_3,
+                    'code_total': 0,
+                    'sent_total': 0,
                 }
+            if row.cost_1 is not None and row.code_count:
+                stats[pk][f'code_total_{row.service_id}'] = row.cost_1 * row.code_count
+                stats[pk]['code_total'] += row.cost_1 * row.code_count
+            if row.cost_2 is not None and row.sent_count:
+                stats[pk][f'sent_total_{row.service_id}'] = row.cost_2 * row.sent_count
+                stats[pk]['sent_total'] += row.cost_2 * row.sent_count
             for c in (
                 'start_count', 'number_count', 'code_count', 'no_code_count',
                 'waiting_count', 'bad_count', 'error_1_count', 'error_2_count',

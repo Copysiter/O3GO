@@ -81,10 +81,9 @@ window.initGrid = function() {
                                 }
                                 if (key == 'code_total') {
                                     if (
-                                        obj.cost_1 != undefined &&
-                                        item.hasOwnProperty('code_count_' + obj.id)
+                                        item.hasOwnProperty('code_total_' + obj.id)
                                     ) {
-                                        return (obj.cost_1 * item['code_count_' + obj.id]).toFixed(2);
+                                        return item['code_total_' + obj.id].toFixed(2);
                                     } else {
                                         return 0;
                                     }
@@ -106,10 +105,9 @@ window.initGrid = function() {
                                 }
                                 if (key == 'sent_total') {
                                     if (
-                                        obj.cost_2 != undefined &&
-                                        item.hasOwnProperty('sent_count_' + obj.id)
+                                        item.hasOwnProperty('sent_total_' + obj.id)
                                     ) {
-                                        return (obj.cost_2 * item['sent_count_' + obj.id]).toFixed(2);
+                                        return item['sent_total_' + obj.id].toFixed(2);
                                     } else {
                                         return 0;
                                     }
@@ -402,18 +400,7 @@ window.initGrid = function() {
                                 style: 'background:#cfcfcf;',
                             },
                             template: function(item) {
-                                let total = 0;
-                                if (servicesData) {
-                                    servicesData.forEach((obj) => {
-                                        if (obj.columns && obj.columns.includes('code_total') && obj.cost_1 != undefined) {
-                                            let fieldName = 'code_count_' + obj.id;
-                                            if (item.hasOwnProperty(fieldName) && item[fieldName]) {
-                                                total += obj.cost_1 * item[fieldName];
-                                            }
-                                        }
-                                    });
-                                }
-                                return total.toFixed(2);
+                                return (item.code_total || 0).toFixed(2);
                             }
                         }, {
                             field: 'sent_total',
@@ -425,18 +412,7 @@ window.initGrid = function() {
                                 style: 'background:#cfcfcf;',
                             },
                             template: function(item) {
-                                let total = 0;
-                                if (servicesData) {
-                                    servicesData.forEach((obj) => {
-                                        if (obj.columns && obj.columns.includes('sent_total') && obj.cost_2 != undefined) {
-                                            let fieldName = 'sent_count_' + obj.id;
-                                            if (item.hasOwnProperty(fieldName) && item[fieldName]) {
-                                                total += obj.cost_2 * item[fieldName];
-                                            }
-                                        }
-                                    });
-                                }
-                                return total.toFixed(2);
+                                return (item.sent_total || 0).toFixed(2);
                             }
                         }]
                     }, {
