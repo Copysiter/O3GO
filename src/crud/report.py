@@ -175,7 +175,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 'account_count', 'account_ban_count', 'sent_count', 'delivered_count',
             ):
                 stats[pk][f'{service_map.get(row.service_id)}_{c}'] = getattr(row, c)
-        return list(stats.values())
+        pk_order = {pk: i for i, pk in enumerate(pks)}
+        return sorted(stats.values(), key=lambda x: pk_order.get((x['api_key'], x['device_id']), 0))
 
     async def get_all_by_user(
         self, db: AsyncSession, *, user: User,
@@ -280,7 +281,8 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 'account_count', 'account_ban_count', 'sent_count', 'delivered_count',
             ):
                 stats[pk][f'{c}_{row.service_id}'] = getattr(row, c)
-        return list(stats.values())
+        pk_order = {pk: i for i, pk in enumerate(pks)}
+        return sorted(stats.values(), key=lambda x: pk_order.get((x['api_key'], x['device_id']), 0))
 
     async def get_count(
         self, db: AsyncSession, *, filters: dict = None

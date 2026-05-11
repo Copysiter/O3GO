@@ -266,12 +266,54 @@ window.initGrid = function() {
                     filterable: true
                 },
                 excelExport: function(e){
-                    var sheet = e.workbook.sheets[0];
-                    for (var i = 0; i < sheet.rows.length; i++) {
-                        for (var ci = 0; ci < sheet.rows[i].cells.length; ci++) {
-                            sheet.rows[i].cells[ci].value = stripFunnyChars(sheet.rows[i].cells[ci].value)
+                    var grid = e.sender;
+                    var columns = [];
+                    function flatten(cols, depth) {
+                        for (var i = 0; i < cols.length; i++) {
+                            if (cols[i].columns) {
+                                flatten(cols[i].columns, depth + 1);
+                            } else {
+                                columns.push(cols[i]);
+                            }
                         }
                     }
+                    flatten(grid.columns, 0);
+
+                    var data = e.data;
+                    var rows = [];
+
+                    var headerRow = {cells: [], type: 'header'};
+                    for (var ci = 0; ci < columns.length; ci++) {
+                        var title = columns[ci].title || columns[ci].field || '';
+                        headerRow.cells.push({value: title.replace(/<[^>]*>/g, '')});
+                    }
+                    rows.push(headerRow);
+
+                    for (var di = 0; di < data.length; di++) {
+                        var item = data[di];
+                        var row = {cells: []};
+                        for (var ci = 0; ci < columns.length; ci++) {
+                            var field = columns[ci].field;
+                            var tmpl = columns[ci].template;
+                            var value = '';
+                            if (tmpl) {
+                                value = tmpl(item);
+                            } else if (field && item.hasOwnProperty(field)) {
+                                value = item[field];
+                            }
+                            if (typeof value === 'string') {
+                                value = stripFunnyChars(value);
+                                var num = parseFloat(value.replace(',', '.'));
+                                if (!isNaN(num) && num.toString() === value.replace(',', '.')) {
+                                    value = num;
+                                }
+                            }
+                            row.cells.push({value: value});
+                        }
+                        rows.push(row);
+                    }
+
+                    e.workbook.sheets[0].rows = rows;
                 },
                 columns: [
                     {
