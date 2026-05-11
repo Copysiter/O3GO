@@ -178,29 +178,72 @@ async def export_report(
         'info_2': 'Info 2',
         'info_3': 'Info 3'
     }
+    services = await crud.service.get_all(db=db)
+    cost_map = {}
+    service_map = {}
+    for s in services:
+        cost_map[s.id] = {'cost_1': s.cost_1 or 0, 'cost_2': s.cost_2 or 0}
+        display_name = s.name or (s.alias or '').title()
+        key_name = display_name.replace(' ', '_')
+        service_map[s.id] = {'key': key_name, 'display': display_name}
+    count_columns = [
+        'start_count', 'number_count', 'code_count', 'no_code_count',
+        'waiting_count', 'bad_count', 'error_1_count', 'error_2_count',
+        'account_count', 'account_ban_count', 'sent_count', 'delivered_count',
+    ]
+    svc_keys = []
+    for svc_id, svc_info in service_map.items():
+        svc_key = svc_info['key']
+        for c in count_columns:
+            svc_keys.append(f'{svc_key}_{c}')
+        for suffix, label in [
+            ('code_cost', 'Code Cost'), ('code_total', 'Code Total'),
+            ('sent_cost', 'Sent Cost'), ('sent_total', 'Sent Total'),
+        ]:
+            field = f'{svc_key}_{suffix}'
+            svc_keys.append(field)
+            COLUMN_NAMES_MAP[field] = f'{svc_info["display"]} {label}'
+    COLUMN_NAMES_MAP['code_total'] = 'Total Code Cost'
+    COLUMN_NAMES_MAP['sent_total'] = 'Total Sent Cost'
+    all_keys = [
+        'api_key', 'device_id', 'device_name', 'device_ext_id',
+        'device_operator', 'device_root',
+    ] + svc_keys + [
+        'code_total', 'sent_total',
+        'timestamp', 'timedelta', 'ts_1', 'info_1', 'info_2', 'info_3'
+    ]
     if crud.user.is_superuser(current_user):
         reports = await crud.report.get_all(db=db, filters=filters)
     else:
         reports = await crud.report.get_all_by_user(db=db, filters=filters)
-
+    for report in reports:
+        code_total = 0
+        sent_total = 0
+        for svc_id, svc_info in service_map.items():
+            svc_key = svc_info['key']
+            costs = cost_map.get(svc_id, {'cost_1': 0, 'cost_2': 0})
+            code_count = report.get(f'{svc_key}_code_count', 0) or 0
+            sent_count = report.get(f'{svc_key}_sent_count', 0) or 0
+            report[f'{svc_key}_code_cost'] = costs['cost_1']
+            report[f'{svc_key}_code_total'] = round(costs['cost_1'] * code_count, 2)
+            report[f'{svc_key}_sent_cost'] = costs['cost_2']
+            report[f'{svc_key}_sent_total'] = round(costs['cost_2'] * sent_count, 2)
+            code_total += costs['cost_1'] * code_count
+            sent_total += costs['cost_2'] * sent_count
+        report['code_total'] = round(code_total, 2)
+        report['sent_total'] = round(sent_total, 2)
     output = BytesIO()
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = 'Report'
-
-    headers = reports[0].keys()
-    headers = list(map(
-        lambda x: COLUMN_NAMES_MAP.get(x, x.replace('_', ' ')), headers
-    ))
+    headers = [COLUMN_NAMES_MAP.get(k, k.replace('_', ' ').title()) for k in all_keys]
     sheet.append(headers)
-
     for report in reports:
-        if report['timestamp']:
+        if report.get('timestamp'):
             report['timestamp'] = report['timestamp'].strftime('%Y-%m-%d %H:%M:%S')
-        if report['ts_1']:
+        if report.get('ts_1'):
             report['ts_1'] = report['ts_1'].strftime('%Y-%m-%d %H:%M:%S')
-        sheet.append(list(report.values()))
-
+        sheet.append([report.get(k, 0) for k in all_keys])
     table_ref = 'A1:{}'.format(
         sheet.cell(row=sheet.max_row, column=sheet.max_column).coordinate
     )
@@ -212,20 +255,16 @@ async def export_report(
     )
     table.tableStyleInfo = style
     sheet.add_table(table)
-
     for column in sheet.columns:
         adjusted_width = max(len(str(cell.value)) for cell in column)
         sheet.column_dimensions[
             column[0].column_letter].width = adjusted_width + 5
-
     workbook.save(output)
     output.seek(0)
-
     filename = f'o3go_stats_report_{datetime.utcnow().strftime("%Y%m%d%H%M%S")}.xlsx'
     headers = {
         'Content-Disposition': f'attachment; filename={filename}'
     }
-
     return StreamingResponse(
         output,
         media_type='application/vnd.openxmlformats-'
