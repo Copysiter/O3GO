@@ -2,6 +2,8 @@ window.initGrid = function() {
     let timer = null;
     let resizeColumn = false;
     let showLoader = true;
+    // let { access_token, token_type } =
+    //     window.storageToken.options.offlineStorage.getItem();
     let token = window.isAuth;
 
     try {
@@ -79,9 +81,10 @@ window.initGrid = function() {
                                 }
                                 if (key == 'code_total') {
                                     if (
-                                        item.hasOwnProperty('code_total_' + obj.id)
+                                        obj.cost_1 != undefined &&
+                                        item.hasOwnProperty('code_count_' + obj.id)
                                     ) {
-                                        return item['code_total_' + obj.id].toFixed(2);
+                                        return (obj.cost_1 * item['code_count_' + obj.id]).toFixed(2);
                                     } else {
                                         return 0;
                                     }
@@ -103,9 +106,10 @@ window.initGrid = function() {
                                 }
                                 if (key == 'sent_total') {
                                     if (
-                                        item.hasOwnProperty('sent_total_' + obj.id)
+                                        obj.cost_2 != undefined &&
+                                        item.hasOwnProperty('sent_count_' + obj.id)
                                     ) {
-                                        return item['sent_total_' + obj.id].toFixed(2);
+                                        return (obj.cost_2 * item['sent_count_' + obj.id]).toFixed(2);
                                     } else {
                                         return 0;
                                     }
@@ -134,195 +138,6 @@ window.initGrid = function() {
                     });
                 }
             });
-
-            var gridColumns = [
-                {
-                    field: 'alert',
-                    title: ' ',
-                    filterable: false,
-                    sortable: false,
-                    template: '# if (timedelta > 300) { #<div class="mdi mdi-alert text-red fs-18 mx-n2 my-n5"></div># } else { ## } #'
-                },
-                {
-                    field: 'api_key',
-                    title: 'API Key',
-                    filterable: {
-                        multi: true,
-                        dataSource: new kendo.data.DataSource({
-                            transport: {
-                                read: {
-                                    url: `${api_base_url}/api/v1/options/api_key`,
-                                    type: 'GET',
-                                    beforeSend: function (request) {
-                                        request.setRequestHeader(
-                                            'Authorization',
-                                            `${token_type} ${access_token}`
-                                        );
-                                    },
-                                },
-                            },
-                        }),
-                        itemTemplate: function(e) {
-                            console.log(e);
-                            if (e.field == "all") {
-                                return "";
-                            } else {
-                                return "<div class=''><label class='d-flex align-items-center py-8 ps-3 border-bottom cursor-pointer'><input type='checkbox' name='" + e.field + "' value='#=value#' class='k-checkbox k-checkbox-md k-rounded-md'/><span class='ms-8'>#=text#</span></label></div>"
-                            }
-                        }
-                    }
-                },
-                {
-                    field: 'device_name',
-                    title: 'Device',
-                    sortable: false,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'contains',
-                        },
-                    },
-                    template: '# if (device_name) { ##: device_name ## } else { ## } #'
-                },
-                {
-                    field: 'device_ext_id',
-                    title: 'Ext ID',
-                    sortable: false,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'contains',
-                        },
-                    },
-                },
-                {
-                    field: 'device_root',
-                    title: 'Root',
-                    sortable: false,
-                    template: "<div class='marker block #=device_root == 1 ? 'green' : 'red'#'><i></i></div>",
-                    filterable: false,
-                },
-                {
-                    field: 'device_operator',
-                    title: 'Operator',
-                    sortable: false,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'contains',
-                        },
-                    },
-                }
-            ].concat(service_columns).concat([
-                {
-                    service_id: 'total_cost',
-                    title: "Total Cost",
-                    headerTemplate: '<span>Total Cost</span>',
-                    headerAttributes: {
-                        style: 'background:#cfcfcf;',
-                    },
-                    filterable: {
-                        mode: 'menu',
-                    },
-                    columns: [{
-                        field: 'code_total',
-                        title: "<span class='rotate'>code cost</span>",
-                        sortable: false,
-                        filterable: false,
-                        headerAttributes: {
-                            class: 'rotate-cell',
-                            style: 'background:#cfcfcf;',
-                        },
-                        template: function(item) {
-                            return (item.code_total || 0).toFixed(2);
-                        }
-                    }, {
-                        field: 'sent_total',
-                        title: "<span class='rotate'>sent cost</span>",
-                        sortable: false,
-                        filterable: false,
-                        headerAttributes: {
-                            class: 'rotate-cell',
-                            style: 'background:#cfcfcf;',
-                        },
-                        template: function(item) {
-                            return (item.sent_total || 0).toFixed(2);
-                        }
-                    }]
-                }, {
-                    field: 'timestamp',
-                    title: 'Last Activity',
-                    sortable: true,
-                    filterable: false,
-                    format: '{0: yyyy-MM-dd HH:mm:ss}',
-                },
-                {
-                    field: 'ts_1',
-                    title: 'Last Success Code',
-                    filterable: false,
-                    format: '{0: yyyy-MM-dd HH:mm:ss}',
-                },
-                {
-                    field: 'info_1',
-                    title: 'Info 1',
-                    sortable: false,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'contains',
-                        },
-                    },
-                },
-                {
-                    field: 'info_2',
-                    title: 'Info 2',
-                    sortable: false,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'contains',
-                        },
-                    },
-                },
-                {
-                    field: 'info_3',
-                    title: 'Info 3',
-                    sortable: false,
-                    filterable: {
-                        cell: {
-                            inputWidth: 0,
-                            showOperators: true,
-                            operator: 'contains',
-                        },
-                    },
-                }
-            ]);
-
-            var leafColumns = [];
-            function collectLeaves(cols, parentTitle) {
-                for (var i = 0; i < cols.length; i++) {
-                    var col = cols[i];
-                    var pTitle = (col.title || '').replace(/<[^>]*>/g, '') || parentTitle || '';
-                    if (col.columns) {
-                        collectLeaves(col.columns, pTitle);
-                    } else if (col.field || col.template) {
-                        var title = (col.title || '').replace(/<[^>]*>/g, '') || col.field || '';
-                        if (pTitle && title && pTitle !== title) {
-                            title = pTitle + ' - ' + title;
-                        } else if (pTitle && !title) {
-                            title = pTitle;
-                        }
-                        leafColumns.push({field: col.field, template: col.template, exportTitle: title});
-                    }
-                }
-            }
-            collectLeaves(gridColumns, '');
-
             $('#report-grid').kendoGrid({
                 dataSource: {
                     transport: {
@@ -334,6 +149,9 @@ window.initGrid = function() {
                             },
                             dataType: 'json',
                         },
+                        // parameterMap: function (options, type) {
+                        //     return kendo.stringify(options);
+                        // },
                         parameterMap: function (data, type) {
                             if (data.hasOwnProperty('take')) {
                                 data.limit = data.take;
@@ -363,10 +181,11 @@ window.initGrid = function() {
                             return kendo.stringify(data);
                         },
                     },
+                    // data: fakedata,
                     pageSize: 500,
-                    serverPaging: true,
-                    serverFiltering: true,
-                    serverSorting: true,
+                    serverPaging: true, // true
+                    serverFiltering: true, // true
+                    serverSorting: true, // true
                     schema: {
                         data: function (response) {
                             if (response.data !== undefined) return response.data;
@@ -404,6 +223,15 @@ window.initGrid = function() {
                 },
                 dataBound: function (e) {
                     showLoader = true;
+                    // if (!resizeColumn) {
+                    //     autoFitColumn(e.sender);
+                    //     resizeColumn = true;
+                    // }
+
+                    // timer = setTimeout(function () {
+                    //     showLoader = false;
+                    //     e.sender.dataSource.read();
+                    // }, 30000);
                 },
                 filterable: {
                     mode: 'menu',
@@ -439,43 +267,238 @@ window.initGrid = function() {
                     allPages: true,
                     filterable: true
                 },
-                excelExport: function(e) {
-                    var rows = [];
-
-                    var headerRow = {cells: [], type: 'header'};
-                    for (var ci = 0; ci < leafColumns.length; ci++) {
-                        headerRow.cells.push({value: leafColumns[ci].exportTitle});
+                excelExport: function(e){
+                    var sheet = e.workbook.sheets[0];
+                    for (var i = 0; i < sheet.rows.length; i++) {
+                        for (var ci = 0; ci < sheet.rows[i].cells.length; ci++) {
+                            sheet.rows[i].cells[ci].value = stripFunnyChars(sheet.rows[i].cells[ci].value)
+                        }
                     }
-                    rows.push(headerRow);
-
-                    var data = e.data;
-                    for (var di = 0; di < data.length; di++) {
-                        var item = data[di];
-                        var row = {cells: []};
-                        for (var ci = 0; ci < leafColumns.length; ci++) {
-                            var field = leafColumns[ci].field;
-                            var tmpl = leafColumns[ci].template;
-                            var value = '';
-                            if (tmpl) {
-                                value = tmpl(item);
-                            } else if (field && item.hasOwnProperty(field)) {
-                                value = item[field];
-                            }
-                            if (typeof value === 'string') {
-                                value = stripFunnyChars(value);
-                                var num = parseFloat(value.replace(',', '.'));
-                                if (!isNaN(num) && num.toString() === value.replace(',', '.')) {
-                                    value = num;
+                },
+                columns: [
+                    {
+                        field: 'alert',
+                        title: ' ',
+                        filterable: false,
+                        sortable: false,
+                        template: '# if (timedelta > 300) { #<div class="mdi mdi-alert text-red fs-18 mx-n2 my-n5"></div># } else { ## } #'
+                    },
+                    {
+                        field: 'api_key',
+                        title: 'API Key',
+                        filterable: {
+                            multi: true,
+                            dataSource: new kendo.data.DataSource({
+                                transport: {
+                                    read: {
+                                        url: `${api_base_url}/api/v1/options/api_key`,
+                                        type: 'GET',
+                                        beforeSend: function (request) {
+                                            request.setRequestHeader(
+                                                'Authorization',
+                                                `${token_type} ${access_token}`
+                                            );
+                                        },
+                                    },
+                                },
+                            }),
+                            itemTemplate: function(e) {
+                                console.log(e);
+                                if (e.field == "all") {
+                                    //handle the check-all checkbox template
+                                    return "";
+                                } else {
+                                    //handle the other checkboxes
+                                    return "<div class=''><label class='d-flex align-items-center py-8 ps-3 border-bottom cursor-pointer'><input type='checkbox' name='" + e.field + "' value='#=value#' class='k-checkbox k-checkbox-md k-rounded-md'/><span class='ms-8'>#=text#</span></label></div>"
                                 }
                             }
-                            row.cells.push({value: value});
                         }
-                        rows.push(row);
-                    }
-
-                    e.workbook.sheets[0].rows = rows;
-                },
-                columns: gridColumns,
+                    },
+                    {
+                        field: 'device_name',
+                        title: 'Device',
+                        sortable: false,
+                        filterable: {
+                            cell: {
+                                inputWidth: 0,
+                                showOperators: true,
+                                operator: 'contains',
+                            },
+                        },
+                        /*
+                        filterable: {
+                            multi: true,
+                            dataSource: {
+                                transport: {
+                                    read: {
+                                        url: `${api_base_url}/api/v1/options/device`,
+                                        type: 'GET',
+                                        beforeSend: function (request) {
+                                            request.setRequestHeader('Authorization', `${token_type} ${access_token}`);
+                                        },
+                                        dataType: 'json',
+                                    }
+                                }
+                            },
+                            itemTemplate: function(e) {
+                                if (e.field == "all") {
+                                    return "";
+                                } else {
+                                    return "<div class=''><label class='d-flex align-items-center py-8 ps-3 border-bottom cursor-pointer'><input type='checkbox' name='" + e.field + "' value='#=value#' class='k-checkbox k-checkbox-md k-rounded-md'/><span class='ms-8'>#=text#</span></label></div>"
+                                }
+                            }
+                        },
+                        */
+                        template: '# if (device_name) { ##: device_name ## } else { ## } #'
+                    },
+                    {
+                        field: 'device_ext_id',
+                        title: 'Ext ID',
+                        sortable: false,
+                        filterable: {
+                            cell: {
+                                inputWidth: 0,
+                                showOperators: true,
+                                operator: 'contains',
+                            },
+                        },
+                    },
+                    {
+                        field: 'device_root',
+                        title: 'Root',
+                        sortable: false,
+                        // width: 44,
+                        template: "<div class='marker block #=device_root == 1 ? 'green' : 'red'#'><i></i></div>",
+                        filterable: false,
+                    },
+                    {
+                        field: 'device_operator',
+                        title: 'Operator',
+                        sortable: false,
+                        filterable: {
+                            cell: {
+                                inputWidth: 0,
+                                showOperators: true,
+                                operator: 'contains',
+                            },
+                        },
+                    }].concat(service_columns).concat([{
+                        service_id: 'total_cost',
+                        title: "Total Cost",
+                        headerTemplate: '<span>Total Cost</span>',
+                        headerAttributes: {
+                            style: 'background:#cfcfcf;',
+                        },
+                        filterable: {
+                            mode: 'menu',
+                        },
+                        columns: [{
+                            field: 'code_total',
+                            title: "<span class='rotate'>code cost</span>",
+                            sortable: false,
+                            filterable: false,
+                            headerAttributes: {
+                                class: 'rotate-cell',
+                                style: 'background:#cfcfcf;',
+                            },
+                            template: function(item) {
+                                let total = 0;
+                                if (servicesData) {
+                                    servicesData.forEach((obj) => {
+                                        if (obj.columns && obj.columns.includes('code_total') && obj.cost_1 != undefined) {
+                                            let fieldName = 'code_count_' + obj.id;
+                                            if (item.hasOwnProperty(fieldName) && item[fieldName]) {
+                                                total += obj.cost_1 * item[fieldName];
+                                            }
+                                        }
+                                    });
+                                }
+                                return total.toFixed(2);
+                            }
+                        }, {
+                            field: 'sent_total',
+                            title: "<span class='rotate'>sent cost</span>",
+                            sortable: false,
+                            filterable: false,
+                            headerAttributes: {
+                                class: 'rotate-cell',
+                                style: 'background:#cfcfcf;',
+                            },
+                            template: function(item) {
+                                let total = 0;
+                                if (servicesData) {
+                                    servicesData.forEach((obj) => {
+                                        if (obj.columns && obj.columns.includes('sent_total') && obj.cost_2 != undefined) {
+                                            let fieldName = 'sent_count_' + obj.id;
+                                            if (item.hasOwnProperty(fieldName) && item[fieldName]) {
+                                                total += obj.cost_2 * item[fieldName];
+                                            }
+                                        }
+                                    });
+                                }
+                                return total.toFixed(2);
+                            }
+                        }]
+                    }, {
+                        field: 'timestamp',
+                        title: 'Last Activity',
+                        // width: 33,
+                        sortable: true,
+                        filterable: false,
+                        // filterable: {
+                        //     cell: {
+                        //         inputWidth: 0,
+                        //         showOperators: true,
+                        //         operator: 'eq',
+                        //     },
+                        // },
+                        format: '{0: yyyy-MM-dd HH:mm:ss}',
+                    },
+                    {
+                        field: 'ts_1',
+                        title: 'Last Success Code',
+                        // width: 33,
+                        filterable: false,
+                        format: '{0: yyyy-MM-dd HH:mm:ss}',
+                    },
+                    {
+                        field: 'info_1',
+                        title: 'Info 1',
+                        sortable: false,
+                        filterable: {
+                            cell: {
+                                inputWidth: 0,
+                                showOperators: true,
+                                operator: 'contains',
+                            },
+                        },
+                    },
+                    {
+                        field: 'info_2',
+                        title: 'Info 2',
+                        sortable: false,
+                        filterable: {
+                            cell: {
+                                inputWidth: 0,
+                                showOperators: true,
+                                operator: 'contains',
+                            },
+                        },
+                    },
+                    {
+                        field: 'info_3',
+                        title: 'Info 3',
+                        sortable: false,
+                        filterable: {
+                            cell: {
+                                inputWidth: 0,
+                                showOperators: true,
+                                operator: 'contains',
+                            },
+                        },
+                    },
+                    {}
+                ]),
             });
             window.optimize_grid(['#report-grid']);
         }).fail(function (result) {

@@ -127,17 +127,11 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
             func.string_agg(
                 distinct(self.model.info_2), None).label('info_2'),
             func.string_agg(
-                distinct(self.model.info_3), None).label('info_3'),
-            Service.cost_1,
-            Service.cost_2
-        ).join(Device, Device.id == self.model.device_id).join(
-            Service, Service.id == self.model.service_id
-        ).where(
+                distinct(self.model.info_3), None).label('info_3')
+        ).join(Device, Device.id == self.model.device_id).where(
             tuple_(self.model.api_key, self.model.device_id).in_(pks), *filter_list
         ).group_by(
-            self.model.api_key, self.model.device_id,
-            self.model.service_id,
-            Service.cost_1, Service.cost_2
+            self.model.api_key, self.model.device_id, self.model.service_id
         ).order_by(*order_list)
 
         rows = await db.execute(statement=statement)
@@ -160,23 +154,14 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'info_1': row.info_1,
                     'info_2': row.info_2,
                     'info_3': row.info_3,
-                    'code_total': 0,
-                    'sent_total': 0,
                 }
-            if row.cost_1 is not None and row.code_count:
-                stats[pk][f'code_total_{row.service_id}'] = row.cost_1 * row.code_count
-                stats[pk]['code_total'] += row.cost_1 * row.code_count
-            if row.cost_2 is not None and row.sent_count:
-                stats[pk][f'sent_total_{row.service_id}'] = row.cost_2 * row.sent_count
-                stats[pk]['sent_total'] += row.cost_2 * row.sent_count
             for c in (
                 'start_count', 'number_count', 'code_count', 'no_code_count',
                 'waiting_count', 'bad_count', 'error_1_count', 'error_2_count',
                 'account_count', 'account_ban_count', 'sent_count', 'delivered_count',
             ):
                 stats[pk][f'{service_map.get(row.service_id)}_{c}'] = getattr(row, c)
-        pk_order = {pk: i for i, pk in enumerate(pks)}
-        return sorted(stats.values(), key=lambda x: pk_order.get((x['api_key'], x['device_id']), 0))
+        return list(stats.values())
 
     async def get_all_by_user(
         self, db: AsyncSession, *, user: User,
@@ -234,18 +219,14 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                 func.string_agg(
                     distinct(self.model.info_2), None).label('info_2'),
                 func.string_agg(
-                    distinct(self.model.info_3), None).label('info_3'),
-                Service.cost_1,
-                Service.cost_2
+                    distinct(self.model.info_3), None).label('info_3')
             ).join(Device, Device.id == self.model.device_id).
-            join(Service, Service.id == self.model.service_id).
             where(
                 tuple_(self.model.api_key, self.model.device_id).in_(pks),
                 *filter_list).
             group_by(
                 self.model.api_key, self.model.device_id,
-                self.model.service_id,
-                Service.cost_1, Service.cost_2).
+                self.model.service_id).
             order_by(*order_list))
         rows = await db.execute(statement=statement)
         stats = {}
@@ -266,23 +247,14 @@ class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
                     'info_1': row.info_1,
                     'info_2': row.info_2,
                     'info_3': row.info_3,
-                    'code_total': 0,
-                    'sent_total': 0,
                 }
-            if row.cost_1 is not None and row.code_count:
-                stats[pk][f'code_total_{row.service_id}'] = row.cost_1 * row.code_count
-                stats[pk]['code_total'] += row.cost_1 * row.code_count
-            if row.cost_2 is not None and row.sent_count:
-                stats[pk][f'sent_total_{row.service_id}'] = row.cost_2 * row.sent_count
-                stats[pk]['sent_total'] += row.cost_2 * row.sent_count
             for c in (
                 'start_count', 'number_count', 'code_count', 'no_code_count',
                 'waiting_count', 'bad_count', 'error_1_count', 'error_2_count',
                 'account_count', 'account_ban_count', 'sent_count', 'delivered_count',
             ):
                 stats[pk][f'{c}_{row.service_id}'] = getattr(row, c)
-        pk_order = {pk: i for i, pk in enumerate(pks)}
-        return sorted(stats.values(), key=lambda x: pk_order.get((x['api_key'], x['device_id']), 0))
+        return list(stats.values())
 
     async def get_count(
         self, db: AsyncSession, *, filters: dict = None
