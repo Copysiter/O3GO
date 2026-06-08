@@ -9,6 +9,7 @@ from .proxy import Proxy, ProxyCreate, ProxyInDB, ProxyUpdate, ProxyRows, ProxyI
 from .number import Number, NumberCreate, NumberInDB, NumberUpdate, NumberRows, NumberExt, NumberFilter  # noqa
 from .reg import Reg, RegCreate, RegInDB, RegUpdate, RegRows  # noqa
 from .report import Report, ReportCreate, ReportInDB, ReportUpdate, ReportRows  # noqa
+from .analytics import Analytics, AnalyticsCreate, AnalyticsInDB, AnalyticsUpdate, AnalyticsRows, AnalyticsRunRequest, AnalyticsIds  # noqa
 from .setting import (
     Setting, SettingCreate, SettingInDB, SettingUpdate, SettingRows,  # noqa
     SettingGroup, SettingGroupCreate, SettingGroupInDB, SettingGroupUpdate, SettingGroupRows,  # noqa

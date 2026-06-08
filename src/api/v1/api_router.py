@@ -1,7 +1,8 @@
 ﻿from fastapi import APIRouter
 
 from .endpoints import (
-    base, auth, users, devices, services, proxy_groups, proxies, report, numbers, settings, setting_groups, options, export, utils
+    base, auth, users, devices, services, proxy_groups, proxies, report, numbers,
+    settings, setting_groups, options, export, utils, analytics, storage
 )
 
 
@@ -21,3 +22,5 @@ api_router.include_router(settings.router, prefix='/settings', tags=['Setting'])
 api_router.include_router(setting_groups.router, prefix='/setting_groups', tags=['Setting Groups'])
 api_router.include_router(options.router, prefix='/options', tags=['Options'])
 api_router.include_router(export.router, prefix='/export', tags=['Export'])
+api_router.include_router(analytics.router, prefix='/analytics', tags=['Analytics'])
+api_router.include_router(storage.router, prefix='/storage', tags=['Storage'])

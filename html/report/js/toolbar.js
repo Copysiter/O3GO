@@ -1,4 +1,42 @@
 window.initToolbar = function() {
+    function showReportNotification(message, type) {
+        let notification = $('#report-notification').data('kendoNotification');
+        if (!notification) {
+            $('#report-notification').kendoNotification({
+                position: {
+                    top: 54,
+                    right: 12,
+                },
+                stacking: 'down',
+                autoHideAfter: 5000,
+                width: 'auto',
+            });
+            notification = $('#report-notification').data('kendoNotification');
+        }
+        notification.show(message, type || 'info');
+    }
+
+    function currentReportFilters() {
+        const grid = $('#report-grid').data('kendoGrid');
+        const filter = grid.dataSource.filter();
+        if (!filter) return [];
+        if (filter.filters) return filter.filters.slice();
+        return [filter];
+    }
+
+    function currentReportPeriod(filters) {
+        const periodFilter = filters.find((item) => item.field === 'period');
+        if (periodFilter) {
+            const ddl = $('#period-ddl').data('kendoDropDownList');
+            const text = ddl ? ddl.text() : '';
+            return text && text !== 'Select Period' ? text : periodFilter.value;
+        }
+        const from = filters.find((item) => item.field === 'date' && item.operator === 'gte');
+        const to = filters.find((item) => item.field === 'date' && item.operator === 'lte');
+        if (from && to) return `${from.value} — ${to.value}`;
+        return 'Current selection';
+    }
+
     $('#report-toolbar').kendoToolBar({
         items: [
             {
@@ -51,6 +89,41 @@ window.initToolbar = function() {
                     }
                     const exportURL = `${api_base_url}/api/v1/export/report?${params.toString()}`;
                     exportToExcel(exportURL)
+                },
+            },
+            {
+                type: 'button',
+                text: 'Create Analytics',
+                icon: 'chart-column-clustered',
+                click: function (e) {
+                    const filters = currentReportFilters();
+                    const period = currentReportPeriod(filters);
+                    const token = window.isAuth;
+                    const { access_token, token_type } = token;
+                    kendo.ui.progress($('#content'), true);
+                    $.ajax({
+                        url: `${api_base_url}/api/v1/analytics/run`,
+                        type: 'POST',
+                        data: JSON.stringify({ period: period, filters: filters }),
+                        processData: false,
+                        contentType: 'application/json',
+                        headers: {
+                            Authorization: `${token_type} ${access_token}`,
+                            accept: 'application/json',
+                        },
+                    }).done(function (data) {
+                        showReportNotification(
+                            `Analytics generation started. ID: ${data.id}`,
+                            'success'
+                        );
+                    }).fail(function (xhr) {
+                        const detail = xhr.responseJSON && xhr.responseJSON.detail
+                            ? xhr.responseJSON.detail
+                            : 'Failed to start analytics generation';
+                        showReportNotification(detail, 'error');
+                    }).always(function () {
+                        kendo.ui.progress($('#content'), false);
+                    });
                 },
             },
         ],

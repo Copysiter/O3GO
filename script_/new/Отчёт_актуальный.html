@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчёт по сотрудникам</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+         margin: 0; padding: 24px; background: #f5f6f8; color: #1a1a1a; }
+  .container { max-width: 1280px; margin: 0 auto; }
+  h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; }
+  .subtitle { color: #666; margin-bottom: 24px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .card { background: #fff; border-radius: 10px; padding: 16px 20px; border: 1px solid #e5e7eb; }
+  .card .label { font-size: 13px; color: #6b7280; }
+  .card .value { font-size: 26px; font-weight: 600; margin-top: 4px; }
+  .card .hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+  section { background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; padding: 24px; margin-bottom: 24px; }
+  section h2 { margin: 0 0 16px; font-size: 20px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+  th { background: #f9fafb; font-weight: 600; color: #374151; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:hover { background: #fafbfc; }
+  .bar { background: linear-gradient(to right, #4472C4 var(--w), transparent var(--w)); }
+  .good { color: #137333; font-weight: 500; }
+  .bad { color: #c5221f; font-weight: 500; }
+  .neutral { color: #5f6368; }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .chip-green { background: #e6f4ea; color: #137333; }
+  .chip-red { background: #fce8e6; color: #c5221f; }
+  .chip-yellow { background: #fef7e0; color: #b06000; }
+  .chip-blue { background: #e8f0fe; color: #1967d2; }
+  .rec-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .rec { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: #fafbfc; }
+  .rec-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .rec-name { font-weight: 600; font-size: 16px; }
+  .rec-money { color: #1967d2; font-weight: 600; }
+  .rec-pluses { background: #e6f4ea; border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; }
+  .rec-minuses { background: #fce8e6; border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+  .channel-bar { display: flex; height: 24px; border-radius: 4px; overflow: hidden; margin-top: 8px; min-width: 200px; }
+  .channel-bar > div { height: 100%; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; font-size: 13px; color: #6b7280; }
+  .legend > span { display: flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+  .footer { text-align: center; color: #9ca3af; font-size: 12px; padding: 16px 0; }
+  /* Employee cards */
+  .emp-card { border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  .emp-card summary { padding: 14px 18px; cursor: pointer; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; list-style: none; }
+  .emp-card summary::-webkit-details-marker { display: none; }
+  .emp-card summary:hover { background: #fafbfc; }
+  .emp-card[open] summary { border-bottom: 1px solid #e5e7eb; }
+  .emp-badge { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+  .emp-badge.green { background: #e6f4ea; color: #137333; }
+  .emp-badge.yellow { background: #fef7e0; color: #9c5700; }
+  .emp-badge.red { background: #fce8e6; color: #c5221f; }
+  .emp-body { padding: 16px 18px; }
+  .emp-body h4 { margin: 16px 0 8px; font-size: 14px; color: #374151; }
+  .emp-body h4:first-child { margin-top: 0; }
+  .emp-reasons { list-style: none; padding: 0; margin: 0 0 8px; }
+  .emp-reasons li { padding: 8px 12px; margin-bottom: 6px; border-radius: 6px; font-size: 13px; background: #f8f9fa; border-left: 3px solid #dadce0; }
+  .emp-stats { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; font-size: 13px; }
+  .emp-stats div { background: #f8f9fa; padding: 8px 12px; border-radius: 6px; }
+  .emp-stats b { display: block; font-size: 18px; margin-top: 2px; }
+  table.mini { font-size: 12px; }
+  table.mini th, table.mini td { padding: 6px 8px; }
+  tr.dev-dead { background: #fce8e6; }
+  tr.dev-zero { background: #fdf0e8; }
+  tr.dev-low { background: #fef9e8; }
+  tr.dev-ok { background: #f1f8f4; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
+  .tab { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; font-size: 14px; color: #6b7280; }
+  .tab.active { color: #1967d2; border-bottom-color: #1967d2; font-weight: 500; }
+  /* Confidence badge */
+  .confidence { padding: 16px 20px; border-radius: 10px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; }
+  .confidence.green { background: #e6f4ea; border: 1px solid #34a853; }
+  .confidence.yellow { background: #fef7e0; border: 1px solid #f9ab00; }
+  .confidence.red { background: #fce8e6; border: 1px solid #ea4335; }
+  .confidence .badge { font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 6px; white-space: nowrap; }
+  .confidence.green .badge { background: #34a853; color: #fff; }
+  .confidence.yellow .badge { background: #f9ab00; color: #fff; }
+  .confidence.red .badge { background: #ea4335; color: #fff; }
+  .confidence .text { font-size: 14px; color: #1a1a1a; }
+  .confidence .text b { display: block; margin-bottom: 4px; }
+  .confidence .stats { margin-left: auto; font-size: 13px; color: #5f6368; white-space: nowrap; }
+  /* Validation table */
+  .val-row { display: grid; grid-template-columns: 90px 1fr 80px 110px; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #f0f0f0; align-items: start; }
+  .val-row:hover { background: #fafbfc; }
+  .val-status { font-weight: 700; font-size: 12px; padding: 3px 8px; border-radius: 4px; text-align: center; }
+  .val-status.PASS { background: #e6f4ea; color: #137333; }
+  .val-status.WARN { background: #fef7e0; color: #9c5700; }
+  .val-status.FAIL { background: #fce8e6; color: #c5221f; }
+  .val-sev { font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 3px; text-align: center; }
+  .val-sev.HIGH { background: #ea4335; color: #fff; }
+  .val-sev.MED { background: #f9ab00; color: #fff; }
+  .val-sev.LOW { background: #dadce0; color: #3c4043; }
+  .val-name { font-weight: 600; font-size: 13px; }
+  .val-cat { font-size: 11px; color: #5f6368; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .val-msg { font-size: 12px; color: #5f6368; margin-top: 2px; }
+  .caveats { list-style: none; padding: 0; margin: 0; }
+  .caveats li { padding: 6px 0; font-size: 13px; color: #1a1a1a; border-bottom: 1px solid #f0f0f0; }
+  .caveats li:last-child { border-bottom: none; }
+  .rec-caveat { background: #fff2cc; border-radius: 6px; padding: 8px 12px; font-size: 12px; margin-top: 6px; color: #6b5d00; }
+  /* Goal table */
+  .goal-good { color: #137333; font-weight: 600; }
+  .goal-bad { color: #c5221f; font-weight: 600; }
+  .goal-warn { color: #b06000; font-weight: 600; }
+  tr.goal-row-good { background: #f1f8f4; }
+  tr.goal-row-bad { background: #fcefee; }
+  tr.goal-row-warn { background: #fef9e8; }
+  tr.goal-row-good:hover, tr.goal-row-bad:hover, tr.goal-row-warn:hover { filter: brightness(0.97); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Отчёт по сотрудникам</h1>
+  <div class="subtitle">Период: 18.05.2026 — 01.06.2026 • Сгенерировано: 2026-06-01 07:50</div>
+
+  <div class="confidence red">
+    <div class="badge">Needs revision</div>
+    <div class="text">
+      <b>Статус отчёта</b>
+      Обнаружены критические ошибки (1 шт). Исправить перед презентацией.
+    </div>
+    <div class="stats">13 PASS · 4 WARN · 1 FAIL</div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="label">Общий доход</div>
+      <div class="value">241 125.80 ₽</div>
+      <div class="hint">за период наблюдения</div>
+    </div>
+    <div class="card">
+      <div class="label">Устройств активно</div>
+      <div class="value">1 071</div>
+      <div class="hint">по 10 сотрудникам</div>
+    </div>
+    <div class="card">
+      <div class="label">Средний доход</div>
+      <div class="value">225.14 ₽</div>
+      <div class="hint">на устройство</div>
+    </div>
+    <div class="card">
+      <div class="label">Выполнение цели</div>
+      <div class="value" style="color: #c5221f;">36%</div>
+      <div class="hint">Существенный недобор: 18 ₽/устр/сутки</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Достижение цели · 50 ₽/устр/сутки</h2>
+    <div style="font-size: 13px; color: #5f6368; margin-bottom: 16px;">
+      План у каждого сотрудника считается индивидуально: <code>цель × устройств × период наблюдения в сутках</code>.
+      У сотрудников разные периоды наблюдения, поэтому сравнение по выполнению плана корректнее, чем по абсолютному доходу.
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Сотрудник</th>
+          <th class="num">Устр.</th>
+          <th class="num">Период, сут</th>
+          <th class="num">Факт, ₽/устр/сутки</th>
+          <th class="num">Отклонение</th>
+          <th class="num">План за период</th>
+          <th class="num">Факт за период</th>
+          <th class="num">Выполнение</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr class="goal-row-bad">
+          <td><b>Болонкин</b></td>
+          <td class="num">142</td>
+          <td class="num">12.91</td>
+          <td class="num">25.0 ₽</td>
+          <td class="num goal-bad">-25.0 ₽</td>
+          <td class="num">91 665.68 ₽</td>
+          <td class="num">45 752.20 ₽</td>
+          <td class="num goal-bad">50%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Некит</b></td>
+          <td class="num">120</td>
+          <td class="num">12.00</td>
+          <td class="num">24.8 ₽</td>
+          <td class="num goal-bad">-25.2 ₽</td>
+          <td class="num">71 989.58 ₽</td>
+          <td class="num">35 700.70 ₽</td>
+          <td class="num goal-bad">50%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Глухов</b></td>
+          <td class="num">155</td>
+          <td class="num">11.72</td>
+          <td class="num">23.8 ₽</td>
+          <td class="num goal-bad">-26.2 ₽</td>
+          <td class="num">90 819.33 ₽</td>
+          <td class="num">43 157.00 ₽</td>
+          <td class="num goal-bad">48%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Армен</b></td>
+          <td class="num">124</td>
+          <td class="num">13.02</td>
+          <td class="num">22.6 ₽</td>
+          <td class="num goal-bad">-27.4 ₽</td>
+          <td class="num">80 749.98 ₽</td>
+          <td class="num">36 445.50 ₽</td>
+          <td class="num goal-bad">45%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Насыров</b></td>
+          <td class="num">59</td>
+          <td class="num">11.79</td>
+          <td class="num">17.3 ₽</td>
+          <td class="num goal-bad">-32.7 ₽</td>
+          <td class="num">34 773.88 ₽</td>
+          <td class="num">12 007.50 ₽</td>
+          <td class="num goal-bad">34%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Марат</b></td>
+          <td class="num">132</td>
+          <td class="num">14.05</td>
+          <td class="num">14.1 ₽</td>
+          <td class="num goal-bad">-35.9 ₽</td>
+          <td class="num">92 726.18 ₽</td>
+          <td class="num">26 228.80 ₽</td>
+          <td class="num goal-bad">28%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Бенз</b></td>
+          <td class="num">63</td>
+          <td class="num">12.98</td>
+          <td class="num">13.3 ₽</td>
+          <td class="num goal-bad">-36.7 ₽</td>
+          <td class="num">40 875.62 ₽</td>
+          <td class="num">10 852.80 ₽</td>
+          <td class="num goal-bad">27%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Питер</b></td>
+          <td class="num">196</td>
+          <td class="num">12.82</td>
+          <td class="num">10.3 ₽</td>
+          <td class="num goal-bad">-39.7 ₽</td>
+          <td class="num">125 652.22 ₽</td>
+          <td class="num">25 991.70 ₽</td>
+          <td class="num goal-bad">21%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Серега</b></td>
+          <td class="num">53</td>
+          <td class="num">12.58</td>
+          <td class="num">7.0 ₽</td>
+          <td class="num goal-bad">-43.0 ₽</td>
+          <td class="num">33 341.11 ₽</td>
+          <td class="num">4 699.30 ₽</td>
+          <td class="num goal-bad">14%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Неизвестно</b></td>
+          <td class="num">27</td>
+          <td class="num">10.94</td>
+          <td class="num">1.0 ₽</td>
+          <td class="num goal-bad">-49.0 ₽</td>
+          <td class="num">14 774.27 ₽</td>
+          <td class="num">290.30 ₽</td>
+          <td class="num goal-bad">2%</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr style="background: #e8f0fe; font-weight: 600;">
+          <td>ИТОГО по компании</td>
+          <td class="num">1 071</td>
+          <td class="num">12.48</td>
+          <td class="num">18.0 ₽</td>
+          <td class="num">-32.0 ₽</td>
+          <td class="num">677 367.85 ₽</td>
+          <td class="num">241 125.80 ₽</td>
+          <td class="num"><b style="color: #c5221f;">36%</b></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <section>
+    <h2>Структура дохода по каналам</h2>
+    <div class="legend">
+      <span><i style="background:#1D9E75"></i>WhatsApp: 131 503.60 ₽</span>
+      <span><i style="background:#185FA5"></i>Regular: 75 375.80 ₽</span>
+      <span><i style="background:#BA7517"></i>Kakao: 30 905.40 ₽</span>
+      <span><i style="background:#D85A30"></i>Click: 2 377.30 ₽</span>
+      <span><i style="background:#888780"></i>Business: 7.00 ₽</span>
+    </div>
+    <div class="channel-bar">
+      <div style="background:#1D9E75; width:54.54%" title="WhatsApp"></div>
+      <div style="background:#185FA5; width:31.26%" title="Regular"></div>
+      <div style="background:#BA7517; width:12.82%" title="Kakao"></div>
+      <div style="background:#D85A30; width:0.99%" title="Click"></div>
+      <div style="background:#888780; width:0.00%" title="Business"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Эффективность по сервисам</h2>
+    <div style="font-size: 13px; color: #5f6368; margin-bottom: 16px;">
+      Конверсия кода = коды/старты · Бан = сгоревшие аккаунты/всего аккаунтов · Доставка = доставлено/отправлено · SMS/акк = отправлено на один аккаунт
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Сервис</th>
+          <th class="num">Старты</th>
+          <th class="num">Коды</th>
+          <th class="num">Аккаунты</th>
+          <th class="num">Отправл.</th>
+          <th class="num">Конверсия кода</th>
+          <th class="num">Брак</th>
+          <th class="num">Бан аккаунтов</th>
+          <th class="num">Доставка</th>
+          <th class="num">SMS/акк</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td><b>Regular</b></td>
+          <td class="num">1 450 321</td>
+          <td class="num">69 255</td>
+          <td class="num">52 809</td>
+          <td class="num">15 302</td>
+          <td class="num goal-bad">4.8%</td>
+          <td class="num">72.8%</td>
+          <td class="num neutral">0.0%</td>
+          <td class="num goal-good">95.6%</td>
+          <td class="num">0.3</td>
+        </tr>
+
+        <tr>
+          <td><b>Kakao</b></td>
+          <td class="num">595 924</td>
+          <td class="num">103 018</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num goal-warn">17.3%</td>
+          <td class="num">0.0%</td>
+          <td class="num neutral">—</td>
+          <td class="num neutral">—</td>
+          <td class="num">—</td>
+        </tr>
+
+        <tr>
+          <td><b>Wa Load</b></td>
+          <td class="num">433 971</td>
+          <td class="num">0</td>
+          <td class="num">309 740</td>
+          <td class="num">328 759</td>
+          <td class="num goal-warn">—</td>
+          <td class="num">0.0%</td>
+          <td class="num goal-bad">34.3%</td>
+          <td class="num goal-good">91.5%</td>
+          <td class="num">1.1</td>
+        </tr>
+
+        <tr>
+          <td><b>Viber</b></td>
+          <td class="num">226 953</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num goal-warn">—</td>
+          <td class="num">99.3%</td>
+          <td class="num neutral">—</td>
+          <td class="num neutral">—</td>
+          <td class="num">—</td>
+        </tr>
+
+        <tr>
+          <td><b>Kakaotalk</b></td>
+          <td class="num">222 043</td>
+          <td class="num">24 344</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num goal-warn">11.0%</td>
+          <td class="num">90.0%</td>
+          <td class="num neutral">—</td>
+          <td class="num neutral">—</td>
+          <td class="num">—</td>
+        </tr>
+
+        <tr>
+          <td><b>Click</b></td>
+          <td class="num">59 470</td>
+          <td class="num">23 773</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num goal-good">40.0%</td>
+          <td class="num">66.5%</td>
+          <td class="num neutral">—</td>
+          <td class="num neutral">—</td>
+          <td class="num">—</td>
+        </tr>
+
+        <tr>
+          <td><b>Bip</b></td>
+          <td class="num">16 014</td>
+          <td class="num">1 086</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num goal-warn">6.8%</td>
+          <td class="num">8.1%</td>
+          <td class="num neutral">—</td>
+          <td class="num neutral">—</td>
+          <td class="num">—</td>
+        </tr>
+
+        <tr>
+          <td><b>Kakao Spam</b></td>
+          <td class="num">8 967</td>
+          <td class="num">0</td>
+          <td class="num">4 434</td>
+          <td class="num">6 309</td>
+          <td class="num goal-warn">—</td>
+          <td class="num">0.0%</td>
+          <td class="num neutral">0.0%</td>
+          <td class="num goal-bad">56.1%</td>
+          <td class="num">1.4</td>
+        </tr>
+
+        <tr>
+          <td><b>Business</b></td>
+          <td class="num">1 106</td>
+          <td class="num">7</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num goal-bad">0.6%</td>
+          <td class="num">100.0%</td>
+          <td class="num neutral">—</td>
+          <td class="num neutral">—</td>
+          <td class="num">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Рейтинг сотрудников</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Сотрудник</th>
+          <th class="num">Доход</th>
+          <th class="num">Доля</th>
+          <th class="num">Устройств</th>
+          <th class="num">₽/устр</th>
+          <th>Активность 24ч</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>1</td>
+          <td><b>Болонкин</b></td>
+          <td class="num bar" style="--w:100.0%;">45 752.20 ₽</td>
+          <td class="num">19.0%</td>
+          <td class="num">142</td>
+          <td class="num">322 ₽</td>
+          <td><span class="neutral">27%</span></td>
+        </tr>
+
+        <tr>
+          <td>2</td>
+          <td><b>Глухов</b></td>
+          <td class="num bar" style="--w:94.3%;">43 157.00 ₽</td>
+          <td class="num">17.9%</td>
+          <td class="num">155</td>
+          <td class="num">278 ₽</td>
+          <td><span class="good">31%</span></td>
+        </tr>
+
+        <tr>
+          <td>3</td>
+          <td><b>Армен</b></td>
+          <td class="num bar" style="--w:79.7%;">36 445.50 ₽</td>
+          <td class="num">15.1%</td>
+          <td class="num">124</td>
+          <td class="num">294 ₽</td>
+          <td><span class="neutral">16%</span></td>
+        </tr>
+
+        <tr>
+          <td>4</td>
+          <td><b>Некит</b></td>
+          <td class="num bar" style="--w:78.0%;">35 700.70 ₽</td>
+          <td class="num">14.8%</td>
+          <td class="num">120</td>
+          <td class="num">298 ₽</td>
+          <td><span class="bad">14%</span></td>
+        </tr>
+
+        <tr>
+          <td>5</td>
+          <td><b>Марат</b></td>
+          <td class="num bar" style="--w:57.3%;">26 228.80 ₽</td>
+          <td class="num">10.9%</td>
+          <td class="num">132</td>
+          <td class="num">199 ₽</td>
+          <td><span class="neutral">26%</span></td>
+        </tr>
+
+        <tr>
+          <td>6</td>
+          <td><b>Питер</b></td>
+          <td class="num bar" style="--w:56.8%;">25 991.70 ₽</td>
+          <td class="num">10.8%</td>
+          <td class="num">196</td>
+          <td class="num">133 ₽</td>
+          <td><span class="bad">11%</span></td>
+        </tr>
+
+        <tr>
+          <td>7</td>
+          <td><b>Насыров</b></td>
+          <td class="num bar" style="--w:26.2%;">12 007.50 ₽</td>
+          <td class="num">5.0%</td>
+          <td class="num">59</td>
+          <td class="num">204 ₽</td>
+          <td><span class="bad">12%</span></td>
+        </tr>
+
+        <tr>
+          <td>8</td>
+          <td><b>Бенз</b></td>
+          <td class="num bar" style="--w:23.7%;">10 852.80 ₽</td>
+          <td class="num">4.5%</td>
+          <td class="num">63</td>
+          <td class="num">172 ₽</td>
+          <td><span class="bad">8%</span></td>
+        </tr>
+
+        <tr>
+          <td>9</td>
+          <td><b>Серега</b></td>
+          <td class="num bar" style="--w:10.3%;">4 699.30 ₽</td>
+          <td class="num">1.9%</td>
+          <td class="num">53</td>
+          <td class="num">89 ₽</td>
+          <td><span class="bad">0%</span></td>
+        </tr>
+
+        <tr>
+          <td>10</td>
+          <td><b>Неизвестно</b></td>
+          <td class="num bar" style="--w:0.6%;">290.30 ₽</td>
+          <td class="num">0.1%</td>
+          <td class="num">27</td>
+          <td class="num">11 ₽</td>
+          <td><span class="bad">0%</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Качество работы</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Сотрудник</th>
+          <th class="num">Click брак</th>
+          <th class="num">WA бан акк</th>
+          <th class="num">WA доставка</th>
+          <th class="num">Kakao конверсия</th>
+          <th class="num">Мёртвых устр</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td><b>Болонкин</b></td>
+          <td class="num"><span class="chip chip-red">65.4%</span></td>
+          <td class="num"><span class="chip chip-red">42.6%</span></td>
+          <td class="num"><span class="chip chip-green">91.8%</span></td>
+          <td class="num"><span class="chip chip-green">19.1%</span></td>
+          <td class="num"><span class="chip chip-green">1 (0.7%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Глухов</b></td>
+          <td class="num"><span class="chip chip-red">77.5%</span></td>
+          <td class="num"><span class="chip chip-red">34.4%</span></td>
+          <td class="num"><span class="chip chip-green">91.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">17.0%</span></td>
+          <td class="num"><span class="chip chip-green">1 (0.6%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Армен</b></td>
+          <td class="num"><span class="chip chip-yellow">38.1%</span></td>
+          <td class="num"><span class="chip chip-red">30.5%</span></td>
+          <td class="num"><span class="chip chip-green">92.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">16.8%</span></td>
+          <td class="num"><span class="chip chip-yellow">4 (3.2%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Некит</b></td>
+          <td class="num"><span class="chip chip-red">85.0%</span></td>
+          <td class="num"><span class="chip chip-red">34.8%</span></td>
+          <td class="num"><span class="chip chip-green">92.0%</span></td>
+          <td class="num"><span class="chip chip-yellow">17.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">4 (3.3%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Марат</b></td>
+          <td class="num"><span class="chip chip-red">81.7%</span></td>
+          <td class="num"><span class="chip chip-red">28.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">89.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">16.5%</span></td>
+          <td class="num"><span class="chip chip-red">11 (8.3%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Питер</b></td>
+          <td class="num"><span class="chip chip-green">0.0%</span></td>
+          <td class="num"><span class="chip chip-red">37.2%</span></td>
+          <td class="num"><span class="chip chip-green">93.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">16.4%</span></td>
+          <td class="num"><span class="chip chip-red">35 (17.9%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Насыров</b></td>
+          <td class="num"><span class="chip chip-yellow">40.6%</span></td>
+          <td class="num"><span class="chip chip-red">29.0%</span></td>
+          <td class="num"><span class="chip chip-yellow">89.0%</span></td>
+          <td class="num"><span class="chip chip-yellow">16.9%</span></td>
+          <td class="num"><span class="chip chip-green">1 (1.7%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Бенз</b></td>
+          <td class="num"><span class="chip chip-red">85.3%</span></td>
+          <td class="num"><span class="chip chip-yellow">13.8%</span></td>
+          <td class="num"><span class="chip chip-red">69.5%</span></td>
+          <td class="num"><span class="chip chip-yellow">11.3%</span></td>
+          <td class="num"><span class="chip chip-red">8 (12.7%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Серега</b></td>
+          <td class="num"><span class="chip chip-yellow">59.2%</span></td>
+          <td class="num"><span class="chip chip-yellow">12.9%</span></td>
+          <td class="num"><span class="chip chip-yellow">87.7%</span></td>
+          <td class="num"><span class="chip chip-yellow">17.2%</span></td>
+          <td class="num"><span class="chip chip-red">8 (15.1%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Неизвестно</b></td>
+          <td class="num"><span class="chip chip-red">7161.9%</span></td>
+          <td class="num"><span class="chip chip-green">0.0%</span></td>
+          <td class="num"><span class="chip chip-red">0.0%</span></td>
+          <td class="num"><span class="chip chip-red">0.0%</span></td>
+          <td class="num"><span class="chip chip-red">6 (22.2%)</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Топ-15 устройств по доходу</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Сотрудник</th>
+          <th>API Key</th>
+          <th>Модель</th>
+          <th class="num">Доход</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>1</td>
+          <td>Болонкин</td>
+          <td>MEGATRON</td>
+          <td>sailfish ver.10</td>
+          <td class="num">1 283.90 ₽</td>
+        </tr>
+
+        <tr>
+          <td>2</td>
+          <td>Армен</td>
+          <td>VIBPC2</td>
+          <td>a21s ver.12</td>
+          <td class="num">780.00 ₽</td>
+        </tr>
+
+        <tr>
+          <td>3</td>
+          <td>Болонкин</td>
+          <td>MEGATRON</td>
+          <td>a03 ver.13</td>
+          <td class="num">712.50 ₽</td>
+        </tr>
+
+        <tr>
+          <td>4</td>
+          <td>Болонкин</td>
+          <td>MEGATRON</td>
+          <td>a03 ver.13</td>
+          <td class="num">707.80 ₽</td>
+        </tr>
+
+        <tr>
+          <td>5</td>
+          <td>Армен</td>
+          <td>VIBPC2</td>
+          <td>a21s ver.12</td>
+          <td class="num">674.60 ₽</td>
+        </tr>
+
+        <tr>
+          <td>6</td>
+          <td>Армен</td>
+          <td>VIBPC2</td>
+          <td>a21s ver.12</td>
+          <td class="num">673.10 ₽</td>
+        </tr>
+
+        <tr>
+          <td>7</td>
+          <td>Армен</td>
+          <td>VINDIESEL</td>
+          <td>a21s ver.12</td>
+          <td class="num">670.90 ₽</td>
+        </tr>
+
+        <tr>
+          <td>8</td>
+          <td>Армен</td>
+          <td>VIBPC2</td>
+          <td>a21s ver.12</td>
+          <td class="num">665.00 ₽</td>
+        </tr>
+
+        <tr>
+          <td>9</td>
+          <td>Армен</td>
+          <td>VINDIESEL</td>
+          <td>a21s ver.12</td>
+          <td class="num">657.50 ₽</td>
+        </tr>
+
+        <tr>
+          <td>10</td>
+          <td>Глухов</td>
+          <td>MEGAN</td>
+          <td>r7 ver.13</td>
+          <td class="num">653.40 ₽</td>
+        </tr>
+
+        <tr>
+          <td>11</td>
+          <td>Армен</td>
+          <td>VINDIESEL</td>
+          <td>a21s ver.12</td>
+          <td class="num">633.50 ₽</td>
+        </tr>
+
+        <tr>
+          <td>12</td>
+          <td>Болонкин</td>
+          <td>MEGATRON</td>
+          <td>a05m ver.15</td>
+          <td class="num">632.90 ₽</td>
+        </tr>
+
+        <tr>
+          <td>13</td>
+          <td>Армен</td>
+          <td>VIBPC1</td>
+          <td>a05m ver.15</td>
+          <td class="num">632.80 ₽</td>
+        </tr>
+
+        <tr>
+          <td>14</td>
+          <td>Глухов</td>
+          <td>MEGAN</td>
+          <td>r7 ver.13</td>
+          <td class="num">630.90 ₽</td>
+        </tr>
+
+        <tr>
+          <td>15</td>
+          <td>Болонкин</td>
+          <td>APRIL</td>
+          <td>a03 ver.</td>
+          <td class="num">630.70 ₽</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Проверки качества отчёта</h2>
+    <div style="font-size: 13px; color: #5f6368; margin-bottom: 12px;">
+      Автоматический чек-лист по мотивам <a href="https://github.com/anthropics/knowledge-work-plugins/blob/main/data/skills/validate-data/SKILL.md" target="_blank" style="color: #1967d2;">validate-data skill</a> от Anthropic. Проверяет корректность расчётов, разумность результатов и аналитические ловушки.
+    </div>
+    
+        <div class="val-row">
+          <div class="val-status FAIL">FAIL</div>
+          <div>
+            <div class="val-cat">Расчёты</div>
+            <div class="val-name">Проценты в [0;100]</div>
+            <div class="val-msg">Проценты &gt; 100 в: Click_bad_pct (1 сотр.) — ошибка деления</div>
+          </div>
+          <div class="val-sev HIGH">HIGH</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Несматченные API Key</div>
+            <div class="val-msg">2 API Key из данных не найдены в конфиге: AGALICH, mobile. Они попали в группу &quot;Неизвестно&quot; — поправь конфиг.</div>
+          </div>
+          <div class="val-sev HIGH">HIGH</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Цели</div>
+            <div class="val-name">Выполнение цели (общее)</div>
+            <div class="val-msg">Существенный недобор: 35.6% от плана. 10 сотрудник(ов) ниже 50% плана. Цель 50 ₽/устр/сутки требует пересмотра либо тактики, либо самой цели.</div>
+          </div>
+          <div class="val-sev HIGH">HIGH</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Сотрудники без данных</div>
+            <div class="val-msg">1 сотрудников из конфига нет в данных: Ильяс. Либо они не работают, либо их API Key переименованы.</div>
+          </div>
+          <div class="val-sev MED">MED</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Аналитические ловушки</div>
+            <div class="val-name">Survivorship bias</div>
+            <div class="val-msg">В выгрузке только активно работающие устройства. Если у сотрудника железо физически отключено (а не показывает 0 ₽), оно вообще не попадёт в анализ — реальный парк может быть больше.</div>
+          </div>
+          <div class="val-sev MED">MED</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Расчёты</div>
+            <div class="val-name">Сумма каналов = Total</div>
+            <div class="val-msg">Сумма каналов 240,169.10 = Total 241,125.80 (расхождение 0.40%)</div>
+          </div>
+          <div class="val-sev HIGH">HIGH</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Режим загрузки</div>
+            <div class="val-msg">Используется конфиг-маппинг API Key → сотрудник (10 сотрудников в конфиге)</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Источники</div>
+            <div class="val-msg">Загружено 10 файл(ов)</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Свежесть данных</div>
+            <div class="val-msg">Самая свежая запись 0 дн. назад</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Дубликаты строк</div>
+            <div class="val-msg">Дубликатов не найдено</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Итоговые строки</div>
+            <div class="val-msg">Все строки без API Key исключены (нет двойного счёта)</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Расчёты</div>
+            <div class="val-name">Отрицательные доходы</div>
+            <div class="val-msg">Все доходы ≥ 0</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Расчёты</div>
+            <div class="val-name">Знаменатели</div>
+            <div class="val-msg">Невозможных соотношений не обнаружено</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Разумность</div>
+            <div class="val-name">Порядок величины</div>
+            <div class="val-msg">Общий доход 241,125.80 ₽ — в разумном диапазоне</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Разумность</div>
+            <div class="val-name">Устройства с 0 ₽</div>
+            <div class="val-msg">105 устр. (9.9%) с 0 ₽ — в норме</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Разумность</div>
+            <div class="val-name">Длина периода</div>
+            <div class="val-msg">Период 15 дн — достаточно для сравнений</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Аналитические ловушки</div>
+            <div class="val-name">Сопоставимость периодов</div>
+            <div class="val-msg">Периоды наблюдения у всех сотрудников сопоставимы</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Аналитические ловушки</div>
+            <div class="val-name">Average of averages</div>
+            <div class="val-msg">Средний доход/устр посчитан корректно: total/total_dev = 225 ₽ (не путать с mean(per_emp) = 200 ₽).</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+  </section>
+
+  <section>
+    <h2>Оговорки для презентации</h2>
+    <div style="font-size: 13px; color: #5f6368; margin-bottom: 12px;">
+      Эти моменты обязательно упомянуть при презентации руководству, чтобы данные были интерпретированы корректно.
+    </div>
+    <ul class="caveats">
+      <li>[HIGH] Проценты в [0;100]: Проценты &gt; 100 в: Click_bad_pct (1 сотр.) — ошибка деления</li>
+<li>[HIGH] Несматченные API Key: 2 API Key из данных не найдены в конфиге: AGALICH, mobile. Они попали в группу &quot;Неизвестно&quot; — поправь конфиг.</li>
+<li>[HIGH] Выполнение цели (общее): Существенный недобор: 35.6% от плана. 10 сотрудник(ов) ниже 50% плана. Цель 50 ₽/устр/сутки требует пересмотра либо тактики, либо самой цели.</li>
+<li>[MED] Сотрудники без данных: 1 сотрудников из конфига нет в данных: Ильяс. Либо они не работают, либо их API Key переименованы.</li>
+<li>[MED] Survivorship bias: В выгрузке только активно работающие устройства. Если у сотрудника железо физически отключено (а не показывает 0 ₽), оно вообще не попадёт в анализ — реальный парк может быть больше.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Персональные рекомендации</h2>
+    <div class="rec-grid">
+      
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Болонкин</div>
+            <div class="rec-money">45 752.20 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Высокая эффективность: 322 ₽/устр (выше медианы) • Сильный Kakao: 19.1% код/старт</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 25 ₽/устр/сутки (50% плана) — парк работает в 0.5× ниже цели 50 ₽/устр/сутки • Высокий бан WA-аккаунтов: 42.6% — снизить частоту/прогрев</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Глухов</div>
+            <div class="rec-money">43 157.00 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Высокая эффективность: 278 ₽/устр (выше медианы)</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 24 ₽/устр/сутки (48% плана) — парк работает в 0.5× ниже цели 50 ₽/устр/сутки • Высокий бан WA-аккаунтов: 34.4% — снизить частоту/прогрев</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Армен</div>
+            <div class="rec-money">36 445.50 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Высокая эффективность: 294 ₽/устр (выше медианы) • Отличная доставка WA: 92.6%</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 23 ₽/устр/сутки (45% плана) — парк работает в 0.5× ниже цели 50 ₽/устр/сутки • Низкая активность парка: 16% за 24ч</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Некит</div>
+            <div class="rec-money">35 700.70 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Высокая эффективность: 298 ₽/устр (выше медианы) • Отличная доставка WA: 92.0%</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 25 ₽/устр/сутки (50% плана) — парк работает в 0.5× ниже цели 50 ₽/устр/сутки • Высокий брак Click: 85.0% — пересобрать сценарий или отключить • Высокий бан WA-аккаунтов: 34.8% — снизить частоту/прогрев • Низкая активность парка: 14% за 24ч</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Марат</div>
+            <div class="rec-money">26 228.80 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Стабильная работа без особых выбросов</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 14 ₽/устр/сутки (28% плана) — парк работает в 0.3× ниже цели 50 ₽/устр/сутки • Высокий брак Click: 81.7% — пересобрать сценарий или отключить • Много &#x27;мёртвых&#x27; устройств: 11 шт (8.3%) — разобрать или починить</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Питер</div>
+            <div class="rec-money">25 991.70 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Отличная доставка WA: 93.6%</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 10 ₽/устр/сутки (21% плана) — парк работает в 0.2× ниже цели 50 ₽/устр/сутки • Низкая эффективность: 133 ₽/устр (ниже медианы) • Высокий бан WA-аккаунтов: 37.2% — снизить частоту/прогрев • Много &#x27;мёртвых&#x27; устройств: 35 шт (17.9%) — разобрать или починить • Низкая активность парка: 11% за 24ч</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Насыров</div>
+            <div class="rec-money">12 007.50 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Стабильная работа без особых выбросов</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 17 ₽/устр/сутки (34% плана) — парк работает в 0.3× ниже цели 50 ₽/устр/сутки • Низкая активность парка: 12% за 24ч</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Бенз</div>
+            <div class="rec-money">10 852.80 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Стабильная работа без особых выбросов</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 13 ₽/устр/сутки (27% плана) — парк работает в 0.3× ниже цели 50 ₽/устр/сутки • Высокий брак Click: 85.3% — пересобрать сценарий или отключить • Много &#x27;мёртвых&#x27; устройств: 8 шт (12.7%) — разобрать или починить • Низкая активность парка: 8% за 24ч • Низкая доставка WA: 69.5%</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Серега</div>
+            <div class="rec-money">4 699.30 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Стабильная работа без особых выбросов</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 7 ₽/устр/сутки (14% плана) — парк работает в 0.1× ниже цели 50 ₽/устр/сутки • Низкая эффективность: 89 ₽/устр (ниже медианы) • Много &#x27;мёртвых&#x27; устройств: 8 шт (15.1%) — разобрать или починить • Низкая активность парка: 0% за 24ч</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Неизвестно</div>
+            <div class="rec-money">290.30 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Стабильная работа без особых выбросов</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 1 ₽/устр/сутки (2% плана) — парк работает в 0.0× ниже цели 50 ₽/устр/сутки • Низкая эффективность: 11 ₽/устр (ниже медианы) • Много &#x27;мёртвых&#x27; устройств: 6 шт (22.2%) — разобрать или починить • Низкая активность парка: 0% за 24ч</div>
+          <div class="rec-caveat">ⓘ Оговорка: мало Click-стартов (21) — оценка брака шумная</div>
+        </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Личные кабинеты сотрудников</h2>
+    <div style="font-size: 13px; color: #5f6368; margin-bottom: 16px;">
+      Каждый раздел можно раскрыть — внутри причины недотягивания, разбивка по платформам и список устройств (худшие сверху). Найди себя и разберись со своими устройствами.
+    </div>
+    
+    <details class="emp-card">
+      <summary>
+        <span>Болонкин</span>
+        <span class="emp-badge red">50% плана · 25 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>45 752.20 ₽</b></div>
+          <div>Устройств<b>142</b></div>
+          <div>Период<b>12.9 сут</b></div>
+          <div>Факт/устр/сутки<b>25.0 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🟡 1 устройств (1%) с нулевым доходом — включены, но ничего не приносят. Проверить сценарии и аккаунты.</li><li>🔴 Больше половины парка (79 из 142) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Платформа &#x27;AZA&#x27; тянет вниз: 9 ₽/устр/сутки (21 устр). Для сравнения лучшая &#x27;MEGATRON&#x27; даёт 40 ₽/устр/сутки. Разобраться что не так с &#x27;AZA&#x27;.</li><li>🔴 Сервис &#x27;Wa Load&#x27;: бан аккаунтов 43% (23669 из 55575). Аккаунты горят — снизить интенсивность, прогрев.</li><li>🟡 Сервис &#x27;Kakao Spam&#x27;: доставка только 38%. Часть рассылки не доходит — проверить качество номеров/аккаунтов.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>APRIL</td><td class='num'>20</td><td class='num'>9 972.90 ₽</td><td class='num'>38.6 ₽</td></tr><tr><td>BANDIT73</td><td class='num'>22</td><td class='num'>9 689.50 ₽</td><td class='num'>34.1 ₽</td></tr><tr><td>HOSHIMIN</td><td class='num'>36</td><td class='num'>9 535.80 ₽</td><td class='num'>20.5 ₽</td></tr><tr><td>MEGATRON</td><td class='num'>17</td><td class='num'>8 742.20 ₽</td><td class='num'>39.8 ₽</td></tr><tr><td>RAGNAR</td><td class='num'>27</td><td class='num'>5 316.40 ₽</td><td class='num'>15.3 ₽</td></tr><tr><td>AZA</td><td class='num'>21</td><td class='num'>2 495.40 ₽</td><td class='num'>9.2 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>182 425</td><td class='num'>7 834</td><td class='num'>0%</td><td class='num'>96%</td><td class='num'>0.3</td></tr><tr><td>Kakao</td><td class='num'>99 297</td><td class='num'>18 976</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Wa Load</td><td class='num'>61 476</td><td class='num'>0</td><td class='num'>43%</td><td class='num'>92%</td><td class='num'>1.4</td></tr><tr><td>Viber</td><td class='num'>40 418</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>10 194</td><td class='num'>3 515</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Kakao Spam</td><td class='num'>3 202</td><td class='num'>0</td><td class='num'>0%</td><td class='num'>38%</td><td class='num'>0.8</td></tr><tr><td>Business</td><td class='num'>474</td><td class='num'>3</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-zero'><td>R58N23551GB</td><td>HOSHIMIN</td><td>r12s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-low'><td>RF8R31WPR6F</td><td>BANDIT73</td><td>a21s</td><td class='num'>0.30 ₽</td><td class='num'>0.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTB1D8L5J</td><td>RAGNAR</td><td>a04e</td><td class='num'>22.00 ₽</td><td class='num'>1.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTC0EHVKE</td><td>MEGATRON</td><td>a04e</td><td class='num'>29.60 ₽</td><td class='num'>2.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N235AVPW</td><td>HOSHIMIN</td><td>r12s</td><td class='num'>31.90 ₽</td><td class='num'>2.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40EFLRT</td><td>AZA</td><td>a20</td><td class='num'>41.10 ₽</td><td class='num'>3.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N408CBGW</td><td>AZA</td><td>a20</td><td class='num'>68.20 ₽</td><td class='num'>5.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N30MC85L</td><td>HOSHIMIN</td><td>r12s</td><td class='num'>70.40 ₽</td><td class='num'>5.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N20L14PR</td><td>AZA</td><td>a20</td><td class='num'>82.90 ₽</td><td class='num'>6.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N22JD4VB</td><td>AZA</td><td>a20</td><td class='num'>84.60 ₽</td><td class='num'>6.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40P95DP</td><td>AZA</td><td>a20</td><td class='num'>87.20 ₽</td><td class='num'>6.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N20NARMJ</td><td>RAGNAR</td><td>a20</td><td class='num'>90.80 ₽</td><td class='num'>7.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N408CTBV</td><td>AZA</td><td>a20</td><td class='num'>94.20 ₽</td><td class='num'>7.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40ALNLP</td><td>APRIL</td><td>a20</td><td class='num'>99.60 ₽</td><td class='num'>7.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58NB3YFRCZ</td><td>RAGNAR</td><td>a21s</td><td class='num'>104.30 ₽</td><td class='num'>8.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40EDS8D</td><td>AZA</td><td>a20</td><td class='num'>104.40 ₽</td><td class='num'>8.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N408BVXV</td><td>AZA</td><td>a20</td><td class='num'>106.00 ₽</td><td class='num'>8.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40MKD8D</td><td>AZA</td><td>a20</td><td class='num'>109.70 ₽</td><td class='num'>8.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40MJLDL</td><td>AZA</td><td>a20</td><td class='num'>111.10 ₽</td><td class='num'>8.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N407Y7YJ</td><td>AZA</td><td>a20</td><td class='num'>117.70 ₽</td><td class='num'>9.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>384f505258393098</td><td>HOSHIMIN</td><td>star2qltesq</td><td class='num'>125.30 ₽</td><td class='num'>9.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40KA81Z</td><td>AZA</td><td>a20</td><td class='num'>132.40 ₽</td><td class='num'>10.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N22JH0XP</td><td>AZA</td><td>a20</td><td class='num'>135.10 ₽</td><td class='num'>10.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8N63C76LZ</td><td>BANDIT73</td><td>a21s</td><td class='num'>138.50 ₽</td><td class='num'>10.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40X8ZKW</td><td>RAGNAR</td><td>a20</td><td class='num'>140.00 ₽</td><td class='num'>10.8 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 142. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Глухов</span>
+        <span class="emp-badge red">48% плана · 24 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>43 157.00 ₽</b></div>
+          <div>Устройств<b>155</b></div>
+          <div>Период<b>11.7 сут</b></div>
+          <div>Факт/устр/сутки<b>23.8 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 1 &#x27;мёртвых&#x27; устройств (1% парка) — не работают и простаивают &gt;2 дней. Это потеря ~50 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🔴 Больше половины парка (87 из 155) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Платформа &#x27;DIEGO&#x27; тянет вниз: 12 ₽/устр/сутки (28 устр). Для сравнения лучшая &#x27;MEGAN&#x27; даёт 41 ₽/устр/сутки. Разобраться что не так с &#x27;DIEGO&#x27;.</li><li>🔴 Сервис &#x27;Wa Load&#x27;: бан аккаунтов 34% (18810 из 54621). Аккаунты горят — снизить интенсивность, прогрев.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>LIMA</td><td class='num'>38</td><td class='num'>9 797.60 ₽</td><td class='num'>22.0 ₽</td></tr><tr><td>MEGAN</td><td class='num'>19</td><td class='num'>9 054.40 ₽</td><td class='num'>40.7 ₽</td></tr><tr><td>DALAT</td><td class='num'>35</td><td class='num'>8 977.20 ₽</td><td class='num'>21.9 ₽</td></tr><tr><td>ELIZAJANE</td><td class='num'>18</td><td class='num'>6 171.70 ₽</td><td class='num'>29.3 ₽</td></tr><tr><td>KLAVACOCA</td><td class='num'>17</td><td class='num'>5 099.60 ₽</td><td class='num'>25.6 ₽</td></tr><tr><td>DIEGO</td><td class='num'>28</td><td class='num'>4 056.50 ₽</td><td class='num'>12.4 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>216 102</td><td class='num'>11 251</td><td class='num'>0%</td><td class='num'>95%</td><td class='num'>0.3</td></tr><tr><td>Kakao</td><td class='num'>114 890</td><td class='num'>19 506</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Wa Load</td><td class='num'>65 993</td><td class='num'>0</td><td class='num'>34%</td><td class='num'>92%</td><td class='num'>1.1</td></tr><tr><td>Viber</td><td class='num'>55 934</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>9 202</td><td class='num'>2 060</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Kakao Spam</td><td class='num'>717</td><td class='num'>0</td><td class='num'>0%</td><td class='num'>87%</td><td class='num'>2.6</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-dead'><td>RF8N63C76LZ</td><td>DIEGO</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-low'><td>R8YTB18T0CF</td><td>DIEGO</td><td>a04e</td><td class='num'>11.00 ₽</td><td class='num'>0.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTC0KHZ1T</td><td>DIEGO</td><td>a04e</td><td class='num'>29.10 ₽</td><td class='num'>2.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTB1EQTDX</td><td>DIEGO</td><td>a04e</td><td class='num'>32.30 ₽</td><td class='num'>2.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83W70H8Z1B</td><td>DIEGO</td><td>a04e</td><td class='num'>46.30 ₽</td><td class='num'>4.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83W70H8PCB</td><td>DIEGO</td><td>a04e</td><td class='num'>46.50 ₽</td><td class='num'>4.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40KPHJA</td><td>KLAVACOCA</td><td>a20</td><td class='num'>49.70 ₽</td><td class='num'>4.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTC08K1ZY</td><td>DIEGO</td><td>a04e</td><td class='num'>50.40 ₽</td><td class='num'>4.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8R31WSH0K</td><td>DIEGO</td><td>a21s</td><td class='num'>53.50 ₽</td><td class='num'>4.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTB18SMBH</td><td>DIEGO</td><td>a04e</td><td class='num'>62.60 ₽</td><td class='num'>5.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTC09QT9A</td><td>DIEGO</td><td>a04e</td><td class='num'>66.90 ₽</td><td class='num'>5.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YW4050E9L</td><td>DIEGO</td><td>a04e</td><td class='num'>69.90 ₽</td><td class='num'>6.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W9084LGR</td><td>DIEGO</td><td>a04</td><td class='num'>75.40 ₽</td><td class='num'>6.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YW91JTQCA</td><td>DIEGO</td><td>a04e</td><td class='num'>77.30 ₽</td><td class='num'>6.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce031713ebcdae0302</td><td>DALAT</td><td>dreamlte</td><td class='num'>114.00 ₽</td><td class='num'>9.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce091719b872a50303</td><td>DALAT</td><td>dreamlte</td><td class='num'>122.80 ₽</td><td class='num'>10.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce091719bb617e0305</td><td>DALAT</td><td>dreamlte</td><td class='num'>122.80 ₽</td><td class='num'>10.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>23d0e61c5a0c7ece</td><td>DALAT</td><td>star2lte</td><td class='num'>128.30 ₽</td><td class='num'>10.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce031713e281ecc00d</td><td>DALAT</td><td>dreamlte</td><td class='num'>128.80 ₽</td><td class='num'>11.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R28M21N9RTX</td><td>MEGAN</td><td>beyond1q</td><td class='num'>135.80 ₽</td><td class='num'>11.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>9889db4430485a534a</td><td>DALAT</td><td>dreamlte</td><td class='num'>140.40 ₽</td><td class='num'>12.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce031713ade7b02c0c</td><td>DALAT</td><td>dreamlte</td><td class='num'>141.20 ₽</td><td class='num'>12.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce11171bea2bef2804</td><td>DALAT</td><td>dreamlte</td><td class='num'>141.80 ₽</td><td class='num'>12.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce0817181a6350fb0c</td><td>DALAT</td><td>dreamlte</td><td class='num'>145.60 ₽</td><td class='num'>12.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce031713d21e322501</td><td>DALAT</td><td>dreamlte</td><td class='num'>146.80 ₽</td><td class='num'>12.5 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 155. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Армен</span>
+        <span class="emp-badge red">45% плана · 23 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>36 445.50 ₽</b></div>
+          <div>Устройств<b>124</b></div>
+          <div>Период<b>13.0 сут</b></div>
+          <div>Факт/устр/сутки<b>22.6 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 3 &#x27;мёртвых&#x27; устройств (2% парка) — не работают и простаивают &gt;2 дней. Это потеря ~150 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🔴 Больше половины парка (84 из 124) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Платформа &#x27;HANOI&#x27; тянет вниз: 11 ₽/устр/сутки (36 устр). Для сравнения лучшая &#x27;VIBPC1&#x27; даёт 38 ₽/устр/сутки. Разобраться что не так с &#x27;HANOI&#x27;.</li><li>🔴 Сервис &#x27;Wa Load&#x27;: бан аккаунтов 30% (13700 из 44907). Аккаунты горят — снизить интенсивность, прогрев.</li><li>🟡 Сервис &#x27;Kakao Spam&#x27;: доставка только 53%. Часть рассылки не доходит — проверить качество номеров/аккаунтов.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>VIBPC1</td><td class='num'>17</td><td class='num'>8 455.10 ₽</td><td class='num'>38.2 ₽</td></tr><tr><td>VINDIESEL</td><td class='num'>16</td><td class='num'>7 547.80 ₽</td><td class='num'>36.2 ₽</td></tr><tr><td>VIBPC2</td><td class='num'>17</td><td class='num'>7 133.00 ₽</td><td class='num'>32.2 ₽</td></tr><tr><td>HANOI</td><td class='num'>36</td><td class='num'>5 202.70 ₽</td><td class='num'>11.1 ₽</td></tr><tr><td>VIBPC3</td><td class='num'>19</td><td class='num'>4 680.80 ₽</td><td class='num'>18.9 ₽</td></tr><tr><td>NHATRANG</td><td class='num'>22</td><td class='num'>3 426.10 ₽</td><td class='num'>12.0 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>169 751</td><td class='num'>9 364</td><td class='num'>0%</td><td class='num'>96%</td><td class='num'>0.3</td></tr><tr><td>Kakao</td><td class='num'>79 971</td><td class='num'>13 462</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Wa Load</td><td class='num'>47 002</td><td class='num'>0</td><td class='num'>30%</td><td class='num'>93%</td><td class='num'>1.2</td></tr><tr><td>Viber</td><td class='num'>27 513</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>6 328</td><td class='num'>3 920</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Kakao Spam</td><td class='num'>1 361</td><td class='num'>0</td><td class='num'>0%</td><td class='num'>53%</td><td class='num'>1.9</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-zero'><td>4738314659443098</td><td>HANOI</td><td>star2qltesq</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-dead'><td>R3CN60PSJ0N</td><td>HANOI</td><td>y2s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-zero'><td>R58N11SSPDX</td><td>HANOI</td><td>r12s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-dead'><td>R5J565774650</td><td>VINDIESEL</td><td>universal9830</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R9YT51174EB</td><td>VIBPC2</td><td>a03</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-low'><td>R58N23HN61Z</td><td>HANOI</td><td>r12s</td><td class='num'>5.80 ₽</td><td class='num'>0.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83YC0D65KB</td><td>NHATRANG</td><td>a07</td><td class='num'>12.60 ₽</td><td class='num'>1.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8R31WTPFX</td><td>VIBPC2</td><td>a21s</td><td class='num'>28.60 ₽</td><td class='num'>2.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83YC0D6FEX</td><td>NHATRANG</td><td>a07</td><td class='num'>48.80 ₽</td><td class='num'>3.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83YC05FBYL</td><td>NHATRANG</td><td>a07</td><td class='num'>61.10 ₽</td><td class='num'>4.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>3755324d38363098</td><td>HANOI</td><td>star2qltesq</td><td class='num'>63.40 ₽</td><td class='num'>4.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83YC0DE3HA</td><td>NHATRANG</td><td>a07</td><td class='num'>72.10 ₽</td><td class='num'>5.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58NB3CHYZA</td><td>VINDIESEL</td><td>a21s</td><td class='num'>75.50 ₽</td><td class='num'>5.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83YC0DFPWT</td><td>NHATRANG</td><td>a07</td><td class='num'>94.90 ₽</td><td class='num'>7.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N312KGYK</td><td>HANOI</td><td>r12s</td><td class='num'>108.70 ₽</td><td class='num'>8.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83YC0D8HHP</td><td>NHATRANG</td><td>a07</td><td class='num'>115.30 ₽</td><td class='num'>8.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RZ8NB1788WN</td><td>HANOI</td><td>r12s</td><td class='num'>120.00 ₽</td><td class='num'>9.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83YB17QRDW</td><td>NHATRANG</td><td>a07</td><td class='num'>122.00 ₽</td><td class='num'>9.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N30M5MNT</td><td>HANOI</td><td>r12s</td><td class='num'>122.50 ₽</td><td class='num'>9.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>3131414243423098</td><td>HANOI</td><td>star2qltesq</td><td class='num'>125.10 ₽</td><td class='num'>9.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N23BD9CW</td><td>HANOI</td><td>r12s</td><td class='num'>126.50 ₽</td><td class='num'>9.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>413338484d353098</td><td>HANOI</td><td>star2qltesq</td><td class='num'>128.20 ₽</td><td class='num'>9.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N30MCFEF</td><td>HANOI</td><td>r12s</td><td class='num'>128.60 ₽</td><td class='num'>9.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R83YB17Q3BZ</td><td>NHATRANG</td><td>a07</td><td class='num'>130.50 ₽</td><td class='num'>10.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>384b33574d493098</td><td>HANOI</td><td>star2qltesq</td><td class='num'>132.90 ₽</td><td class='num'>10.2 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 124. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Некит</span>
+        <span class="emp-badge red">50% плана · 25 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>35 700.70 ₽</b></div>
+          <div>Устройств<b>120</b></div>
+          <div>Период<b>12.0 сут</b></div>
+          <div>Факт/устр/сутки<b>24.8 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 1 &#x27;мёртвых&#x27; устройств (1% парка) — не работают и простаивают &gt;2 дней. Это потеря ~50 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🟡 Платформа &#x27;TLT_03&#x27; тянет вниз: 16 ₽/устр/сутки (21 устр). Для сравнения лучшая &#x27;GARIBALDI&#x27; даёт 26 ₽/устр/сутки. Разобраться что не так с &#x27;TLT_03&#x27;.</li><li>🔴 Сервис &#x27;Wa Load&#x27;: бан аккаунтов 35% (15423 из 44351). Аккаунты горят — снизить интенсивность, прогрев.</li><li>🟡 Сервис &#x27;Kakao Spam&#x27;: доставка только 49%. Часть рассылки не доходит — проверить качество номеров/аккаунтов.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>DANANG</td><td class='num'>40</td><td class='num'>10 473.20 ₽</td><td class='num'>21.8 ₽</td></tr><tr><td>TLT_04</td><td class='num'>18</td><td class='num'>5 598.20 ₽</td><td class='num'>25.9 ₽</td></tr><tr><td>TLT_01</td><td class='num'>18</td><td class='num'>5 579.10 ₽</td><td class='num'>25.8 ₽</td></tr><tr><td>GARIBALDI</td><td class='num'>16</td><td class='num'>4 989.00 ₽</td><td class='num'>26.0 ₽</td></tr><tr><td>TLT_02</td><td class='num'>21</td><td class='num'>4 908.70 ₽</td><td class='num'>19.5 ₽</td></tr><tr><td>TLT_03</td><td class='num'>21</td><td class='num'>4 152.50 ₽</td><td class='num'>16.5 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>204 478</td><td class='num'>9 803</td><td class='num'>0%</td><td class='num'>96%</td><td class='num'>0.3</td></tr><tr><td>Kakao</td><td class='num'>121 156</td><td class='num'>21 262</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Wa Load</td><td class='num'>48 875</td><td class='num'>0</td><td class='num'>35%</td><td class='num'>92%</td><td class='num'>1.0</td></tr><tr><td>Viber</td><td class='num'>45 507</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>9 567</td><td class='num'>1 442</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Kakao Spam</td><td class='num'>3 581</td><td class='num'>0</td><td class='num'>0%</td><td class='num'>49%</td><td class='num'>1.3</td></tr><tr><td>Business</td><td class='num'>202</td><td class='num'>2</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-dead'><td>228237df31027ece</td><td>DANANG</td><td>star2lte</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-low'><td>192.168.1.64:5555</td><td>DANANG</td><td>r12s</td><td class='num'>2.80 ₽</td><td class='num'>0.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N20N9SHY</td><td>TLT_02</td><td>a20</td><td class='num'>55.90 ₽</td><td class='num'>4.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>22a8e3a4fc0d7ece</td><td>DANANG</td><td>star2lte</td><td class='num'>207.60 ₽</td><td class='num'>17.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40ML4FE</td><td>TLT_02</td><td>a20</td><td class='num'>211.80 ₽</td><td class='num'>17.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTC0GSG2N</td><td>TLT_03</td><td>a04e</td><td class='num'>212.40 ₽</td><td class='num'>17.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N62YP8NB</td><td>TLT_01</td><td>a10</td><td class='num'>219.50 ₽</td><td class='num'>18.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N22JFW5D</td><td>TLT_02</td><td>a20</td><td class='num'>231.30 ₽</td><td class='num'>19.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RZ8M42MKBAF</td><td>TLT_03</td><td>a10</td><td class='num'>231.90 ₽</td><td class='num'>19.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>227453953c037ece</td><td>DANANG</td><td>star2lte</td><td class='num'>233.60 ₽</td><td class='num'>19.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>22d9c03c39037ece</td><td>DANANG</td><td>star2lte</td><td class='num'>236.10 ₽</td><td class='num'>19.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>2a910a3c27027ece</td><td>DANANG</td><td>star2lte</td><td class='num'>237.40 ₽</td><td class='num'>19.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N22JK6XZ</td><td>GARIBALDI</td><td>a20</td><td class='num'>237.60 ₽</td><td class='num'>19.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9YT608RC0P</td><td>TLT_03</td><td>a03</td><td class='num'>238.10 ₽</td><td class='num'>19.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>23aa5f1920047ece</td><td>DANANG</td><td>star2lte</td><td class='num'>240.90 ₽</td><td class='num'>20.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTB18T39V</td><td>TLT_03</td><td>a04e</td><td class='num'>246.00 ₽</td><td class='num'>20.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>247b58a43b0d7ece</td><td>DANANG</td><td>star2lte</td><td class='num'>247.50 ₽</td><td class='num'>20.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>22a56a983c027ece</td><td>DANANG</td><td>star2lte</td><td class='num'>248.70 ₽</td><td class='num'>20.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40AL4AV</td><td>TLT_02</td><td>a20</td><td class='num'>248.80 ₽</td><td class='num'>20.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>227bd90e30057ece</td><td>DANANG</td><td>star2lte</td><td class='num'>249.40 ₽</td><td class='num'>20.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>4c474b515a443498</td><td>DANANG</td><td>star2lte</td><td class='num'>249.90 ₽</td><td class='num'>20.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>1ca9b2c8aa0c7ece</td><td>DANANG</td><td>star2lte</td><td class='num'>253.50 ₽</td><td class='num'>21.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>515a304652443498</td><td>DANANG</td><td>star2lte</td><td class='num'>257.00 ₽</td><td class='num'>21.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>24808698020c7ece</td><td>DANANG</td><td>star2lte</td><td class='num'>260.20 ₽</td><td class='num'>21.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N61EJGEZ</td><td>TLT_01</td><td>a10</td><td class='num'>263.10 ₽</td><td class='num'>21.9 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 120. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Марат</span>
+        <span class="emp-badge red">28% плана · 14 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>26 228.80 ₽</b></div>
+          <div>Устройств<b>132</b></div>
+          <div>Период<b>14.0 сут</b></div>
+          <div>Факт/устр/сутки<b>14.1 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 9 &#x27;мёртвых&#x27; устройств (7% парка) — не работают и простаивают &gt;2 дней. Это потеря ~450 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🔴 Больше половины парка (112 из 132) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Платформа &#x27;STARLIGHT&#x27; тянет вниз: 7 ₽/устр/сутки (16 устр). Для сравнения лучшая &#x27;PUMA&#x27; даёт 19 ₽/устр/сутки. Разобраться что не так с &#x27;STARLIGHT&#x27;.</li><li>🔴 Сервис &#x27;Wa Load&#x27;: бан аккаунтов 29% (9257 из 32347). Аккаунты горят — снизить интенсивность, прогрев.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>TOMYAM</td><td class='num'>31</td><td class='num'>6 622.50 ₽</td><td class='num'>15.2 ₽</td></tr><tr><td>PUMA</td><td class='num'>18</td><td class='num'>4 911.00 ₽</td><td class='num'>19.4 ₽</td></tr><tr><td>HOMELANDER</td><td class='num'>25</td><td class='num'>4 421.70 ₽</td><td class='num'>12.6 ₽</td></tr><tr><td>SASHAGREY</td><td class='num'>15</td><td class='num'>3 464.90 ₽</td><td class='num'>16.4 ₽</td></tr><tr><td>OTEC</td><td class='num'>17</td><td class='num'>3 076.70 ₽</td><td class='num'>12.9 ₽</td></tr><tr><td>ADIDAS</td><td class='num'>17</td><td class='num'>2 200.20 ₽</td><td class='num'>9.2 ₽</td></tr><tr><td>STARLIGHT</td><td class='num'>16</td><td class='num'>1 531.80 ₽</td><td class='num'>6.8 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>164 390</td><td class='num'>6 668</td><td class='num'>0%</td><td class='num'>97%</td><td class='num'>0.3</td></tr><tr><td>Kakao</td><td class='num'>123 730</td><td class='num'>20 388</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Wa Load</td><td class='num'>49 943</td><td class='num'>0</td><td class='num'>29%</td><td class='num'>90%</td><td class='num'>1.0</td></tr><tr><td>Viber</td><td class='num'>35 027</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>8 924</td><td class='num'>1 624</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-dead'><td>R58N40AJFLX</td><td>HOMELANDER</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R83W50PR1GJ</td><td>HOMELANDER</td><td>a04e</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R5J082480966</td><td>STARLIGHT</td><td>universal9830</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R5J367319113</td><td>HOMELANDER</td><td>universal9830</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R58NA0GJQGF</td><td>HOMELANDER</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R58N40KQJFV</td><td>HOMELANDER</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R94XC0AD4PZ</td><td>HOMELANDER</td><td>a05m</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R9WTA0QNRRH</td><td>HOMELANDER</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>RF8N50VMRVE</td><td>OTEC</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-zero'><td>ce04171418ceb51202</td><td>TOMYAM</td><td>dreamlteks</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>ce081718ad16691901</td><td>TOMYAM</td><td>dreamlteks</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>ce0917191d409a0e04</td><td>TOMYAM</td><td>dreamlteks</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-low'><td>R58N22W4WDX</td><td>HOMELANDER</td><td>a20</td><td class='num'>1.00 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9YT51187QV</td><td>HOMELANDER</td><td>a03</td><td class='num'>1.00 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8N80B3V9P</td><td>HOMELANDER</td><td>a21s</td><td class='num'>1.00 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8N62491GM</td><td>OTEC</td><td>a21s</td><td class='num'>2.00 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce0917193023552d02</td><td>TOMYAM</td><td>dreamlteks</td><td class='num'>2.40 ₽</td><td class='num'>0.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RZ8M60BF4SF</td><td>STARLIGHT</td><td>a10</td><td class='num'>3.20 ₽</td><td class='num'>0.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40ED9VB</td><td>ADIDAS</td><td>a20</td><td class='num'>3.60 ₽</td><td class='num'>0.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9YT607H11V</td><td>STARLIGHT</td><td>a03</td><td class='num'>5.00 ₽</td><td class='num'>0.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40GVNYZ</td><td>ADIDAS</td><td>a20</td><td class='num'>5.10 ₽</td><td class='num'>0.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9YT51174EB</td><td>ADIDAS</td><td>a03</td><td class='num'>14.00 ₽</td><td class='num'>1.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>ce04171479b7083e0d</td><td>TOMYAM</td><td>dreamlteks</td><td class='num'>14.00 ₽</td><td class='num'>1.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9HT50112WR</td><td>STARLIGHT</td><td>a03</td><td class='num'>20.00 ₽</td><td class='num'>1.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40GT3WX</td><td>ADIDAS</td><td>a20</td><td class='num'>22.30 ₽</td><td class='num'>1.6 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 132. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Питер</span>
+        <span class="emp-badge red">21% плана · 10 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>25 991.70 ₽</b></div>
+          <div>Устройств<b>196</b></div>
+          <div>Период<b>12.8 сут</b></div>
+          <div>Факт/устр/сутки<b>10.3 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 31 &#x27;мёртвых&#x27; устройств (16% парка) — не работают и простаивают &gt;2 дней. Это потеря ~1550 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🔴 Больше половины парка (168 из 196) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Платформа &#x27;SPB11&#x27; тянет вниз: 0 ₽/устр/сутки (11 устр). Для сравнения лучшая &#x27;SPB1&#x27; даёт 29 ₽/устр/сутки. Разобраться что не так с &#x27;SPB11&#x27;.</li><li>🟡 Слабые модели устройств: a20 (0 ₽/устр), a03 (1 ₽/устр). Возможно, старое/слабое железо — рассмотреть замену или перераспределение.</li><li>🔴 Сервис &#x27;Wa Load&#x27;: бан аккаунтов 37% (18092 из 48637). Аккаунты горят — снизить интенсивность, прогрев.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>SPB1</td><td class='num'>12</td><td class='num'>4 417.80 ₽</td><td class='num'>28.7 ₽</td></tr><tr><td>SPB5</td><td class='num'>12</td><td class='num'>4 238.80 ₽</td><td class='num'>27.5 ₽</td></tr><tr><td>SPB3</td><td class='num'>13</td><td class='num'>3 835.40 ₽</td><td class='num'>23.0 ₽</td></tr><tr><td>SPB2</td><td class='num'>13</td><td class='num'>3 614.20 ₽</td><td class='num'>21.7 ₽</td></tr><tr><td>SPB14</td><td class='num'>10</td><td class='num'>1 996.60 ₽</td><td class='num'>15.6 ₽</td></tr><tr><td>SPB4</td><td class='num'>15</td><td class='num'>1 889.60 ₽</td><td class='num'>9.8 ₽</td></tr><tr><td>SPB7</td><td class='num'>11</td><td class='num'>1 506.80 ₽</td><td class='num'>10.7 ₽</td></tr><tr><td>SPB8</td><td class='num'>10</td><td class='num'>1 321.60 ₽</td><td class='num'>10.3 ₽</td></tr><tr><td>SPB9</td><td class='num'>10</td><td class='num'>1 221.00 ₽</td><td class='num'>9.5 ₽</td></tr><tr><td>SPB16</td><td class='num'>11</td><td class='num'>689.80 ₽</td><td class='num'>4.9 ₽</td></tr><tr><td>SPB15</td><td class='num'>7</td><td class='num'>683.00 ₽</td><td class='num'>7.6 ₽</td></tr><tr><td>SPB18</td><td class='num'>11</td><td class='num'>325.80 ₽</td><td class='num'>2.3 ₽</td></tr><tr><td>SPB17</td><td class='num'>10</td><td class='num'>95.00 ₽</td><td class='num'>0.7 ₽</td></tr><tr><td>SPB12</td><td class='num'>9</td><td class='num'>72.00 ₽</td><td class='num'>0.6 ₽</td></tr><tr><td>SPB20</td><td class='num'>7</td><td class='num'>42.90 ₽</td><td class='num'>0.5 ₽</td></tr><tr><td>SPB10</td><td class='num'>10</td><td class='num'>38.00 ₽</td><td class='num'>0.3 ₽</td></tr><tr><td>SPB11</td><td class='num'>11</td><td class='num'>3.40 ₽</td><td class='num'>0.0 ₽</td></tr><tr><td>SPB19</td><td class='num'>10</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td></tr><tr><td>SPB13</td><td class='num'>8</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>247 215</td><td class='num'>11 413</td><td class='num'>0%</td><td class='num'>95%</td><td class='num'>0.0</td></tr><tr><td>Kakaotalk</td><td class='num'>222 043</td><td class='num'>24 344</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Wa Load</td><td class='num'>125 979</td><td class='num'>0</td><td class='num'>37%</td><td class='num'>94%</td><td class='num'>0.7</td></tr><tr><td>Bip</td><td class='num'>16 014</td><td class='num'>1 086</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Kakao</td><td class='num'>871</td><td class='num'>143</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-zero'><td>R58N237HX7V</td><td>SPB11</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R58N407Y51X</td><td>SPB11</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R58N40EAP6F</td><td>SPB11</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R58N40AG4NY</td><td>SPB11</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R58N40EEVEF</td><td>SPB11</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R58N40MJAWB</td><td>SPB11</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R58N40GWS7V</td><td>SPB11</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R58N40GVBXF</td><td>SPB11</td><td>a20</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-dead'><td>R8YTC08JEGZ</td><td>SPB10</td><td>a04e</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R92TA0DCCER</td><td>SPB10</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R8YTB1EQL9N</td><td>SPB16</td><td>a04e</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-zero'><td>R92TB0AYNBJ</td><td>SPB19</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-dead'><td>R92TC03LVJH</td><td>SPB19</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R92TC03LTSD</td><td>SPB13</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-zero'><td>R92TC01G58N</td><td>SPB18</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-dead'><td>R92TB0T3ZCR</td><td>SPB17</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R92W70F89EB</td><td>SPB20</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R92W70F898M</td><td>SPB13</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R92TC086YFE</td><td>SPB19</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R92W605MREA</td><td>SPB19</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R92W605MSPR</td><td>SPB18</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R92W9084GNM</td><td>SPB17</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-zero'><td>R92W70F8AWF</td><td>SPB17</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R92W70FDYSE</td><td>SPB19</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-zero'><td>R92W605MQRM</td><td>SPB13</td><td>a04</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 196. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Насыров</span>
+        <span class="emp-badge red">35% плана · 17 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>12 007.50 ₽</b></div>
+          <div>Устройств<b>59</b></div>
+          <div>Период<b>11.8 сут</b></div>
+          <div>Факт/устр/сутки<b>17.3 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 1 &#x27;мёртвых&#x27; устройств (2% парка) — не работают и простаивают &gt;2 дней. Это потеря ~50 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🔴 Больше половины парка (55 из 59) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Платформа &#x27;RENTGEN&#x27; тянет вниз: 12 ₽/устр/сутки (17 устр). Для сравнения лучшая &#x27;HANSOLO&#x27; даёт 19 ₽/устр/сутки. Разобраться что не так с &#x27;RENTGEN&#x27;.</li><li>🔴 Сервис &#x27;Wa Load&#x27;: бан аккаунтов 29% (6082 из 20977). Аккаунты горят — снизить интенсивность, прогрев.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>KZ</td><td class='num'>18</td><td class='num'>3 682.60 ₽</td><td class='num'>17.4 ₽</td></tr><tr><td>HANSOLO</td><td class='num'>14</td><td class='num'>3 152.40 ₽</td><td class='num'>19.1 ₽</td></tr><tr><td>DESKTOP-LV446TA</td><td class='num'>16</td><td class='num'>2 672.90 ₽</td><td class='num'>14.2 ₽</td></tr><tr><td>RENTGEN</td><td class='num'>17</td><td class='num'>2 499.60 ₽</td><td class='num'>12.5 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>65 230</td><td class='num'>2 881</td><td class='num'>0%</td><td class='num'>96%</td><td class='num'>0.3</td></tr><tr><td>Kakao</td><td class='num'>45 255</td><td class='num'>7 648</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Wa Load</td><td class='num'>23 317</td><td class='num'>0</td><td class='num'>29%</td><td class='num'>89%</td><td class='num'>0.7</td></tr><tr><td>Viber</td><td class='num'>17 461</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>14 548</td><td class='num'>8 141</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Kakao Spam</td><td class='num'>106</td><td class='num'>0</td><td class='num'>0%</td><td class='num'>70%</td><td class='num'>1.1</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-zero'><td>R8YTB18T3JZ</td><td>RENTGEN</td><td>a04e</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-dead'><td>R5J377536721</td><td>KZ</td><td>universal9830</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-low'><td>R5J179240937</td><td>KZ</td><td>universal9830</td><td class='num'>1.20 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RZ8M810BSZZ</td><td>DESKTOP-LV446TA</td><td>a10</td><td class='num'>27.40 ₽</td><td class='num'>2.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W907T7GV</td><td>DESKTOP-LV446TA</td><td>a04</td><td class='num'>37.60 ₽</td><td class='num'>3.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RZ8MA0LGDQM</td><td>DESKTOP-LV446TA</td><td>a10</td><td class='num'>51.20 ₽</td><td class='num'>4.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9HT5046KCD</td><td>RENTGEN</td><td>a03</td><td class='num'>85.50 ₽</td><td class='num'>7.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RZ8M5460VWB</td><td>DESKTOP-LV446TA</td><td>a10</td><td class='num'>89.10 ₽</td><td class='num'>7.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RZ8M71KFVVR</td><td>DESKTOP-LV446TA</td><td>a10</td><td class='num'>89.80 ₽</td><td class='num'>7.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YW70Z99TX</td><td>RENTGEN</td><td>a04e</td><td class='num'>107.40 ₽</td><td class='num'>9.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N231X8AY</td><td>HANSOLO</td><td>a20</td><td class='num'>109.10 ₽</td><td class='num'>9.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N231N2LB</td><td>RENTGEN</td><td>a20</td><td class='num'>129.40 ₽</td><td class='num'>11.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W908529H</td><td>RENTGEN</td><td>a04</td><td class='num'>129.90 ₽</td><td class='num'>11.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W6015MHD</td><td>DESKTOP-LV446TA</td><td>a04</td><td class='num'>142.70 ₽</td><td class='num'>12.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N820LFVL</td><td>DESKTOP-LV446TA</td><td>a10</td><td class='num'>152.50 ₽</td><td class='num'>12.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58NB3YG4LD</td><td>RENTGEN</td><td>a21s</td><td class='num'>153.70 ₽</td><td class='num'>13.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W9084X8R</td><td>RENTGEN</td><td>a04</td><td class='num'>158.70 ₽</td><td class='num'>13.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8R321CEKZ</td><td>RENTGEN</td><td>a21s</td><td class='num'>170.40 ₽</td><td class='num'>14.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92TB0HT4GX</td><td>RENTGEN</td><td>a04</td><td class='num'>171.60 ₽</td><td class='num'>14.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W70FDWCW</td><td>KZ</td><td>a04</td><td class='num'>187.80 ₽</td><td class='num'>15.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W70DZXYN</td><td>RENTGEN</td><td>a04</td><td class='num'>199.40 ₽</td><td class='num'>16.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W9084XZW</td><td>RENTGEN</td><td>a04</td><td class='num'>203.70 ₽</td><td class='num'>17.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R8YTC08KCTY</td><td>DESKTOP-LV446TA</td><td>a04e</td><td class='num'>204.80 ₽</td><td class='num'>17.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W80LE6ZM</td><td>KZ</td><td>a04</td><td class='num'>214.30 ₽</td><td class='num'>18.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N40AMLYT</td><td>KZ</td><td>a20</td><td class='num'>225.40 ₽</td><td class='num'>19.1 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 59. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Бенз</span>
+        <span class="emp-badge red">27% плана · 13 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>10 852.80 ₽</b></div>
+          <div>Устройств<b>63</b></div>
+          <div>Период<b>13.0 сут</b></div>
+          <div>Факт/устр/сутки<b>13.3 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 8 &#x27;мёртвых&#x27; устройств (13% парка) — не работают и простаивают &gt;2 дней. Это потеря ~400 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🔴 Больше половины парка (63 из 63) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Платформа &#x27;OBIVAN&#x27; тянет вниз: 10 ₽/устр/сутки (16 устр). Для сравнения лучшая &#x27;KUSKO&#x27; даёт 14 ₽/устр/сутки. Разобраться что не так с &#x27;OBIVAN&#x27;.</li><li>🟡 Слабые модели устройств: p3s (0 ₽/устр), a21s (151 ₽/устр). Возможно, старое/слабое железо — рассмотреть замену или перераспределение.</li><li>🟡 Сервис &#x27;Wa Load&#x27;: доставка только 70%. Часть рассылки не доходит — проверить качество номеров/аккаунтов.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>KUSKO</td><td class='num'>47</td><td class='num'>8 723.00 ₽</td><td class='num'>14.3 ₽</td></tr><tr><td>OBIVAN</td><td class='num'>16</td><td class='num'>2 129.80 ₽</td><td class='num'>10.3 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>158 243</td><td class='num'>8 464</td><td class='num'>0%</td><td class='num'>95%</td><td class='num'>0.4</td></tr><tr><td>Wa Load</td><td class='num'>4 276</td><td class='num'>0</td><td class='num'>14%</td><td class='num'>70%</td><td class='num'>0.9</td></tr><tr><td>Kakao</td><td class='num'>3 687</td><td class='num'>417</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Viber</td><td class='num'>2 802</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>382</td><td class='num'>45</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-dead'><td>192.168.18.12:5555</td><td>KUSKO</td><td>p3s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>192.168.18.13:5555</td><td>KUSKO</td><td>p3s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>192.168.18.14:5555</td><td>KUSKO</td><td>p3s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>192.168.18.51:5555</td><td>KUSKO</td><td>star2lte</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>192.168.18.58:5555</td><td>KUSKO</td><td>star2lte</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>192.168.18.60:5555</td><td>KUSKO</td><td>nan</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>192.168.18.55:5555</td><td>KUSKO</td><td>star2lte</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R5J865115380</td><td>OBIVAN</td><td>universal9830</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-zero'><td>R58NB3CJ38A</td><td>OBIVAN</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>нулевой доход</td></tr><tr class='dev-low'><td>192.168.18.57:5555</td><td>KUSKO</td><td>star2lte</td><td class='num'>1.00 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>192.168.18.61:5555</td><td>KUSKO</td><td>star2lte</td><td class='num'>1.00 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>192.168.18.24:5555</td><td>KUSKO</td><td>p3s</td><td class='num'>1.00 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>192.168.18.25:5555</td><td>KUSKO</td><td>p3s</td><td class='num'>1.00 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>192.168.18.48:5555</td><td>KUSKO</td><td>star2lte</td><td class='num'>2.00 ₽</td><td class='num'>0.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>192.168.18.53:5555</td><td>KUSKO</td><td>star2lte</td><td class='num'>2.00 ₽</td><td class='num'>0.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92TC03MNZF</td><td>OBIVAN</td><td>a04</td><td class='num'>14.70 ₽</td><td class='num'>1.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8R31WTWDN</td><td>OBIVAN</td><td>a21s</td><td class='num'>29.00 ₽</td><td class='num'>2.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58NB3TYDXH</td><td>OBIVAN</td><td>a21s</td><td class='num'>62.40 ₽</td><td class='num'>4.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8N91CH8BB</td><td>OBIVAN</td><td>a21s</td><td class='num'>96.50 ₽</td><td class='num'>7.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8R31WATSM</td><td>OBIVAN</td><td>a21s</td><td class='num'>110.50 ₽</td><td class='num'>8.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58NB3CGPYF</td><td>OBIVAN</td><td>a21s</td><td class='num'>161.10 ₽</td><td class='num'>12.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8N91Q28ZP</td><td>OBIVAN</td><td>a21s</td><td class='num'>166.40 ₽</td><td class='num'>12.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58NB3CGT6B</td><td>OBIVAN</td><td>a21s</td><td class='num'>187.70 ₽</td><td class='num'>14.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>2575d410c11c7ece</td><td>KUSKO</td><td>star2lte</td><td class='num'>199.40 ₽</td><td class='num'>15.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58NB3VSV3A</td><td>OBIVAN</td><td>a21s</td><td class='num'>199.50 ₽</td><td class='num'>15.4 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 63. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Серега</span>
+        <span class="emp-badge red">14% плана · 7 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>4 699.30 ₽</b></div>
+          <div>Устройств<b>53</b></div>
+          <div>Период<b>12.6 сут</b></div>
+          <div>Факт/устр/сутки<b>7.0 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 8 &#x27;мёртвых&#x27; устройств (15% парка) — не работают и простаивают &gt;2 дней. Это потеря ~400 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🔴 Больше половины парка (53 из 53) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Платформа &#x27;OPTIMUS&#x27; тянет вниз: 2 ₽/устр/сутки (13 устр). Для сравнения лучшая &#x27;BABAI&#x27; даёт 13 ₽/устр/сутки. Разобраться что не так с &#x27;OPTIMUS&#x27;.</li><li>🟡 Слабые модели устройств: a05m (31 ₽/устр), a21s (37 ₽/устр). Возможно, старое/слабое железо — рассмотреть замену или перераспределение.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>BABAI</td><td class='num'>16</td><td class='num'>2 528.10 ₽</td><td class='num'>12.6 ₽</td></tr><tr><td>SVALKA</td><td class='num'>24</td><td class='num'>1 821.40 ₽</td><td class='num'>6.0 ₽</td></tr><tr><td>OPTIMUS</td><td class='num'>13</td><td class='num'>349.80 ₽</td><td class='num'>2.1 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>42 429</td><td class='num'>1 577</td><td class='num'>0%</td><td class='num'>96%</td><td class='num'>0.6</td></tr><tr><td>Wa Load</td><td class='num'>7 110</td><td class='num'>0</td><td class='num'>13%</td><td class='num'>88%</td><td class='num'>1.2</td></tr><tr><td>Kakao</td><td class='num'>7 061</td><td class='num'>1 216</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Viber</td><td class='num'>2 286</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Business</td><td class='num'>430</td><td class='num'>2</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>304</td><td class='num'>123</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-dead'><td>R58N726F1LV</td><td>OPTIMUS</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R58NB3CGQ7M</td><td>BABAI</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>RF8R31WQG4X</td><td>SVALKA</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>RF8R31WSM3F</td><td>SVALKA</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>RF8R31WN51E</td><td>SVALKA</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>RF8R31WPGRZ</td><td>SVALKA</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>RF8N50M129D</td><td>SVALKA</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>RF8R31WAYSX</td><td>SVALKA</td><td>a21s</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-low'><td>R9HT50112KW</td><td>OPTIMUS</td><td>a03</td><td class='num'>0.90 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R94XC03P3BL</td><td>OPTIMUS</td><td>a05m</td><td class='num'>1.30 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R58N231SKTH</td><td>BABAI</td><td>a20</td><td class='num'>10.20 ₽</td><td class='num'>0.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92W9084WGV</td><td>SVALKA</td><td>a04</td><td class='num'>14.20 ₽</td><td class='num'>1.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9YT605690X</td><td>SVALKA</td><td>a03</td><td class='num'>18.20 ₽</td><td class='num'>1.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8N50R1NLB</td><td>OPTIMUS</td><td>a21s</td><td class='num'>19.10 ₽</td><td class='num'>1.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9WWC0LAHTJ</td><td>OPTIMUS</td><td>a05m</td><td class='num'>27.60 ₽</td><td class='num'>2.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92X70FWG2D</td><td>OPTIMUS</td><td>a05m</td><td class='num'>28.00 ₽</td><td class='num'>2.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9WX4004A2T</td><td>OPTIMUS</td><td>a05m</td><td class='num'>32.20 ₽</td><td class='num'>2.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9WX10MKQPD</td><td>OPTIMUS</td><td>a05m</td><td class='num'>36.40 ₽</td><td class='num'>2.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9WX4004FVV</td><td>OPTIMUS</td><td>a05m</td><td class='num'>39.40 ₽</td><td class='num'>3.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>RF8N61YZ9ET</td><td>OPTIMUS</td><td>a21s</td><td class='num'>39.80 ₽</td><td class='num'>3.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9RYA06HTGK</td><td>OPTIMUS</td><td>a07</td><td class='num'>40.60 ₽</td><td class='num'>3.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R94XC0DH5XJ</td><td>OPTIMUS</td><td>a05m</td><td class='num'>40.60 ₽</td><td class='num'>3.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9HT50476NT</td><td>BABAI</td><td>a03</td><td class='num'>43.50 ₽</td><td class='num'>3.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R92Y10LZEWN</td><td>OPTIMUS</td><td>a05m</td><td class='num'>43.90 ₽</td><td class='num'>3.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>R9HT5046JNV</td><td>SVALKA</td><td>a03</td><td class='num'>67.50 ₽</td><td class='num'>5.4 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 53. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+
+    <details class="emp-card">
+      <summary>
+        <span>Неизвестно</span>
+        <span class="emp-badge red">2% плана · 1 ₽/устр/сутки</span>
+      </summary>
+      <div class="emp-body">
+        <div class="emp-stats">
+          <div>Доход за период<b>290.30 ₽</b></div>
+          <div>Устройств<b>27</b></div>
+          <div>Период<b>10.9 сут</b></div>
+          <div>Факт/устр/сутки<b>1.0 ₽</b></div>
+          <div>Цель<b>50 ₽</b></div>
+        </div>
+        <h4>Почему не дотягиваем до плана</h4>
+        <ul class="emp-reasons"><li>🔴 6 &#x27;мёртвых&#x27; устройств (22% парка) — не работают и простаивают &gt;2 дней. Это потеря ~300 ₽/сутки. Проверить: связь, аккаунты, переустановка.</li><li>🔴 Больше половины парка (27 из 27) работает ниже половины цели (25 ₽/устр/сутки). Проблема системная, не в отдельных устройствах.</li><li>🟡 Слабые модели устройств: SM-G781B (7 ₽/устр), SM-A105F (10 ₽/устр). Возможно, старое/слабое железо — рассмотреть замену или перераспределение.</li></ul>
+        <h4>Платформы (API Key)</h4>
+        <table class="mini">
+          <thead><tr><th>API Key</th><th class="num">Устройств</th><th class="num">Доход</th><th class="num">₽/устр/сутки</th></tr></thead>
+          <tbody><tr><td>mobile</td><td class='num'>26</td><td class='num'>290.30 ₽</td><td class='num'>1.0 ₽</td></tr><tr><td>AGALICH</td><td class='num'>1</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td></tr></tbody>
+        </table>
+        <h4>Эффективность сервисов</h4><table class='mini'><thead><tr><th>Сервис</th><th class='num'>Старты</th><th class='num'>Коды</th><th class='num'>Бан акк</th><th class='num'>Доставка</th><th class='num'>SMS/акк</th></tr></thead><tbody><tr><td>Regular</td><td class='num'>58</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Click</td><td class='num'>21</td><td class='num'>2 903</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Kakao</td><td class='num'>6</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr><tr><td>Viber</td><td class='num'>5</td><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td></tr></tbody></table>
+        <h4>Устройства (худшие сверху — с них начинать)</h4>
+        <table class="mini">
+          <thead><tr><th>Ext ID</th><th>Платформа</th><th>Модель</th><th class="num">Доход</th><th class="num">₽/сутки</th><th>Статус</th></tr></thead>
+          <tbody><tr class='dev-dead'><td>148ec24f-e1be-47b4-b990-7c2b05626454</td><td>mobile</td><td>SM-G781B</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>33804c62-0981-4138-99ce-4362502e0e23</td><td>mobile</td><td>SM-G781B</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>4b641ebd-d665-4b79-a13f-4c3d9ab7e63a</td><td>mobile</td><td>SM-A105F</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>a16ef972-e956-4c14-af0f-a714ad544626</td><td>mobile</td><td>SM-G781B</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>R9YT607K2ZF</td><td>AGALICH</td><td>a03</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-dead'><td>e9a1714d-29a6-4de3-bc8b-71ae5a95ca5f</td><td>mobile</td><td>SM-G781B</td><td class='num'>0.00 ₽</td><td class='num'>0.0 ₽</td><td>мёртвое (нет дохода, простой &gt;2 дн)</td></tr><tr class='dev-low'><td>5ba417eb-ac4c-4392-9817-f863519c8501</td><td>mobile</td><td>SM-A105F</td><td class='num'>0.20 ₽</td><td class='num'>0.0 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>cd92dab3-ea77-4105-bd25-b048e30caf29</td><td>mobile</td><td>SM-G781B</td><td class='num'>1.10 ₽</td><td class='num'>0.1 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>70a0596b-43c0-48e3-b046-c2989328e10a</td><td>mobile</td><td>SM-A105F</td><td class='num'>2.30 ₽</td><td class='num'>0.2 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>1384d48a-9605-43ef-91fc-7be6493be426</td><td>mobile</td><td>SM-A105F</td><td class='num'>4.80 ₽</td><td class='num'>0.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>cfd1e624-ebbb-41b2-8c8e-7c5b50ba4ef2</td><td>mobile</td><td>SM-A105F</td><td class='num'>5.00 ₽</td><td class='num'>0.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>b991222f-dc8a-4304-b25b-977fbcf5d8a4</td><td>mobile</td><td>SM-A105F</td><td class='num'>5.10 ₽</td><td class='num'>0.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>fd251818-8007-4696-97ba-7796ce48ed83</td><td>mobile</td><td>SM-G781B</td><td class='num'>5.30 ₽</td><td class='num'>0.5 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>e29910e1-c239-4b70-b2b8-a9179cadbc0d</td><td>mobile</td><td>SM-A105F</td><td class='num'>6.40 ₽</td><td class='num'>0.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>6c68f8fe-d53e-439a-a168-e44dabc625c1</td><td>mobile</td><td>SM-G781B</td><td class='num'>6.50 ₽</td><td class='num'>0.6 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>e60f5819-19f7-45c3-8bb6-eb9c844b3abe</td><td>mobile</td><td>SM-A105F</td><td class='num'>7.20 ₽</td><td class='num'>0.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>96606c80-b094-48c0-8590-7d0aa2f2a8ac</td><td>mobile</td><td>SM-A105F</td><td class='num'>7.60 ₽</td><td class='num'>0.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>a3697be3-64b8-4e2c-83dc-890a0c8527ec</td><td>mobile</td><td>SM-A105F</td><td class='num'>7.70 ₽</td><td class='num'>0.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>f2eee21c-8f94-4282-9e1e-241737270955</td><td>mobile</td><td>SM-A105F</td><td class='num'>8.30 ₽</td><td class='num'>0.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>1653d02d-3844-499f-a65e-829d01c2b784</td><td>mobile</td><td>SM-A105F</td><td class='num'>8.80 ₽</td><td class='num'>0.8 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>8a4999e8-63c8-4de4-930a-2b5938d4eba3</td><td>mobile</td><td>SM-A105F</td><td class='num'>9.70 ₽</td><td class='num'>0.9 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>48f1bf5a-df56-4c8f-b01a-e7dcd4c80f23</td><td>mobile</td><td>SM-G781B</td><td class='num'>15.80 ₽</td><td class='num'>1.4 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>55ca4033-e282-4630-a172-525249716d0a</td><td>mobile</td><td>SM-G781B</td><td class='num'>19.00 ₽</td><td class='num'>1.7 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>40645414-87f4-4ed0-85b3-9ef54c9c2b11</td><td>mobile</td><td>SM-G781B</td><td class='num'>25.10 ₽</td><td class='num'>2.3 ₽</td><td>ниже половины цели</td></tr><tr class='dev-low'><td>b1e1b6b8-d17c-40fd-a1dd-47f7d5e3e92b</td><td>mobile</td><td>SM-A105F</td><td class='num'>30.90 ₽</td><td class='num'>2.8 ₽</td><td>ниже половины цели</td></tr></tbody>
+        </table>
+        <p style='font-size:12px;color:#9ca3af'>Показаны 25 худших из 27. Полный список — в Excel-отчёте.</p>
+      </div>
+    </details>
+  </section>
+
+  <div class="footer">Автоматический отчёт • analyze_reports.py</div>
+</div>
+</body>
+</html>

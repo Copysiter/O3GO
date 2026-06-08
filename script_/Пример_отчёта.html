@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчёт по сотрудникам</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+         margin: 0; padding: 24px; background: #f5f6f8; color: #1a1a1a; }
+  .container { max-width: 1280px; margin: 0 auto; }
+  h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; }
+  .subtitle { color: #666; margin-bottom: 24px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .card { background: #fff; border-radius: 10px; padding: 16px 20px; border: 1px solid #e5e7eb; }
+  .card .label { font-size: 13px; color: #6b7280; }
+  .card .value { font-size: 26px; font-weight: 600; margin-top: 4px; }
+  .card .hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+  section { background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; padding: 24px; margin-bottom: 24px; }
+  section h2 { margin: 0 0 16px; font-size: 20px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+  th { background: #f9fafb; font-weight: 600; color: #374151; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:hover { background: #fafbfc; }
+  .bar { background: linear-gradient(to right, #4472C4 var(--w), transparent var(--w)); }
+  .good { color: #137333; font-weight: 500; }
+  .bad { color: #c5221f; font-weight: 500; }
+  .neutral { color: #5f6368; }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .chip-green { background: #e6f4ea; color: #137333; }
+  .chip-red { background: #fce8e6; color: #c5221f; }
+  .chip-yellow { background: #fef7e0; color: #b06000; }
+  .chip-blue { background: #e8f0fe; color: #1967d2; }
+  .rec-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .rec { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: #fafbfc; }
+  .rec-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .rec-name { font-weight: 600; font-size: 16px; }
+  .rec-money { color: #1967d2; font-weight: 600; }
+  .rec-pluses { background: #e6f4ea; border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; }
+  .rec-minuses { background: #fce8e6; border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+  .channel-bar { display: flex; height: 24px; border-radius: 4px; overflow: hidden; margin-top: 8px; min-width: 200px; }
+  .channel-bar > div { height: 100%; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; font-size: 13px; color: #6b7280; }
+  .legend > span { display: flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+  .footer { text-align: center; color: #9ca3af; font-size: 12px; padding: 16px 0; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
+  .tab { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; font-size: 14px; color: #6b7280; }
+  .tab.active { color: #1967d2; border-bottom-color: #1967d2; font-weight: 500; }
+  /* Confidence badge */
+  .confidence { padding: 16px 20px; border-radius: 10px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; }
+  .confidence.green { background: #e6f4ea; border: 1px solid #34a853; }
+  .confidence.yellow { background: #fef7e0; border: 1px solid #f9ab00; }
+  .confidence.red { background: #fce8e6; border: 1px solid #ea4335; }
+  .confidence .badge { font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 6px; white-space: nowrap; }
+  .confidence.green .badge { background: #34a853; color: #fff; }
+  .confidence.yellow .badge { background: #f9ab00; color: #fff; }
+  .confidence.red .badge { background: #ea4335; color: #fff; }
+  .confidence .text { font-size: 14px; color: #1a1a1a; }
+  .confidence .text b { display: block; margin-bottom: 4px; }
+  .confidence .stats { margin-left: auto; font-size: 13px; color: #5f6368; white-space: nowrap; }
+  /* Validation table */
+  .val-row { display: grid; grid-template-columns: 90px 1fr 80px 110px; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #f0f0f0; align-items: start; }
+  .val-row:hover { background: #fafbfc; }
+  .val-status { font-weight: 700; font-size: 12px; padding: 3px 8px; border-radius: 4px; text-align: center; }
+  .val-status.PASS { background: #e6f4ea; color: #137333; }
+  .val-status.WARN { background: #fef7e0; color: #9c5700; }
+  .val-status.FAIL { background: #fce8e6; color: #c5221f; }
+  .val-sev { font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 3px; text-align: center; }
+  .val-sev.HIGH { background: #ea4335; color: #fff; }
+  .val-sev.MED { background: #f9ab00; color: #fff; }
+  .val-sev.LOW { background: #dadce0; color: #3c4043; }
+  .val-name { font-weight: 600; font-size: 13px; }
+  .val-cat { font-size: 11px; color: #5f6368; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .val-msg { font-size: 12px; color: #5f6368; margin-top: 2px; }
+  .caveats { list-style: none; padding: 0; margin: 0; }
+  .caveats li { padding: 6px 0; font-size: 13px; color: #1a1a1a; border-bottom: 1px solid #f0f0f0; }
+  .caveats li:last-child { border-bottom: none; }
+  .rec-caveat { background: #fff2cc; border-radius: 6px; padding: 8px 12px; font-size: 12px; margin-top: 6px; color: #6b5d00; }
+  /* Goal table */
+  .goal-good { color: #137333; font-weight: 600; }
+  .goal-bad { color: #c5221f; font-weight: 600; }
+  .goal-warn { color: #b06000; font-weight: 600; }
+  tr.goal-row-good { background: #f1f8f4; }
+  tr.goal-row-bad { background: #fcefee; }
+  tr.goal-row-warn { background: #fef9e8; }
+  tr.goal-row-good:hover, tr.goal-row-bad:hover, tr.goal-row-warn:hover { filter: brightness(0.97); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Отчёт по сотрудникам</h1>
+  <div class="subtitle">Период: 18.05.2026 — 22.05.2026 • Сгенерировано: 2026-05-25 08:25</div>
+
+  <div class="confidence yellow">
+    <div class="badge">Share with caveats</div>
+    <div class="text">
+      <b>Статус отчёта</b>
+      Отчёт корректен, но требует 2 важных оговорок при презентации.
+    </div>
+    <div class="stats">13 PASS · 5 WARN · 0 FAIL</div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="label">Общий доход</div>
+      <div class="value">52 781.40 ₽</div>
+      <div class="hint">за период наблюдения</div>
+    </div>
+    <div class="card">
+      <div class="label">Устройств активно</div>
+      <div class="value">801</div>
+      <div class="hint">по 8 сотрудникам</div>
+    </div>
+    <div class="card">
+      <div class="label">Средний доход</div>
+      <div class="value">65.89 ₽</div>
+      <div class="hint">на устройство</div>
+    </div>
+    <div class="card">
+      <div class="label">Выполнение цели</div>
+      <div class="value" style="color: #c5221f;">49%</div>
+      <div class="hint">Существенный недобор: 25 ₽/устр/сутки</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Достижение цели · 50 ₽/устр/сутки</h2>
+    <div style="font-size: 13px; color: #5f6368; margin-bottom: 16px;">
+      План у каждого сотрудника считается индивидуально: <code>цель × устройств × период наблюдения в сутках</code>.
+      У сотрудников разные периоды наблюдения, поэтому сравнение по выполнению плана корректнее, чем по абсолютному доходу.
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Сотрудник</th>
+          <th class="num">Устр.</th>
+          <th class="num">Период, сут</th>
+          <th class="num">Факт, ₽/устр/сутки</th>
+          <th class="num">Отклонение</th>
+          <th class="num">План за период</th>
+          <th class="num">Факт за период</th>
+          <th class="num">Выполнение</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr class="goal-row-warn">
+          <td><b>Глухов</b></td>
+          <td class="num">152</td>
+          <td class="num">1.74</td>
+          <td class="num">39.3 ₽</td>
+          <td class="num goal-bad">-10.7 ₽</td>
+          <td class="num">13 199.81 ₽</td>
+          <td class="num">10 385.90 ₽</td>
+          <td class="num goal-warn">79%</td>
+        </tr>
+
+        <tr class="goal-row-warn">
+          <td><b>Болонкин</b></td>
+          <td class="num">141</td>
+          <td class="num">2.94</td>
+          <td class="num">35.4 ₽</td>
+          <td class="num goal-bad">-14.6 ₽</td>
+          <td class="num">20 736.55 ₽</td>
+          <td class="num">14 683.80 ₽</td>
+          <td class="num goal-warn">71%</td>
+        </tr>
+
+        <tr class="goal-row-warn">
+          <td><b>Насыров</b></td>
+          <td class="num">56</td>
+          <td class="num">1.81</td>
+          <td class="num">30.9 ₽</td>
+          <td class="num goal-bad">-19.1 ₽</td>
+          <td class="num">5 056.72 ₽</td>
+          <td class="num">3 125.90 ₽</td>
+          <td class="num goal-warn">62%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Армен</b></td>
+          <td class="num">122</td>
+          <td class="num">3.04</td>
+          <td class="num">21.6 ₽</td>
+          <td class="num goal-bad">-28.4 ₽</td>
+          <td class="num">18 558.54 ₽</td>
+          <td class="num">8 011.80 ₽</td>
+          <td class="num goal-bad">43%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Бенз</b></td>
+          <td class="num">51</td>
+          <td class="num">2.99</td>
+          <td class="num">21.5 ₽</td>
+          <td class="num goal-bad">-28.5 ₽</td>
+          <td class="num">7 636.22 ₽</td>
+          <td class="num">3 277.50 ₽</td>
+          <td class="num goal-bad">43%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Серега</b></td>
+          <td class="num">44</td>
+          <td class="num">2.76</td>
+          <td class="num">20.0 ₽</td>
+          <td class="num goal-bad">-30.0 ₽</td>
+          <td class="num">6 064.13 ₽</td>
+          <td class="num">2 420.60 ₽</td>
+          <td class="num goal-bad">40%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Некит</b></td>
+          <td class="num">118</td>
+          <td class="num">2.02</td>
+          <td class="num">19.4 ₽</td>
+          <td class="num goal-bad">-30.6 ₽</td>
+          <td class="num">11 897.17 ₽</td>
+          <td class="num">4 622.40 ₽</td>
+          <td class="num goal-bad">39%</td>
+        </tr>
+
+        <tr class="goal-row-bad">
+          <td><b>Марат</b></td>
+          <td class="num">117</td>
+          <td class="num">4.07</td>
+          <td class="num">13.1 ₽</td>
+          <td class="num goal-bad">-36.9 ₽</td>
+          <td class="num">23 795.62 ₽</td>
+          <td class="num">6 253.50 ₽</td>
+          <td class="num goal-bad">26%</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr style="background: #e8f0fe; font-weight: 600;">
+          <td>ИТОГО по компании</td>
+          <td class="num">801</td>
+          <td class="num">2.67</td>
+          <td class="num">24.7 ₽</td>
+          <td class="num">-25.3 ₽</td>
+          <td class="num">106 944.76 ₽</td>
+          <td class="num">52 781.40 ₽</td>
+          <td class="num"><b style="color: #c5221f;">49%</b></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <section>
+    <h2>Структура дохода по каналам</h2>
+    <div class="legend">
+      <span><i style="background:#1D9E75"></i>WhatsApp: 31 845.30 ₽</span>
+      <span><i style="background:#185FA5"></i>Regular: 12 972.00 ₽</span>
+      <span><i style="background:#BA7517"></i>Kakao: 7 541.70 ₽</span>
+      <span><i style="background:#D85A30"></i>Click: 415.40 ₽</span>
+      <span><i style="background:#888780"></i>Business: 7.00 ₽</span>
+    </div>
+    <div class="channel-bar">
+      <div style="background:#1D9E75; width:60.33%" title="WhatsApp"></div>
+      <div style="background:#185FA5; width:24.58%" title="Regular"></div>
+      <div style="background:#BA7517; width:14.29%" title="Kakao"></div>
+      <div style="background:#D85A30; width:0.79%" title="Click"></div>
+      <div style="background:#888780; width:0.01%" title="Business"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Рейтинг сотрудников</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Сотрудник</th>
+          <th class="num">Доход</th>
+          <th class="num">Доля</th>
+          <th class="num">Устройств</th>
+          <th class="num">₽/устр</th>
+          <th>Активность 24ч</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>1</td>
+          <td><b>Болонкин</b></td>
+          <td class="num bar" style="--w:100.0%;">14 683.80 ₽</td>
+          <td class="num">27.8%</td>
+          <td class="num">141</td>
+          <td class="num">104 ₽</td>
+          <td><span class="neutral">26%</span></td>
+        </tr>
+
+        <tr>
+          <td>2</td>
+          <td><b>Глухов</b></td>
+          <td class="num bar" style="--w:70.7%;">10 385.90 ₽</td>
+          <td class="num">19.7%</td>
+          <td class="num">152</td>
+          <td class="num">68 ₽</td>
+          <td><span class="neutral">28%</span></td>
+        </tr>
+
+        <tr>
+          <td>3</td>
+          <td><b>Армен</b></td>
+          <td class="num bar" style="--w:54.6%;">8 011.80 ₽</td>
+          <td class="num">15.2%</td>
+          <td class="num">122</td>
+          <td class="num">66 ₽</td>
+          <td><span class="neutral">27%</span></td>
+        </tr>
+
+        <tr>
+          <td>4</td>
+          <td><b>Марат</b></td>
+          <td class="num bar" style="--w:42.6%;">6 253.50 ₽</td>
+          <td class="num">11.8%</td>
+          <td class="num">117</td>
+          <td class="num">53 ₽</td>
+          <td><span class="good">32%</span></td>
+        </tr>
+
+        <tr>
+          <td>5</td>
+          <td><b>Некит</b></td>
+          <td class="num bar" style="--w:31.5%;">4 622.40 ₽</td>
+          <td class="num">8.8%</td>
+          <td class="num">118</td>
+          <td class="num">39 ₽</td>
+          <td><span class="neutral">23%</span></td>
+        </tr>
+
+        <tr>
+          <td>6</td>
+          <td><b>Бенз</b></td>
+          <td class="num bar" style="--w:22.3%;">3 277.50 ₽</td>
+          <td class="num">6.2%</td>
+          <td class="num">51</td>
+          <td class="num">64 ₽</td>
+          <td><span class="neutral">28%</span></td>
+        </tr>
+
+        <tr>
+          <td>7</td>
+          <td><b>Насыров</b></td>
+          <td class="num bar" style="--w:21.3%;">3 125.90 ₽</td>
+          <td class="num">5.9%</td>
+          <td class="num">56</td>
+          <td class="num">56 ₽</td>
+          <td><span class="neutral">21%</span></td>
+        </tr>
+
+        <tr>
+          <td>8</td>
+          <td><b>Серега</b></td>
+          <td class="num bar" style="--w:16.5%;">2 420.60 ₽</td>
+          <td class="num">4.6%</td>
+          <td class="num">44</td>
+          <td class="num">55 ₽</td>
+          <td><span class="bad">7%</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Качество работы</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Сотрудник</th>
+          <th class="num">Click брак</th>
+          <th class="num">WA бан акк</th>
+          <th class="num">WA доставка</th>
+          <th class="num">Kakao конверсия</th>
+          <th class="num">Мёртвых устр</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td><b>Болонкин</b></td>
+          <td class="num"><span class="chip chip-yellow">56.7%</span></td>
+          <td class="num"><span class="chip chip-red">15.8%</span></td>
+          <td class="num"><span class="chip chip-green">92.0%</span></td>
+          <td class="num"><span class="chip chip-green">18.9%</span></td>
+          <td class="num"><span class="chip chip-green">4 (2.8%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Глухов</b></td>
+          <td class="num"><span class="chip chip-red">64.7%</span></td>
+          <td class="num"><span class="chip chip-yellow">14.1%</span></td>
+          <td class="num"><span class="chip chip-yellow">88.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">15.1%</span></td>
+          <td class="num"><span class="chip chip-green">1 (0.7%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Армен</b></td>
+          <td class="num"><span class="chip chip-green">23.0%</span></td>
+          <td class="num"><span class="chip chip-yellow">10.0%</span></td>
+          <td class="num"><span class="chip chip-green">91.4%</span></td>
+          <td class="num"><span class="chip chip-yellow">15.7%</span></td>
+          <td class="num"><span class="chip chip-yellow">6 (4.9%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Марат</b></td>
+          <td class="num"><span class="chip chip-yellow">59.3%</span></td>
+          <td class="num"><span class="chip chip-yellow">14.5%</span></td>
+          <td class="num"><span class="chip chip-green">90.5%</span></td>
+          <td class="num"><span class="chip chip-yellow">12.4%</span></td>
+          <td class="num"><span class="chip chip-red">11 (9.4%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Некит</b></td>
+          <td class="num"><span class="chip chip-red">71.6%</span></td>
+          <td class="num"><span class="chip chip-green">6.3%</span></td>
+          <td class="num"><span class="chip chip-yellow">86.7%</span></td>
+          <td class="num"><span class="chip chip-green">18.4%</span></td>
+          <td class="num"><span class="chip chip-green">3 (2.5%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Бенз</b></td>
+          <td class="num"><span class="chip chip-red">83.4%</span></td>
+          <td class="num"><span class="chip chip-green">6.2%</span></td>
+          <td class="num"><span class="chip chip-yellow">85.7%</span></td>
+          <td class="num"><span class="chip chip-green">40.3%</span></td>
+          <td class="num"><span class="chip chip-yellow">2 (3.9%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Насыров</b></td>
+          <td class="num"><span class="chip chip-green">25.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">9.0%</span></td>
+          <td class="num"><span class="chip chip-yellow">87.4%</span></td>
+          <td class="num"><span class="chip chip-yellow">16.3%</span></td>
+          <td class="num"><span class="chip chip-green">1 (1.8%)</span></td>
+        </tr>
+
+        <tr>
+          <td><b>Серега</b></td>
+          <td class="num"><span class="chip chip-yellow">59.2%</span></td>
+          <td class="num"><span class="chip chip-yellow">12.7%</span></td>
+          <td class="num"><span class="chip chip-yellow">87.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">16.6%</span></td>
+          <td class="num"><span class="chip chip-yellow">3 (6.8%)</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Топ-15 устройств по доходу</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Сотрудник</th>
+          <th>API Key</th>
+          <th>Модель</th>
+          <th class="num">Доход</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>1</td>
+          <td>Болонкин</td>
+          <td>MEGATRON</td>
+          <td>sailfish ver.10</td>
+          <td class="num">311.00 ₽</td>
+        </tr>
+
+        <tr>
+          <td>2</td>
+          <td>Марат</td>
+          <td>TOMYAM</td>
+          <td>star2lte ver.11</td>
+          <td class="num">229.90 ₽</td>
+        </tr>
+
+        <tr>
+          <td>3</td>
+          <td>Марат</td>
+          <td>TOMYAM</td>
+          <td>dreamlteks ver.9</td>
+          <td class="num">226.40 ₽</td>
+        </tr>
+
+        <tr>
+          <td>4</td>
+          <td>Марат</td>
+          <td>TOMYAM</td>
+          <td>star2lte ver.11</td>
+          <td class="num">226.30 ₽</td>
+        </tr>
+
+        <tr>
+          <td>5</td>
+          <td>Армен</td>
+          <td>VIBPC2</td>
+          <td>a21s ver.12</td>
+          <td class="num">220.30 ₽</td>
+        </tr>
+
+        <tr>
+          <td>6</td>
+          <td>Болонкин</td>
+          <td>HOSHIMIN</td>
+          <td>star2qltesq ver.10</td>
+          <td class="num">218.90 ₽</td>
+        </tr>
+
+        <tr>
+          <td>7</td>
+          <td>Марат</td>
+          <td>TOMYAM</td>
+          <td>star2lte ver.11</td>
+          <td class="num">207.10 ₽</td>
+        </tr>
+
+        <tr>
+          <td>8</td>
+          <td>Болонкин</td>
+          <td>BANDIT73</td>
+          <td>a21s ver.12</td>
+          <td class="num">206.90 ₽</td>
+        </tr>
+
+        <tr>
+          <td>9</td>
+          <td>Болонкин</td>
+          <td>BANDIT73</td>
+          <td>a20 ver.11</td>
+          <td class="num">198.70 ₽</td>
+        </tr>
+
+        <tr>
+          <td>10</td>
+          <td>Болонкин</td>
+          <td>HOSHIMIN</td>
+          <td>star2qltesq ver.10</td>
+          <td class="num">198.60 ₽</td>
+        </tr>
+
+        <tr>
+          <td>11</td>
+          <td>Марат</td>
+          <td>TOMYAM</td>
+          <td>star2lte ver.11</td>
+          <td class="num">197.50 ₽</td>
+        </tr>
+
+        <tr>
+          <td>12</td>
+          <td>Армен</td>
+          <td>VINDIESEL</td>
+          <td>a21s ver.12</td>
+          <td class="num">197.30 ₽</td>
+        </tr>
+
+        <tr>
+          <td>13</td>
+          <td>Марат</td>
+          <td>TOMYAM</td>
+          <td>star2lte ver.11</td>
+          <td class="num">197.30 ₽</td>
+        </tr>
+
+        <tr>
+          <td>14</td>
+          <td>Болонкин</td>
+          <td>HOSHIMIN</td>
+          <td>star2qltesq ver.10</td>
+          <td class="num">195.30 ₽</td>
+        </tr>
+
+        <tr>
+          <td>15</td>
+          <td>Болонкин</td>
+          <td>BANDIT73</td>
+          <td>a10 ver.11</td>
+          <td class="num">193.40 ₽</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Проверки качества отчёта</h2>
+    <div style="font-size: 13px; color: #5f6368; margin-bottom: 12px;">
+      Автоматический чек-лист по мотивам <a href="https://github.com/anthropics/knowledge-work-plugins/blob/main/data/skills/validate-data/SKILL.md" target="_blank" style="color: #1967d2;">validate-data skill</a> от Anthropic. Проверяет корректность расчётов, разумность результатов и аналитические ловушки.
+    </div>
+    
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Аналитические ловушки</div>
+            <div class="val-name">Сопоставимость периодов</div>
+            <div class="val-msg">У сотрудников разные периоды наблюдения (42–98 ч). Сравнение по абсолютному доходу некорректно — используйте &quot;Доход/устр&quot; или нормируйте на длину периода.</div>
+          </div>
+          <div class="val-sev HIGH">HIGH</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Цели</div>
+            <div class="val-name">Выполнение цели (общее)</div>
+            <div class="val-msg">Существенный недобор: 49.4% от плана. 5 сотрудник(ов) ниже 50% плана. Цель 50 ₽/устр/сутки требует пересмотра либо тактики, либо самой цели.</div>
+          </div>
+          <div class="val-sev HIGH">HIGH</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Сотрудники без данных</div>
+            <div class="val-msg">2 сотрудников из конфига нет в данных: Ильяс, Питер. Либо они не работают, либо их API Key переименованы.</div>
+          </div>
+          <div class="val-sev MED">MED</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Разумность</div>
+            <div class="val-name">Длина периода</div>
+            <div class="val-msg">Период 5 дн — выводы по отдельным сотрудникам имеют большой шум</div>
+          </div>
+          <div class="val-sev MED">MED</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status WARN">WARN</div>
+          <div>
+            <div class="val-cat">Аналитические ловушки</div>
+            <div class="val-name">Survivorship bias</div>
+            <div class="val-msg">В выгрузке только активно работающие устройства. Если у сотрудника железо физически отключено (а не показывает 0 ₽), оно вообще не попадёт в анализ — реальный парк может быть больше.</div>
+          </div>
+          <div class="val-sev MED">MED</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Расчёты</div>
+            <div class="val-name">Сумма каналов = Total</div>
+            <div class="val-msg">Сумма каналов 52,781.40 = Total 52,781.40 (расхождение 0.00%)</div>
+          </div>
+          <div class="val-sev HIGH">HIGH</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Режим загрузки</div>
+            <div class="val-msg">Используется конфиг-маппинг API Key → сотрудник (10 сотрудников в конфиге)</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Несматченные API Key</div>
+            <div class="val-msg">Все API Key из данных нашли своего сотрудника в конфиге</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Источники</div>
+            <div class="val-msg">Загружено 8 файл(ов)</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Свежесть данных</div>
+            <div class="val-msg">Самая свежая запись 3 дн. назад</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Дубликаты строк</div>
+            <div class="val-msg">Дубликатов не найдено</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Качество данных</div>
+            <div class="val-name">Итоговые строки</div>
+            <div class="val-msg">Все строки без API Key исключены (нет двойного счёта)</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Расчёты</div>
+            <div class="val-name">Отрицательные доходы</div>
+            <div class="val-msg">Все доходы ≥ 0</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Расчёты</div>
+            <div class="val-name">Проценты в [0;100]</div>
+            <div class="val-msg">Все процентные метрики в норме</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Расчёты</div>
+            <div class="val-name">Знаменатели</div>
+            <div class="val-msg">Невозможных соотношений не обнаружено</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Разумность</div>
+            <div class="val-name">Порядок величины</div>
+            <div class="val-msg">Общий доход 52,781.40 ₽ — в разумном диапазоне</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Разумность</div>
+            <div class="val-name">Устройства с 0 ₽</div>
+            <div class="val-msg">37 устр. (4.6%) с 0 ₽ — в норме</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+
+        <div class="val-row">
+          <div class="val-status PASS">PASS</div>
+          <div>
+            <div class="val-cat">Аналитические ловушки</div>
+            <div class="val-name">Average of averages</div>
+            <div class="val-msg">Средний доход/устр посчитан корректно: total/total_dev = 66 ₽ (не путать с mean(per_emp) = 63 ₽).</div>
+          </div>
+          <div class="val-sev LOW">LOW</div>
+          <div></div>
+        </div>
+  </section>
+
+  <section>
+    <h2>Оговорки для презентации</h2>
+    <div style="font-size: 13px; color: #5f6368; margin-bottom: 12px;">
+      Эти моменты обязательно упомянуть при презентации руководству, чтобы данные были интерпретированы корректно.
+    </div>
+    <ul class="caveats">
+      <li>[HIGH] Сопоставимость периодов: У сотрудников разные периоды наблюдения (42–98 ч). Сравнение по абсолютному доходу некорректно — используйте &quot;Доход/устр&quot; или нормируйте на длину периода.</li>
+<li>[HIGH] Выполнение цели (общее): Существенный недобор: 49.4% от плана. 5 сотрудник(ов) ниже 50% плана. Цель 50 ₽/устр/сутки требует пересмотра либо тактики, либо самой цели.</li>
+<li>[MED] Сотрудники без данных: 2 сотрудников из конфига нет в данных: Ильяс, Питер. Либо они не работают, либо их API Key переименованы.</li>
+<li>[MED] Длина периода: Период 5 дн — выводы по отдельным сотрудникам имеют большой шум</li>
+<li>[MED] Survivorship bias: В выгрузке только активно работающие устройства. Если у сотрудника железо физически отключено (а не показывает 0 ₽), оно вообще не попадёт в анализ — реальный парк может быть больше.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Персональные рекомендации</h2>
+    <div class="rec-grid">
+      
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Болонкин</div>
+            <div class="rec-money">14 683.80 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Высокая эффективность: 104 ₽/устр (выше медианы) • Отличная доставка WA: 92.0% • Сильный Kakao: 18.9% код/старт</div>
+          <div class="rec-minuses">⚠ Недовыполнение цели: 35 ₽/устр/сутки (71% плана), не хватает 15 ₽/устр/сутки до цели • Высокий бан WA-аккаунтов: 15.8% — снизить частоту/прогрев</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Глухов</div>
+            <div class="rec-money">10 385.90 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Стабильная работа без особых выбросов</div>
+          <div class="rec-minuses">⚠ Недовыполнение цели: 39 ₽/устр/сутки (79% плана), не хватает 11 ₽/устр/сутки до цели</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Армен</div>
+            <div class="rec-money">8 011.80 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Чистый Click-трафик: брак 23.0%</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 22 ₽/устр/сутки (43% плана) — парк работает в 0.4× ниже цели 50 ₽/устр/сутки</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Марат</div>
+            <div class="rec-money">6 253.50 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Стабильная работа без особых выбросов</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 13 ₽/устр/сутки (26% плана) — парк работает в 0.3× ниже цели 50 ₽/устр/сутки • Много &#x27;мёртвых&#x27; устройств: 11 шт (9.4%) — разобрать или починить</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Некит</div>
+            <div class="rec-money">4 622.40 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Сильный Kakao: 18.4% код/старт • Бережно с аккаунтами WA: бан 6.3%</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 19 ₽/устр/сутки (39% плана) — парк работает в 0.4× ниже цели 50 ₽/устр/сутки • Низкая эффективность: 39 ₽/устр (ниже медианы) • Высокий брак Click: 71.6% — пересобрать сценарий или отключить</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Бенз</div>
+            <div class="rec-money">3 277.50 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Сильный Kakao: 40.3% код/старт</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 21 ₽/устр/сутки (43% плана) — парк работает в 0.4× ниже цели 50 ₽/устр/сутки • Высокий брак Click: 83.4% — пересобрать сценарий или отключить</div>
+          <div class="rec-caveat">ⓘ Оговорка: мало WA-аккаунтов (32) — оценка бана/доставки шумная</div>
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Насыров</div>
+            <div class="rec-money">3 125.90 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Чистый Click-трафик: брак 25.6%</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 31 ₽/устр/сутки (62% плана) — парк работает в 0.6× ниже цели 50 ₽/устр/сутки</div>
+          
+        </div>
+
+        <div class="rec">
+          <div class="rec-head">
+            <div class="rec-name">Серега</div>
+            <div class="rec-money">2 420.60 ₽</div>
+          </div>
+          <div class="rec-pluses">✓ Стабильная работа без особых выбросов</div>
+          <div class="rec-minuses">⚠ Серьёзное недовыполнение: 20 ₽/устр/сутки (40% плана) — парк работает в 0.4× ниже цели 50 ₽/устр/сутки • Много &#x27;мёртвых&#x27; устройств: 3 шт (6.8%) — разобрать или починить • Низкая активность парка: 7% за 24ч</div>
+          
+        </div>
+    </div>
+  </section>
+
+  <div class="footer">Автоматический отчёт • analyze_reports.py</div>
+</div>
+</body>
+</html>

@@ -43,7 +43,6 @@ window.initGrid = function() {
                     },
                     update: {
                         url: function (options) {
-                            console.log(options);
                             return `${api_base_url}/api/v1/services/${options.id}`;
                         },
 

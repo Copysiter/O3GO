@@ -8,6 +8,8 @@ from sqlalchemy import update
 
 from core.config import settings
 from db.session import async_session
+from services.export.employee_analytics import generate_analytics_files
+from services.export.report_rows import build_report_rows
 
 import models
 import schemas
@@ -253,3 +255,46 @@ async def event_handler(data: schemas.WebhookRequest):
 def webhook_handler(data: schemas.WebhookRequest):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(event_handler(data))
+
+
+async def analytics_event_handler(
+    analytics_id: int, filters: list, user_id: int, period: str
+) -> None:
+    async with async_session() as db:
+        item = await crud.analytics.get(db=db, id=analytics_id)
+        if not item:
+            return
+        try:
+            await crud.analytics.mark_running(db=db, db_obj=item)
+            user = await crud.user.get(db=db, id=user_id)
+            if not user:
+                raise ValueError(f'User {user_id} not found')
+            rows, services = await build_report_rows(
+                db, filters=filters or [], current_user=user
+            )
+            html_path, xlsx_path, html_filename, xlsx_filename = generate_analytics_files(
+                analytics_id=analytics_id,
+                period=period,
+                rows=rows,
+                services=services,
+            )
+            item = await crud.analytics.get(db=db, id=analytics_id)
+            await crud.analytics.mark_done(
+                db=db,
+                db_obj=item,
+                html_path=html_path,
+                xlsx_path=xlsx_path,
+                html_filename=html_filename,
+                xlsx_filename=xlsx_filename,
+            )
+        except Exception as e:
+            await db.rollback()
+            item = await crud.analytics.get(db=db, id=analytics_id)
+            if item:
+                await crud.analytics.mark_failed(db=db, db_obj=item, error=str(e))
+            raise
+
+
+@celery.task(name="analytics")
+def analytics_handler(analytics_id: int, filters: list, user_id: int, period: str):
+    asyncio.run(analytics_event_handler(analytics_id, filters, user_id, period))

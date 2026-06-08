@@ -8,3 +8,4 @@ from .reg import reg  # noqa
 from .setting import setting  # noqa
 from .setting_group import setting_group  # noqa
 from .report import report  # noqa
+from .analytics import analytics  # noqa

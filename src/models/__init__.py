@@ -6,3 +6,4 @@ from .number import Number  # noqa
 from .reg import Reg  # noqa
 from .report import Report  # noqa
 from .setting import Setting, SettingOption, SettingValue, SettingGroup, SettingGroupApiKeys  # noqa
+from .analytics import Analytics  # noqa

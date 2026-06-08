@@ -11,6 +11,14 @@ $(document).ready(function () {
     </a>
     </li>
     <li>
+    <a href='/analytics/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'analytics' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='analytics-icon'>
+    <span><i class='mdi mdi-file-chart fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='analytics'>Analytics</span>
+    </a>
+    </li>
+    <li>
     <a href='/devices/' data-role='drawer-item' class='${
         $('body').attr('data-id') == 'devices' ? 'k-selected ' : ''
     }d-flex align-items-center text-decoration-none p-0' id='routing-icon'>
@@ -67,6 +75,14 @@ $(document).ready(function () {
     }d-flex align-items-center text-decoration-none p-0' id='routing-icon'>
     <span><i class='mdi mdi-poll fs-20'></i></span>
     <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='report'>Report</span>
+    </a>
+    </li>
+    <li>
+    <a href='/analytics/' data-role='drawer-item' class='${
+        $('body').attr('data-id') == 'analytics' ? 'k-selected ' : ''
+    }d-flex align-items-center text-decoration-none p-0' id='analytics-icon'>
+    <span><i class='mdi mdi-file-chart fs-20'></i></span>
+    <span class='k-item-text flex-grow-1 fs-14 ps-0 pe-20 pt-2' data-id='analytics'>Analytics</span>
     </a>
     </li>
     <li>
