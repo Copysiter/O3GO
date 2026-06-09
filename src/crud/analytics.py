@@ -17,7 +17,7 @@ class CRUDAnalytics(CRUDBase[Analytics, AnalyticsCreate, AnalyticsUpdate]):
     ) -> List[Analytics]:
         filters = filters or []
         filters.append({
-            'field': 'created_by_id', 'operator': 'eq', 'value': user.id
+            'field': 'user_id', 'operator': 'eq', 'value': user.id
         })
         return await self.get_rows(
             db, filters=filters, orders=orders, skip=skip, limit=limit
@@ -28,7 +28,7 @@ class CRUDAnalytics(CRUDBase[Analytics, AnalyticsCreate, AnalyticsUpdate]):
     ) -> int:
         filters = filters or []
         filters.append({
-            'field': 'created_by_id', 'operator': 'eq', 'value': user.id
+            'field': 'user_id', 'operator': 'eq', 'value': user.id
         })
         return await self.get_count(db, filters=filters)
 

@@ -8,6 +8,10 @@ from db.base_class import Base
 
 class Analytics(Base):
     id = Column(BigInteger, primary_key=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey('user.id', ondelete='SET NULL'),
+        nullable=True, index=True
+    )
     period = Column(String, nullable=False, index=True)
     period_from = Column(DateTime, nullable=True, index=True)
     period_to = Column(DateTime, nullable=True, index=True)
@@ -17,10 +21,7 @@ class Analytics(Base):
     html_filename = Column(String, nullable=True)
     xlsx_filename = Column(String, nullable=True)
     error = Column(Text, nullable=True)
-    created_by_id = Column(
-        Integer, ForeignKey('user.id', ondelete='SET NULL'), nullable=True, index=True
-    )
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     finished_at = Column(DateTime, nullable=True)
 
-    created_by = relationship('User', lazy='joined')
+    user = relationship('User', lazy='joined')

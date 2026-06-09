@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 def _assert_can_access(item: models.Analytics, user: models.User) -> None:
-    if not crud.user.is_superuser(user) and item.created_by_id != user.id:
+    if not crud.user.is_superuser(user) and item.user_id != user.id:
         raise HTTPException(status_code=403, detail='Not enough permissions')
 
 
@@ -66,7 +66,7 @@ async def run_analytics(
     item = await crud.analytics.create(db=db, obj_in={
         'period': data.period or 'Current selection',
         'status': 'pending',
-        'created_by_id': current_user.id,
+        'user_id': current_user.id,
     })
     from tasks import analytics_handler
     analytics_handler.delay(item.id, data.filters, current_user.id, item.period)

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 
 class AnalyticsBase(BaseModel):
+    user_id: Optional[int] = None
     period: Optional[str] = None
     period_from: Optional[datetime] = None
     period_to: Optional[datetime] = None
@@ -12,7 +13,6 @@ class AnalyticsBase(BaseModel):
     html_filename: Optional[str] = None
     xlsx_filename: Optional[str] = None
     error: Optional[str] = None
-    created_by_id: Optional[int] = None
     finished_at: Optional[datetime] = None
 
 
