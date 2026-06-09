@@ -414,6 +414,13 @@ td[role='gridcell'] .badge:first-child {
     border-color: rgba(0, 0, 0, 0.08);
 }
 
+.k-notification,
+.k-notification .k-notification-content {
+    width: auto;
+    max-width: none;
+    white-space: nowrap;
+}
+
 .k-confirm .k-dialog-titlebar,
 .k-prompt .k-dialog-titlebar {
     display: none;
