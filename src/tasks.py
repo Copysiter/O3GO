@@ -296,5 +296,10 @@ async def analytics_event_handler(
 
 
 @celery.task(name="analytics")
-def analytics_handler(analytics_id: int, filters: list, user_id: int, period: str):
-    asyncio.run(analytics_event_handler(analytics_id, filters, user_id, period))
+def analytics_handler(
+    analytics_id: int, filters: list, user_id: int, period: str
+):
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(
+        analytics_event_handler(analytics_id, filters, user_id, period)
+    )
