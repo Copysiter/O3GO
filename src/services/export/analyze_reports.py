@@ -403,12 +403,31 @@ def enrich(all_data: pd.DataFrame) -> pd.DataFrame:
 # 2. АГРЕГАЦИИ
 # =============================================================
 
-def safe_pct(num, denom):
+def safe_div(num, denom, decimals=2):
+    """Деление num/denom, при нулевом знаменателе возвращает 0."""
+    num = pd.to_numeric(num, errors='coerce')
+    denom = pd.to_numeric(denom, errors='coerce')
+    if isinstance(num, pd.Series) and not isinstance(denom, pd.Series):
+        denom = pd.Series(denom, index=num.index)
+    return (num / denom.where(denom.ne(0))).fillna(0).round(decimals)
+
+
+def safe_pct(num, denom, decimals=1):
     """Процент num/denom, не падает на нулях."""
-    return (num / denom.replace(0, pd.NA) * 100).fillna(0).round(1)
+    return safe_div(pd.to_numeric(num, errors='coerce') * 100, denom, decimals)
 
 
-def compute_summary(all_data: pd.DataFrame) -> pd.DataFrame:
+def company_goal_totals(summary: pd.DataFrame) -> tuple:
+    """Итоги цели по компании с взвешиванием периода по устройствам."""
+    total_devices = summary['Устройств'].sum()
+    total_revenue = summary['Итого_руб'].sum()
+    total_device_days = (summary['Устройств'] * summary['Период_суток']).sum()
+    weighted_period_days = total_device_days / total_devices if total_devices else 0
+    company_fact_day = total_revenue / total_device_days if total_device_days else 0
+    return total_devices, total_revenue, total_device_days, weighted_period_days, company_fact_day
+
+
+def compute_summary(all_data: pd.DataFrame, period_days: float = None) -> pd.DataFrame:
     """Сводка по сотрудникам — для рейтинга, качества и утилизации."""
     g = all_data.groupby('_Сотрудник')
 
@@ -441,8 +460,12 @@ def compute_summary(all_data: pd.DataFrame) -> pd.DataFrame:
 
     agg = agg.sort_values('Итого_руб', ascending=False).reset_index(drop=True)
 
-    # Период наблюдения по каждому сотруднику (для нормировки на сутки)
-    if 'Timestamp' in all_data.columns:
+    # Для UI-аналитики используем выбранный период. Timestamp — только fallback,
+    # потому что это последняя активность, а не граница фильтра.
+    if period_days is not None:
+        agg['Период_часов'] = period_days * 24
+        agg['Период_суток'] = period_days
+    elif 'Timestamp' in all_data.columns:
         ts = pd.to_datetime(all_data['Timestamp'], errors='coerce')
         all_data['_ts_norm'] = ts
         ts_per_emp = all_data.groupby('_Сотрудник').agg(
@@ -464,12 +487,12 @@ def compute_summary(all_data: pd.DataFrame) -> pd.DataFrame:
         agg['Период_суток'] = 1.0
 
     # Вычисляемые метрики
-    agg['Доход_на_устр'] = (agg['Итого_руб'] / agg['Устройств'].replace(0, pd.NA)).fillna(0).round(2)
+    agg['Доход_на_устр'] = safe_div(agg['Итого_руб'], agg['Устройств'], 2)
 
     # === ЦЕЛЕВЫЕ МЕТРИКИ (50 ₽/устр/сутки) ===
     # Фактический доход на устройство в сутки
-    denom = (agg['Устройств'] * agg['Период_суток']).replace(0, pd.NA)
-    agg['Факт_руб_устр_сутки'] = (agg['Итого_руб'] / denom).fillna(0).round(2)
+    denom = agg['Устройств'] * agg['Период_суток']
+    agg['Факт_руб_устр_сутки'] = safe_div(agg['Итого_руб'], denom, 2)
 
     # План за период: цель × устройств × дней
     agg['План_за_период'] = (
@@ -480,9 +503,7 @@ def compute_summary(all_data: pd.DataFrame) -> pd.DataFrame:
     agg['Отклонение_за_период'] = (agg['Итого_руб'] - agg['План_за_период']).round(2)
 
     # Процент выполнения плана
-    agg['Выполнение_pct'] = (
-        agg['Итого_руб'] / agg['План_за_период'].replace(0, pd.NA) * 100
-    ).fillna(0).round(1)
+    agg['Выполнение_pct'] = safe_pct(agg['Итого_руб'], agg['План_за_период'], 1)
 
     # Отклонение в ₽/устр/сутки (положительное = выше цели)
     agg['Отклонение_сутки'] = (agg['Факт_руб_устр_сутки'] - TARGET_PER_DEVICE_DAY).round(2)
@@ -491,8 +512,8 @@ def compute_summary(all_data: pd.DataFrame) -> pd.DataFrame:
     agg['WA_ban_pct'] = safe_pct(agg['Wa_bans'], agg['Wa_accounts'])
     agg['WA_delivery_pct'] = safe_pct(agg['Wa_delivered'], agg['Wa_sent'])
     agg['Reg_delivery_pct'] = safe_pct(agg['Regular_delivered'], agg['Regular_sent'])
-    agg['Reg_codes_pct'] = (agg['Regular_codes'] / agg['Regular_start'].replace(0, pd.NA) * 100).fillna(0).round(2)
-    agg['Kakao_codes_pct'] = (agg['Kakao_codes'] / agg['Kakao_start'].replace(0, pd.NA) * 100).fillna(0).round(2)
+    agg['Reg_codes_pct'] = safe_pct(agg['Regular_codes'], agg['Regular_start'], 2)
+    agg['Kakao_codes_pct'] = safe_pct(agg['Kakao_codes'], agg['Kakao_start'], 2)
     agg['Активность_24ч_pct'] = safe_pct(agg['Активен_24ч'], agg['Устройств'])
     agg['Нулевых_pct'] = safe_pct(agg['Нулевой_доход'], agg['Устройств'])
     agg['Мертвых_pct'] = safe_pct(agg['Мертвый'], agg['Устройств'])
@@ -514,7 +535,7 @@ def compute_api_breakdown(all_data: pd.DataFrame, emp_totals: dict) -> pd.DataFr
             Доход=('Итого_руб', 'sum')
         ).reset_index()
 
-    api['На_устр'] = (api['Доход'] / api['Устройств'].replace(0, pd.NA)).fillna(0).round(2)
+    api['На_устр'] = safe_div(api['Доход'], api['Устройств'], 2)
     api['Доля_сотрудника'] = api.apply(
         lambda r: r['Доход'] / emp_totals.get(r['_Сотрудник'], 1) if emp_totals.get(r['_Сотрудник'], 0) else 0,
         axis=1
@@ -536,15 +557,16 @@ def compute_model_stats(all_data: pd.DataFrame) -> pd.DataFrame:
     if 'Operator' not in all_data.columns:
         return pd.DataFrame()
     all_data['_Model'] = all_data['Operator'].astype(str).str.split(' ver').str[0]
+    device_agg = ('Ext ID', 'nunique') if 'Ext ID' in all_data.columns else ('_Model', 'count')
     g = all_data.groupby('_Model').agg(
-        Устройств=('_Model', 'count'),
+        Устройств=device_agg,
         Доход=('Итого_руб', 'sum'),
         WA_sent=('Wa_sent', 'sum'),
         WA_delivered=('Wa_delivered', 'sum'),
         WA_accounts=('Wa_accounts', 'sum'),
         WA_bans=('Wa_bans', 'sum'),
     ).reset_index()
-    g['На_устр'] = (g['Доход'] / g['Устройств'].replace(0, pd.NA)).fillna(0).round(2)
+    g['На_устр'] = safe_div(g['Доход'], g['Устройств'], 2)
     g['WA_доставка_pct'] = safe_pct(g['WA_delivered'], g['WA_sent'])
     g['WA_ban_pct'] = safe_pct(g['WA_bans'], g['WA_accounts'])
     return g.sort_values('Доход', ascending=False).reset_index(drop=True)
@@ -655,8 +677,8 @@ def compute_service_efficiency(all_data: pd.DataFrame, by_employee: str = None) 
             'Отправлено': int(sent),
             'Доставлено': int(delivered),
             # === Метрики эффективности ===
-            'Конверсия_кода_pct': min(pct(code, start), 100.0),    # код / старт
-            'Брак_pct': min(pct(bad, start), 100.0),                # брак / старт
+            'Конверсия_кода_pct': pct(code, start),                 # код / старт
+            'Брак_pct': pct(bad, start),                            # брак / старт
             'Регистраций_от_кодов_pct': pct(account, code),         # аккаунты / коды
             'Бан_аккаунтов_pct': pct(ban, account),                 # баны / аккаунты
             'Доставка_pct': pct(delivered, sent),                   # доставлено / отправлено
@@ -717,7 +739,8 @@ def compute_service_by_employee(all_data: pd.DataFrame) -> pd.DataFrame:
 # =============================================================
 
 def compute_employee_detail(all_data: pd.DataFrame, employee: str,
-                            target_per_day: float = None) -> dict:
+                            target_per_day: float = None,
+                            period_days: float = None) -> dict:
     """
     Собирает всё для персональной вкладки сотрудника:
       - сводка (доход, устройства, выполнение цели)
@@ -736,12 +759,12 @@ def compute_employee_detail(all_data: pd.DataFrame, employee: str,
 
     has_ext = 'Ext ID' in data.columns
 
-    # Период наблюдения сотрудника
-    if 'Timestamp' in data.columns:
+    # Для UI-аналитики используем выбранный период. Timestamp — только fallback.
+    if period_days is None and 'Timestamp' in data.columns:
         ts = pd.to_datetime(data['Timestamp'], errors='coerce')
         period_h = (ts.max() - ts.min()).total_seconds() / 3600
         period_days = max(period_h / 24, 1.0 / 24)
-    else:
+    elif period_days is None:
         period_days = 1.0
 
     total_revenue = data['Итого_руб'].sum()
@@ -761,8 +784,8 @@ def compute_employee_detail(all_data: pd.DataFrame, employee: str,
             Устройств=('Итого_руб', 'count'),
             Доход=('Итого_руб', 'sum'),
         ).reset_index()
-    by_api['Доход_на_устр'] = (by_api['Доход'] / by_api['Устройств'].replace(0, pd.NA)).fillna(0).round(1)
-    by_api['Факт_сутки'] = (by_api['Доход'] / by_api['Устройств'].replace(0, pd.NA) / period_days).fillna(0).round(1)
+    by_api['Доход_на_устр'] = safe_div(by_api['Доход'], by_api['Устройств'], 1)
+    by_api['Факт_сутки'] = safe_div(by_api['Доход'], by_api['Устройств'] * period_days, 1)
     by_api = by_api.sort_values('Доход', ascending=False).reset_index(drop=True)
 
     # --- Разбивка по моделям ---
@@ -773,8 +796,9 @@ def compute_employee_detail(all_data: pd.DataFrame, employee: str,
             Устройств=('Ext ID', 'nunique'),
             Доход=('Итого_руб', 'sum'),
         ).reset_index()
-        by_model['Доход_на_устр'] = (by_model['Доход'] / by_model['Устройств'].replace(0, pd.NA)).fillna(0).round(1)
-        by_model = by_model.sort_values('Доход_на_устр', ascending=False).reset_index(drop=True)
+        by_model['Доход_на_устр'] = safe_div(by_model['Доход'], by_model['Устройств'], 1)
+        by_model['Факт_сутки'] = safe_div(by_model['Доход'], by_model['Устройств'] * period_days, 1)
+        by_model = by_model.sort_values('Факт_сутки', ascending=False).reset_index(drop=True)
 
     # --- Список устройств с пометками ---
     if has_ext:
@@ -883,9 +907,9 @@ def analyze_underperformance(dev, by_api, by_model, svc, fact_per_day,
 
     # 4. Слабые модели
     if len(by_model) > 1:
-        weak = by_model[by_model['Устройств'] >= 3].nsmallest(2, 'Доход_на_устр')
-        if not weak.empty and weak.iloc[0]['Доход_на_устр'] < target_per_day:
-            models_str = ', '.join(f"{r['_Model']} ({r['Доход_на_устр']:.0f} ₽/устр)"
+        weak = by_model[by_model['Устройств'] >= 3].nsmallest(2, 'Факт_сутки')
+        if not weak.empty and weak.iloc[0]['Факт_сутки'] < target_per_day:
+            models_str = ', '.join(f"{r['_Model']} ({r['Факт_сутки']:.0f} ₽/устр/сутки)"
                                    for _, r in weak.iterrows())
             reasons.append(
                 f"🟡 Слабые модели устройств: {models_str}. "
@@ -919,7 +943,8 @@ def analyze_underperformance(dev, by_api, by_model, svc, fact_per_day,
 # https://github.com/anthropics/knowledge-work-plugins/blob/main/data/skills/validate-data/SKILL.md
 
 def run_sanity_checks(all_data: pd.DataFrame, summary: pd.DataFrame,
-                      files_info: list, mode_info: dict = None) -> list:
+                      files_info: list, mode_info: dict = None,
+                      period_days: float = None) -> list:
     """
     Возвращает список проверок [(severity, category, name, status, message), ...]
 
@@ -1138,7 +1163,12 @@ def run_sanity_checks(all_data: pd.DataFrame, summary: pd.DataFrame,
     # --- ANALYTICAL PITFALLS ---
 
     # 14. Incomplete period comparison — все ли сотрудники наблюдались одинаково
-    if 'Timestamp' in all_data.columns:
+    if period_days is not None:
+        add('LOW', 'Аналитические ловушки', 'Сопоставимость периодов',
+            'PASS',
+            f'Для расчёта цели используется выбранный период {period_days:g} дн. '
+            f'Timestamp используется только как последняя активность.')
+    elif 'Timestamp' in all_data.columns:
         by_emp = all_data.groupby('_Сотрудник')['Timestamp'].agg(['min', 'max'])
         by_emp['span_h'] = (pd.to_datetime(by_emp['max']) - pd.to_datetime(by_emp['min'])).dt.total_seconds() / 3600
         max_span = by_emp['span_h'].max()
@@ -1521,7 +1551,8 @@ def fmt_int(v):
 
 
 def write_excel(summary, api_break, top_dev, model_stats, recs, period_info,
-                checks, confidence, svc_eff, all_data, out_path):
+                checks, confidence, svc_eff, all_data, out_path,
+                period_days: float = None):
     """Создаём многолистовой Excel-файл."""
     wb = Workbook()
 
@@ -1559,8 +1590,8 @@ def write_excel(summary, api_break, top_dev, model_stats, recs, period_info,
     ws.title = 'Общие выводы'
     make_title(ws, 2, 'Краткое резюме')
 
-    total_revenue = summary['Итого_руб'].sum()
-    total_devices = int(summary['Устройств'].sum())
+    total_devices_raw, total_revenue, total_device_days, avg_period_days, company_fact_day = company_goal_totals(summary)
+    total_devices = int(total_devices_raw)
     avg_per_dev = total_revenue / total_devices if total_devices else 0
     total_active = int(summary['Активен_24ч'].sum())
     total_dead = int(summary['Мертвый'].sum())
@@ -1577,8 +1608,6 @@ def write_excel(summary, api_break, top_dev, model_stats, recs, period_info,
     # Расчёт компанейских показателей цели
     total_plan = summary['План_за_период'].sum()
     company_pct = total_revenue / total_plan * 100 if total_plan else 0
-    avg_period_days = summary['Период_суток'].mean()
-    company_fact_day = total_revenue / total_devices / avg_period_days if total_devices and avg_period_days else 0
     n_above_plan = int((summary['Выполнение_pct'] >= 100).sum())
     n_below_half = int((summary['Выполнение_pct'] < 50).sum())
 
@@ -1833,16 +1862,13 @@ def write_excel(summary, api_break, top_dev, model_stats, recs, period_info,
     total_row_goals = 4 + len(summary_by_goal)
     ws.cell(row=total_row_goals, column=1, value='ИТОГО по компании').font = arial_bold
     ws.cell(row=total_row_goals, column=2, value=int(summary['Устройств'].sum())).font = arial_bold
-    avg_period = summary['Период_суток'].mean()
+    total_devices, total_revenue, total_device_days, avg_period, company_fact_day = company_goal_totals(summary)
     ws.cell(row=total_row_goals, column=3, value=avg_period).number_format = '0.00'
     ws.cell(row=total_row_goals, column=3).font = arial_bold
     ws.cell(row=total_row_goals, column=4, value=TARGET_PER_DEVICE_DAY).number_format = '#,##0.00 ₽'
     ws.cell(row=total_row_goals, column=4).font = arial_bold
-    # По компании средний факт = total / total_devices / средний период
-    total_devices = summary['Устройств'].sum()
-    total_revenue = summary['Итого_руб'].sum()
+    # По компании средний факт = total / sum(устройств × период).
     total_plan_period = summary['План_за_период'].sum()
-    company_fact_day = total_revenue / total_devices / avg_period if total_devices and avg_period else 0
     ws.cell(row=total_row_goals, column=5, value=company_fact_day).number_format = '#,##0.00 ₽'
     ws.cell(row=total_row_goals, column=5).font = arial_bold
     ws.cell(row=total_row_goals, column=6, value=company_fact_day - TARGET_PER_DEVICE_DAY).number_format = '+#,##0.00 ₽;-#,##0.00 ₽;0.00 ₽'
@@ -1875,7 +1901,7 @@ def write_excel(summary, api_break, top_dev, model_stats, recs, period_info,
     ws.cell(row=note_row+2, column=1,
             value='• План за период = Цель × Устройств × Период в сутках')
     ws.cell(row=note_row+3, column=1,
-            value='• Период наблюдения у каждого сотрудника свой (от max до min Timestamp)')
+            value='• В строке ИТОГО период — средний период, взвешенный по устройствам')
     ws.cell(row=note_row+4, column=1,
             value='• Зелёный = ≥100% плана; Жёлтый = 50-99%; Красный = <50%')
     for r in range(note_row, note_row+5):
@@ -2139,7 +2165,7 @@ def write_excel(summary, api_break, top_dev, model_stats, recs, period_info,
     badge_text_emp = {'GREEN': '006100', 'YELLOW': '9C5700', 'RED': '9C0006'}
 
     for emp_name in summary['Сотрудник']:
-        detail = compute_employee_detail(all_data, emp_name)
+        detail = compute_employee_detail(all_data, emp_name, period_days=period_days)
         if detail is None:
             continue
 
@@ -2310,7 +2336,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
   th { background: #f9fafb; font-weight: 600; color: #374151; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
   tr:hover { background: #fafbfc; }
   .bar { background: linear-gradient(to right, #4472C4 var(--w), transparent var(--w)); }
   .good { color: #137333; font-weight: 500; }
@@ -2441,8 +2467,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <section>
     <h2>Достижение цели · {{target_per_day}} ₽/устр/сутки</h2>
     <div style="font-size: 13px; color: #5f6368; margin-bottom: 16px;">
-      План у каждого сотрудника считается индивидуально: <code>цель × устройств × период наблюдения в сутках</code>.
-      У сотрудников разные периоды наблюдения, поэтому сравнение по выполнению плана корректнее, чем по абсолютному доходу.
+      План у каждого сотрудника считается индивидуально: <code>цель × устройств × период в сутках</code>.
+      Сравнение по выполнению плана корректнее, чем по абсолютному доходу.
     </div>
     <table>
       <thead>
@@ -2616,13 +2642,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 
-def write_html(summary, top_dev, recs, period_info, checks, confidence, svc_eff, all_data, out_path):
+def write_html(summary, top_dev, recs, period_info, checks, confidence, svc_eff, all_data, out_path,
+               period_days: float = None):
     """Создаём HTML-отчёт."""
     def esc(x):
         return html.escape(str(x))
 
-    total_revenue = summary['Итого_руб'].sum()
-    total_devices = int(summary['Устройств'].sum())
+    total_devices_raw, total_revenue, total_device_days, avg_period_days, company_fact_day = company_goal_totals(summary)
+    total_devices = int(total_devices_raw)
     avg_per_dev = total_revenue / total_devices if total_devices else 0
 
     ch_wa = summary['Доход_Wa'].sum()
@@ -2717,8 +2744,6 @@ def write_html(summary, top_dev, recs, period_info, checks, confidence, svc_eff,
     # === ЦЕЛЕВЫЕ ПОКАЗАТЕЛИ ===
     total_plan = summary['План_за_период'].sum()
     company_pct = total_revenue / total_plan * 100 if total_plan else 0
-    avg_period_days = summary['Период_суток'].mean() if len(summary) else 0
-    company_fact_day = total_revenue / total_devices / avg_period_days if total_devices and avg_period_days else 0
 
     if company_pct >= 100:
         goal_color = '#137333'
@@ -2769,12 +2794,12 @@ def write_html(summary, top_dev, recs, period_info, checks, confidence, svc_eff,
     if svc_eff is not None and not svc_eff.empty:
         for _, row in svc_eff.iterrows():
             conv = row['Конверсия_кода_pct']
-            conv_cls = 'goal-good' if conv >= 20 else ('goal-bad' if conv < 5 and row['Коды'] > 0 else 'goal-warn')
+            conv_cls = 'goal-good' if conv >= 20 else ('goal-bad' if conv < 5 and row['Старты'] > 0 else 'goal-warn')
             ban = row['Бан_аккаунтов_pct']
             ban_cls = 'goal-bad' if ban >= 15 else ('goal-good' if ban > 0 and ban < 8 else 'neutral')
             deliv = row['Доставка_pct']
             deliv_cls = 'goal-good' if deliv >= 90 else ('goal-bad' if deliv > 0 and deliv < 80 else 'neutral')
-            conv_disp = f'{conv:.1f}%' if row['Коды'] > 0 else '—'
+            conv_disp = f'{conv:.1f}%' if row['Старты'] > 0 else '—'
             ban_disp = f'{ban:.1f}%' if row['Аккаунты'] > 0 else '—'
             deliv_disp = f'{deliv:.1f}%' if row['Отправлено'] > 0 else '—'
             sms_disp = f'{row["SMS_на_аккаунт"]:.1f}' if row['Аккаунты'] > 0 else '—'
@@ -2803,7 +2828,7 @@ def write_html(summary, top_dev, recs, period_info, checks, confidence, svc_eff,
         'OK': 'dev-ok',
     }
     for emp_name in summary['Сотрудник']:
-        detail = compute_employee_detail(all_data, emp_name)
+        detail = compute_employee_detail(all_data, emp_name, period_days=period_days)
         if detail is None:
             continue
         comp = detail['completion']

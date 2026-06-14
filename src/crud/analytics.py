@@ -33,11 +33,15 @@ class CRUDAnalytics(CRUDBase[Analytics, AnalyticsCreate, AnalyticsUpdate]):
         return await self.get_count(db, filters=filters)
 
     async def mark_running(
-        self, db: AsyncSession, *, db_obj: Analytics
+        self, db: AsyncSession, *, db_obj: Analytics,
+        period_from=None, period_to=None
     ) -> Analytics:
-        return await self.update(
-            db=db, db_obj=db_obj, obj_in={'status': 'running', 'error': None}
-        )
+        obj_in = {'status': 'running', 'error': None}
+        if period_from is not None:
+            obj_in['period_from'] = period_from
+        if period_to is not None:
+            obj_in['period_to'] = period_to
+        return await self.update(db=db, db_obj=db_obj, obj_in=obj_in)
 
     async def mark_done(
         self, db: AsyncSession, *, db_obj: Analytics,

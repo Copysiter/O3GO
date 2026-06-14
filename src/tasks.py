@@ -1,7 +1,8 @@
 import time
 import asyncio
 
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+from typing import Any, Optional, Tuple, Union
 from celery import Celery
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
@@ -20,6 +21,99 @@ celery = Celery(__name__)
 celery.conf.broker_url = settings.CELERY_BROKER_URL
 celery.conf.result_backend = settings.CELERY_RESULT_BACKEND
 celery.conf.broker_connection_retry_on_startup = True
+
+
+def _flat_filters(filters: Optional[Union[list, dict]]):
+    if isinstance(filters, dict):
+        filters = [filters]
+    for item in filters or []:
+        if not isinstance(item, dict):
+            continue
+        for key in ('filters', 'or'):
+            nested = item.get(key)
+            if nested:
+                yield from _flat_filters(nested)
+                break
+        else:
+            yield item
+
+
+def _filter_date(value: Any) -> Optional[date]:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if not value:
+        return None
+    text = str(value).strip()
+    try:
+        return datetime.fromisoformat(text.replace('Z', '+00:00')).date()
+    except ValueError:
+        pass
+    for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _as_datetime(day: Optional[date]) -> Optional[datetime]:
+    if day is None:
+        return None
+    return datetime.combine(day, datetime.min.time())
+
+
+def resolve_analytics_period(
+    filters: Optional[Union[list, dict]],
+) -> Tuple[Optional[datetime], Optional[datetime], Optional[int]]:
+    """Return inclusive start, exclusive end and duration in days."""
+    date_from = None
+    date_to = None
+    period_result = None
+
+    for item in _flat_filters(filters):
+        field = item.get('field')
+        operator = item.get('operator')
+        value = item.get('value')
+
+        if field == 'period' and value:
+            text = str(value)
+            if text.endswith('d') and text[:-1].isdigit():
+                days = max(int(text[:-1]), 1)
+                if int(text[:-1]) > 0:
+                    start = date.today() - timedelta(days=days)
+                    end = date.today()
+                else:
+                    start = date.today()
+                    end = start + timedelta(days=1)
+                period_result = (_as_datetime(start), _as_datetime(end), days)
+                continue
+
+        if field != 'date':
+            continue
+
+        parsed = _filter_date(value)
+        if not parsed:
+            continue
+        if operator == 'eq':
+            date_from = parsed
+            date_to = parsed + timedelta(days=1)
+        elif operator == 'gte':
+            date_from = parsed
+        elif operator == 'gt':
+            date_from = parsed + timedelta(days=1)
+        elif operator == 'lt':
+            date_to = parsed
+        elif operator == 'lte':
+            date_to = parsed + timedelta(days=1)
+
+    if date_from and date_to:
+        days = max((date_to - date_from).days, 1)
+        return _as_datetime(date_from), _as_datetime(date_to), days
+    if period_result:
+        return period_result
+    return _as_datetime(date_from), _as_datetime(date_to), None
 
 
 @celery.task(name="create_task")
@@ -265,7 +359,11 @@ async def analytics_event_handler(
         if not item:
             return
         try:
-            await crud.analytics.mark_running(db=db, db_obj=item)
+            period_from, period_to, period_days = resolve_analytics_period(filters)
+            await crud.analytics.mark_running(
+                db=db, db_obj=item,
+                period_from=period_from, period_to=period_to
+            )
             user = await crud.user.get(db=db, id=user_id)
             if not user:
                 raise ValueError(f'User {user_id} not found')
@@ -277,6 +375,9 @@ async def analytics_event_handler(
                 period=period,
                 rows=rows,
                 services=services,
+                period_from=period_from,
+                period_to=period_to,
+                period_days=period_days,
             )
             item = await crud.analytics.get(db=db, id=analytics_id)
             await crud.analytics.mark_done(

@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from services.export import analyze_reports as report_module
 
@@ -123,7 +123,16 @@ def _build_dataframe(rows: list[dict[str, Any]], services: list[Any], report_mod
     return all_data, employees_order, mode_info
 
 
-def _period_info(all_data, report_module, fallback: str) -> str:
+def _period_info(
+    all_data, report_module, fallback: str,
+    period_from=None, period_to=None,
+) -> str:
+    if period_from and period_to:
+        start = report_module.pd.to_datetime(period_from).date()
+        end = report_module.pd.to_datetime(period_to).date() - timedelta(days=1)
+        if start == end:
+            return f'{start:%d.%m.%Y}'
+        return f'{start:%d.%m.%Y} — {end:%d.%m.%Y}'
     if 'Timestamp' not in all_data.columns:
         return fallback or 'не определён'
     try:
@@ -139,20 +148,26 @@ def _period_info(all_data, report_module, fallback: str) -> str:
 
 def generate_analytics_files(
     *, analytics_id: int, period: str,
-    rows: list[dict[str, Any]], services: list[Any]
+    rows: list[dict[str, Any]], services: list[Any],
+    period_from=None, period_to=None, period_days: Optional[int] = None,
 ) -> tuple[str, str, str, str]:
     all_data, employees, mode_info = _build_dataframe(rows, services, report_module)
     all_data = report_module.enrich(all_data)
-    period_info = _period_info(all_data, report_module, period)
+    period_info = _period_info(
+        all_data, report_module, period,
+        period_from=period_from, period_to=period_to,
+    )
 
-    summary = report_module.compute_summary(all_data)
+    summary = report_module.compute_summary(all_data, period_days=period_days)
     emp_totals = dict(zip(summary['Сотрудник'], summary['Итого_руб']))
     api_break = report_module.compute_api_breakdown(all_data, emp_totals)
     top_dev = report_module.compute_top_devices(all_data, n=30)
     model_stats = report_module.compute_model_stats(all_data)
     recs = report_module.build_recommendations(summary)
     svc_eff = report_module.compute_service_efficiency(all_data)
-    checks = report_module.run_sanity_checks(all_data, summary, employees, mode_info)
+    checks = report_module.run_sanity_checks(
+        all_data, summary, employees, mode_info, period_days=period_days
+    )
     confidence = report_module.assess_confidence(checks, period_info, summary)
 
     out_dir = Path('/storage/analytics')
@@ -165,10 +180,11 @@ def generate_analytics_files(
 
     report_module.write_excel(
         summary, api_break, top_dev, model_stats, recs, period_info,
-        checks, confidence, svc_eff, all_data, xlsx_path
+        checks, confidence, svc_eff, all_data, xlsx_path,
+        period_days=period_days,
     )
     report_module.write_html(
         summary, top_dev, recs, period_info, checks, confidence,
-        svc_eff, all_data, html_path
+        svc_eff, all_data, html_path, period_days=period_days,
     )
     return str(html_path), str(xlsx_path), html_filename, xlsx_filename
