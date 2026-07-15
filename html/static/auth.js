@@ -1,7 +1,7 @@
 if (window.location.href.includes("o3go")) {
     window.api_base_url = 'https://apistat.o3go.ru'
 } else {
-    window.api_base_url = `http://${document.location.hostname}:5001`
+    window.api_base_url = `http://${document.location.hostname}:8000`
 }
 
 window.getToken = function () {
