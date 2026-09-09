@@ -21,10 +21,10 @@ COUNTER_LABELS = {
 }
 
 MONEY_LABELS = {
-    'code_cost': 'Code Cost',
-    'code_total': 'Code Total',
-    'sent_cost': 'Sent Cost',
-    'sent_total': 'Sent Total',
+    'account_cost': 'Account Cost',
+    'account_profit': 'Accounts Profit',
+    'message_cost': 'Message Cost',
+    'message_profit': 'Messages Profit',
 }
 
 
@@ -64,8 +64,8 @@ def _build_dataframe(rows: list[dict[str, Any]], services: list[Any], report_mod
             'Ext ID': row.get('device_ext_id'),
             'Root': row.get('device_root'),
             'Operator': row.get('device_operator'),
-            'Total Code Cost': row.get('code_total') or 0,
-            'Total Sent Cost': row.get('sent_total') or 0,
+            'Accounts Profit': row.get('account_profit') or 0,
+            'Messages Profit': row.get('message_profit') or 0,
             'Timestamp': row.get('timestamp'),
             'Last Activity': row.get('timestamp'),
             'Last Success Code': row.get('ts_1'),

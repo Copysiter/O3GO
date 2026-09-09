@@ -11,3 +11,7 @@
 .k-multiselect[aria-controls="services_listbox"] .k-input-values ~ span {
     display: none !important;
 }
+
+#report-grid .k-grid-header .rotate-cell {
+    height: 120px !important;
+}

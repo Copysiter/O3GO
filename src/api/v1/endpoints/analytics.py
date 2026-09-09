@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api import deps
+from tasks import analytics_handler
 
 import crud
 import models
@@ -68,7 +69,6 @@ async def run_analytics(
         'status': 'pending',
         'user_id': current_user.id,
     })
-    from tasks import analytics_handler
     analytics_handler.delay(item.id, data.filters, current_user.id, item.period)
     return item
 

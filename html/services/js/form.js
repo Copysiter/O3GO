@@ -24,7 +24,7 @@ function showEditForm(model) {
             },
             {
                 field: 'cost_1',
-                label: 'Code Cost',
+                label: 'Account Cost',
                 editor: 'NumericTextBox',
                 editorOptions: {
                     min: 0,
@@ -35,7 +35,7 @@ function showEditForm(model) {
             },
             {
                 field: 'cost_2',
-                label: 'Sent Cost',
+                label: 'Message Cost',
                 editor: 'NumericTextBox',
                 editorOptions: {
                     min: 0,
@@ -81,25 +81,25 @@ function showEditForm(model) {
                 editorOptions: {
                     dataSource: new kendo.data.DataSource({
                         data: [
-                            {text: 'Start', value: 'start'},
-                            {text: 'Number', value: 'number'},
-                            {text: 'Code', value: 'code'},
-                            {text: 'Code, %', value: 'code_pct'},
-                            {text: 'No Code', value: 'no_code'},
-                            {text: 'Code Cost', value: 'code_cost'},
-                            {text: 'Code Total', value: 'code_total'},
-                            {text: 'Code', value: 'code'},
-                            {text: 'Waiting', value: 'waiting'},
-                            {text: 'Bad', value: 'bad'},
-                            {text: 'Error 1', value: 'error_1'},
-                            {text: 'Error 2', value: 'error_2'},
-                            {text: 'Account', value: 'account'},
-                            {text: 'Account Ban', value: 'account_ban'},
-                            {text: 'Message Sent', value: 'sent'},
-                            {text: 'Message Delivered', value: 'delivered'},
-                            {text: 'Message Avg', value: 'sent_avg'},
-                            {text: 'Sent Cost', value: 'sent_cost'},
-                            {text: 'Sent Total', value: 'sent_total'}
+                            {text: 'Starts', value: 'start'},
+                            {text: 'Numbers', value: 'number'},
+                            {text: 'Codes', value: 'code'},
+                            {text: 'Codes, %', value: 'code_pct'},
+                            {text: 'Waitings', value: 'waiting'},
+                            {text: 'No codes', value: 'no_code'},
+                            {text: 'Bads', value: 'bad'},
+                            {text: 'Errors 1', value: 'error_1'},
+                            {text: 'Errors 2', value: 'error_2'},
+                            {text: 'Accounts', value: 'account'},
+                            {text: 'Bans', value: 'account_ban'},
+                            {text: 'Sent', value: 'sent'},
+                            {text: 'Sent, avg', value: 'sent_avg'},
+                            {text: 'Delivered', value: 'delivered'},
+                            {text: 'Delivered, %', value: 'delivered_pct'},
+                            {text: 'Account Cost', value: 'account_cost'},
+                            {text: 'Accounts Profit', value: 'account_profit'},
+                            {text: 'Message Cost', value: 'message_cost'},
+                            {text: 'Messages Profit', value: 'message_profit'}
                         ]
                     }),
                     dataTextField: 'text',
@@ -109,6 +109,12 @@ function showEditForm(model) {
                     animation: false,
                     autoClose: false,
                 },
+                colSpan: 12,
+            },
+            {
+                field: 'columns_help',
+                label: false,
+                editor: "<div class='text-muted fs-12 mt-n2'>Accounts Profit = Account Cost x accounts. Messages Profit = Message Cost x sent.</div>",
                 colSpan: 12,
             },
             {

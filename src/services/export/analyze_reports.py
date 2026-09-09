@@ -12,8 +12,8 @@
 
 Файлы в папке должны быть .xlsx, имя файла = имя сотрудника.
 В каждом файле — лист с колонками формата (API Key, Ext ID, Operator,
-Click/Wa/Business/Regular/Viber/Kakao Code/Sent ..., Total Code Cost,
-Total Sent Cost, Timestamp, Timedelta, ...).
+Click/Wa/Business/Regular/Viber/Kakao Code/Account/Sent ...,
+Accounts Profit, Messages Profit, Timestamp, Timedelta, ...).
 
 Файл может содержать итоговую строку (с пустым API Key) — она игнорируется.
 Если в файле несколько разных API Key, скрипт автоматически детектит
@@ -52,7 +52,7 @@ except ImportError:
 # 1. ЗАГРУЗКА И ПОДГОТОВКА ДАННЫХ
 # =============================================================
 
-REQUIRED_COLS = ['API Key', 'Total Code Cost', 'Total Sent Cost']
+REQUIRED_COLS = ['API Key', 'Accounts Profit', 'Messages Profit']
 
 # =============================================================
 # ЦЕЛЕВОЙ ПОКАЗАТЕЛЬ
@@ -356,15 +356,23 @@ def enrich(all_data: pd.DataFrame) -> pd.DataFrame:
             return pd.to_numeric(all_data[name], errors='coerce').fillna(default)
         return pd.Series([default] * len(all_data), index=all_data.index)
 
-    all_data['Итого_руб'] = col('Total Code Cost') + col('Total Sent Cost')
+    all_data['Итого_руб'] = col('Accounts Profit') + col('Messages Profit')
 
     # Доходы по каналам
-    all_data['Доход_Click'] = col('click Code Total')
-    all_data['Доход_Wa'] = col('wa_load Sent Total')
-    all_data['Доход_Business'] = col('business Code Total')
-    all_data['Доход_Regular'] = col('regular Code Total') + col('regular Sent Total')
-    all_data['Доход_Viber'] = col('viber Code Total') + col('viber Sent Total')
-    all_data['Доход_Kakao'] = col('kakao Code Total') + col('kakao Sent Total')
+    all_data['Доход_Click'] = col('click Accounts Profit')
+    all_data['Доход_Wa'] = (
+        col('wa_load Accounts Profit') + col('wa_load Messages Profit')
+    )
+    all_data['Доход_Business'] = col('business Accounts Profit')
+    all_data['Доход_Regular'] = (
+        col('regular Accounts Profit') + col('regular Messages Profit')
+    )
+    all_data['Доход_Viber'] = (
+        col('viber Accounts Profit') + col('viber Messages Profit')
+    )
+    all_data['Доход_Kakao'] = (
+        col('kakao Accounts Profit') + col('kakao Messages Profit')
+    )
 
     # Метрики качества и активности
     all_data['Коды_всего'] = (
@@ -579,7 +587,7 @@ def compute_model_stats(all_data: pd.DataFrame) -> pd.DataFrame:
 # единый набор из 12 метрик-счётчиков + 4 денежных:
 #   <Сервис> Start / Number / Code / No Code / Waiting / Bad /
 #            Error 1 / Error 2 / Account / Account Ban / Sent / Delivered
-#   <сервис> Code Cost / Code Total / Sent Cost / Sent Total
+#   <сервис> Account Cost / Accounts Profit / Message Cost / Messages Profit
 #
 # Функция автоматически находит ВСЕ сервисы по суффиксу 'Start Count'
 # и считает метрики эффективности, о которых просил пользователь:
@@ -1028,7 +1036,9 @@ def run_sanity_checks(all_data: pd.DataFrame, summary: pd.DataFrame,
             'WARN', 'Колонка Timestamp отсутствует')
 
     # 3. Completeness — пропуски в ключевых колонках
-    key_cols = ['API Key', 'Ext ID', 'Total Code Cost', 'Total Sent Cost']
+    key_cols = [
+        'API Key', 'Ext ID', 'Accounts Profit', 'Messages Profit',
+    ]
     for col in key_cols:
         if col in all_data.columns:
             null_pct = all_data[col].isna().sum() / len(all_data) * 100
@@ -1294,20 +1304,20 @@ METHODOLOGY_TEMPLATE = """# Methodology — методология расчёт�
 ## Что считаем и из каких полей
 
 ### Доход (Итого_руб)
-**Формула:** `Total Code Cost + Total Sent Cost` по каждой строке отчёта.
-**Источник:** колонки `Total Code Cost`, `Total Sent Cost` исходных xlsx.
+**Формула:** `Accounts Profit + Messages Profit` по каждой строке отчёта.
+**Источник:** колонки `Accounts Profit`, `Messages Profit` исходных xlsx.
 **Единица:** рубли.
 
 ### Доход по каналам (₽)
 
 | Канал | Формула |
 |---|---|
-| Click | `click Code Total` |
-| WhatsApp рассылка | `wa_load Sent Total` |
-| Business | `business Code Total` |
-| Regular (SMS) | `regular Code Total + regular Sent Total` |
-| Viber | `viber Code Total + viber Sent Total` |
-| Kakao | `kakao Code Total + kakao Sent Total` |
+| Click | `click Accounts Profit` |
+| WhatsApp рассылка | `wa_load Accounts Profit + wa_load Messages Profit` |
+| Business | `business Accounts Profit` |
+| Regular (SMS) | `regular Accounts Profit + regular Messages Profit` |
+| Viber | `viber Accounts Profit + viber Messages Profit` |
+| Kakao | `kakao Accounts Profit + kakao Messages Profit` |
 
 Сумма каналов должна совпадать с `Итого_руб` — это проверяется автоматически (см. отчёт о валидации).
 

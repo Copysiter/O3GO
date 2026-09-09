@@ -23,24 +23,25 @@ window.initGrid = function() {
             },
         }).done(function (result) {
             const titles = {
-                start: 'start',
-                number: 'number',
-                code: 'code',
-                code_pct: 'code, %',
-                no_code: 'no code',
-                code_cost: 'cost',
-                code_total: 'total',
-                waiting: 'waiting',
-                bad: 'bad',
-                error_1: 'error-1',
-                error_2: 'error-2',
-                account: 'account',
-                account_ban: 'ban',
-                sent: 'sent',
-                sent_avg: 'sent, avg',
-                delivered: 'delivered',
-                sent_cost: 'cost',
-                sent_total: 'total'
+                start: 'Starts',
+                number: 'Numbers',
+                code: 'Codes',
+                code_pct: 'Codes, %',
+                waiting: 'Waitings',
+                no_code: 'No codes',
+                bad: 'Bads',
+                error_1: 'Errors 1',
+                error_2: 'Errors 2',
+                account: 'Accounts',
+                account_ban: 'Bans',
+                sent: 'Sent',
+                sent_avg: 'Sent, avg',
+                delivered: 'Delivered',
+                delivered_pct: 'Delivered, %',
+                account_cost: 'Account Cost',
+                account_profit: 'Accounts Profit',
+                message_cost: 'Message Cost',
+                message_profit: 'Messages Profit'
             };
             let data = result.data;
             window.servicesData = data;
@@ -54,7 +55,11 @@ window.initGrid = function() {
                             field: key + '_count_' + obj.id,
                             title: "<span class='rotate'>" + title + "</span>",
                             rowSpan: 2,
-                            sortable: ['code_pct', 'msg_avg'].includes(key) ? false : true,
+                            sortable: ![
+                                'code_pct', 'delivered_pct', 'account_cost',
+                                'account_profit', 'sent_avg', 'message_cost',
+                                'message_profit'
+                            ].includes(key),
                             filterable: false,
                             attributes: {
                                 style: `background:\\${obj.color_bg}44;`,
@@ -76,18 +81,8 @@ window.initGrid = function() {
                                         return 0;
                                     }
                                 }
-                                if (key == 'code_cost') {
+                                if (key == 'account_cost') {
                                     return obj.cost_1;
-                                }
-                                if (key == 'code_total') {
-                                    if (
-                                        obj.cost_1 != undefined &&
-                                        item.hasOwnProperty('code_count_' + obj.id)
-                                    ) {
-                                        return (obj.cost_1 * item['code_count_' + obj.id]).toFixed(2);
-                                    } else {
-                                        return 0;
-                                    }
                                 }
                                 if (key == 'sent_avg') {
                                     if (
@@ -101,10 +96,31 @@ window.initGrid = function() {
                                         return 0;
                                     }
                                 }
-                                if (key == 'sent_cost') {
+                                if (key == 'delivered_pct') {
+                                    if (
+                                        item.hasOwnProperty('delivered_count_' + obj.id) &&
+                                        item.hasOwnProperty('sent_count_' + obj.id) &&
+                                        item['sent_count_' + obj.id] > 0
+                                    ) {
+                                        return (item['delivered_count_' + obj.id]/item['sent_count_' + obj.id]*100).toFixed(1);
+                                    } else {
+                                        return 0;
+                                    }
+                                }
+                                if (key == 'account_profit') {
+                                    if (
+                                        obj.cost_1 != undefined &&
+                                        item.hasOwnProperty('account_count_' + obj.id)
+                                    ) {
+                                        return (obj.cost_1 * item['account_count_' + obj.id]).toFixed(2);
+                                    } else {
+                                        return 0;
+                                    }
+                                }
+                                if (key == 'message_cost') {
                                     return obj.cost_2;
                                 }
-                                if (key == 'sent_total') {
+                                if (key == 'message_profit') {
                                     if (
                                         obj.cost_2 != undefined &&
                                         item.hasOwnProperty('sent_count_' + obj.id)
@@ -384,8 +400,8 @@ window.initGrid = function() {
                         },
                     }].concat(service_columns).concat([{
                         service_id: 'total_cost',
-                        title: "Total Cost",
-                        headerTemplate: '<span>Total Cost</span>',
+                        title: "Total Profit",
+                        headerTemplate: '<span>Total Profit</span>',
                         headerAttributes: {
                             style: 'background:#cfcfcf;',
                         },
@@ -393,8 +409,8 @@ window.initGrid = function() {
                             mode: 'menu',
                         },
                         columns: [{
-                            field: 'code_total',
-                            title: "<span class='rotate'>code cost</span>",
+                            field: 'account_profit',
+                            title: "<span class='rotate'>Accounts Profit</span>",
                             sortable: false,
                             filterable: false,
                             headerAttributes: {
@@ -405,8 +421,8 @@ window.initGrid = function() {
                                 let total = 0;
                                 if (servicesData) {
                                     servicesData.forEach((obj) => {
-                                        if (obj.columns && obj.columns.includes('code_total') && obj.cost_1 != undefined) {
-                                            let fieldName = 'code_count_' + obj.id;
+                                        if (obj.columns && obj.columns.includes('account_profit') && obj.cost_1 != undefined) {
+                                            let fieldName = 'account_count_' + obj.id;
                                             if (item.hasOwnProperty(fieldName) && item[fieldName]) {
                                                 total += obj.cost_1 * item[fieldName];
                                             }
@@ -416,8 +432,8 @@ window.initGrid = function() {
                                 return total.toFixed(2);
                             }
                         }, {
-                            field: 'sent_total',
-                            title: "<span class='rotate'>sent cost</span>",
+                            field: 'message_profit',
+                            title: "<span class='rotate'>Messages Profit</span>",
                             sortable: false,
                             filterable: false,
                             headerAttributes: {
@@ -428,7 +444,7 @@ window.initGrid = function() {
                                 let total = 0;
                                 if (servicesData) {
                                     servicesData.forEach((obj) => {
-                                        if (obj.columns && obj.columns.includes('sent_total') && obj.cost_2 != undefined) {
+                                        if (obj.columns && obj.columns.includes('message_profit') && obj.cost_2 != undefined) {
                                             let fieldName = 'sent_count_' + obj.id;
                                             if (item.hasOwnProperty(fieldName) && item[fieldName]) {
                                                 total += obj.cost_2 * item[fieldName];

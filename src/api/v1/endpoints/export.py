@@ -13,7 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api import deps  # noqa
 
 import crud, models, schemas  # noqa
-from services.export.report_rows import build_report_rows
+from services.export.report_rows import (
+    build_report_rows, calculate_report_metric,
+)
 
 router = APIRouter()
 
@@ -170,11 +172,32 @@ async def export_report(
         'start', 'number', 'code', 'no_code', 'waiting', 'bad',
         'error_1', 'error_2', 'account', 'account_ban', 'sent', 'delivered',
     }
+    column_labels = {
+        'start': 'Starts',
+        'number': 'Numbers',
+        'code': 'Codes',
+        'code_pct': 'Codes, %',
+        'waiting': 'Waitings',
+        'no_code': 'No codes',
+        'bad': 'Bads',
+        'error_1': 'Errors 1',
+        'error_2': 'Errors 2',
+        'account': 'Accounts',
+        'account_ban': 'Bans',
+        'sent': 'Sent',
+        'sent_avg': 'Sent, avg',
+        'delivered': 'Delivered',
+        'delivered_pct': 'Delivered, %',
+        'account_cost': 'Account Cost',
+        'account_profit': 'Accounts Profit',
+        'message_cost': 'Message Cost',
+        'message_profit': 'Messages Profit',
+    }
 
     def expand_column(col: str, svc_key: str) -> tuple[str | None, str]:
         # Преобразует короткое имя колонки из Service.columns в полный ключ репорта.
         # Возвращает (ключ_репорта, короткая_ярлык). Если ключ None — колонка вычисляемая.
-        if col in ('code_pct', 'sent_avg'):
+        if col in ('code_pct', 'sent_avg', 'delivered_pct'):
             # Вычисляемые колонки без прямого ключа в репорте
             return (None, col)
         if col in COUNT_SUFFIX:
@@ -210,10 +233,15 @@ async def export_report(
             # Если для сервиса не настроены колонки — пропускаем
             continue
 
-        for col in svc.columns:
+        configured_columns = set(svc.columns)
+        for col in column_labels:
+            if col not in configured_columns:
+                continue
             report_key, short_label = expand_column(col, svc_key)
             # Заголовок: "{ServiceName} {ColumnLabel}"
-            excel_headers.append(f'{display_name} {short_label.replace("_", " ").title()}')
+            excel_headers.append(
+                f'{display_name} {column_labels.get(short_label, short_label)}'
+            )
             # col_keys хранит кортеж (report_key, svc_key, short_label):
             # - report_key не None: обычные данные из репорта (например "WhatsApp_code_count")
             # - report_key None: вычисляемая колонка (например code_pct)
@@ -221,10 +249,12 @@ async def export_report(
 
     # Итоговые стоимости — всегда показываем
     col_keys.extend([
-        ('code_total', None, 'code_total'),
-        ('sent_total', None, 'sent_total'),
+        ('account_profit', None, 'account_profit'),
+        ('message_profit', None, 'message_profit'),
     ])
-    excel_headers.extend(['Total Code Cost', 'Total Sent Cost'])
+    excel_headers.extend([
+        'Accounts Profit', 'Messages Profit'
+    ])
 
     # Глобальные колонки — всегда показываем
     col_keys.extend([
@@ -249,17 +279,8 @@ async def export_report(
         # Обычная колонка — берём значение из отчёта
         if key:
             return report.get(key, 0)
-        # code_pct: (code_count / start_count) * 100
-        if short_label == 'code_pct':
-            start = report.get(f'{svc_key}_start_count', 0) or 0
-            code = report.get(f'{svc_key}_code_count', 0) or 0
-            return round(code / start * 100, 2) if start else 0
-        # sent_avg: (delivered_count / sent_count) * 100
-        if short_label == 'sent_avg':
-            sent = report.get(f'{svc_key}_sent_count', 0) or 0
-            deliv = report.get(f'{svc_key}_delivered_count', 0) or 0
-            return round(deliv / sent * 100, 2) if sent else 0
-        return ''
+        value = calculate_report_metric(report, svc_key, short_label)
+        return value if value is not None else ''
 
     # --- Запись в Excel ---
     output = BytesIO()

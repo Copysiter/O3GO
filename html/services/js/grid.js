@@ -243,12 +243,12 @@ window.initGrid = function() {
                 },
                 {
                     field: 'cost_1',
-                    title: 'Code Cost',
+                    title: 'Account Cost',
                     filterable: false,
                 },
                 {
                     field: 'cost_2',
-                    title: 'Sent Cost',
+                    title: 'Message Cost',
                     filterable: false,
                 },
                 {
