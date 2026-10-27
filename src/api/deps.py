@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings  # noqa
+from core.logger import logger, E
 from db.session import async_session  # noqa
 
 import crud, models, schemas  # noqa
@@ -35,7 +36,10 @@ async def get_current_user(
             token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
         token_data = schemas.TokenPayload(**payload)
-    except (jwt.JWTError, ValidationError) as e:
+    except (jwt.JWTError, ValidationError):
+        logger.warning(event=E.AUTH.ACCESS.DENIED, extra={
+            'reason': 'invalid_token',
+        })
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Could not validate credentials',
@@ -58,6 +62,9 @@ async def get_current_active_superuser(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     if not crud.user.is_superuser(current_user):
+        logger.warning(event=E.AUTH.ACCESS.DENIED, extra={
+            'reason': 'superuser_required', 'user_id': current_user.id,
+        })
         raise HTTPException(
             status_code=400, detail='The user doesn\'t have enough privileges'
         )
@@ -72,6 +79,9 @@ def get_api_key(
         return key_query
     if key_header:
         return key_header
+    logger.warning(event=E.AUTH.ACCESS.DENIED, extra={
+        'reason': 'missing_api_key',
+    })
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail='Not authenticated'
@@ -81,6 +91,9 @@ def get_api_key(
 async def check_api_key(
     api_key: APIKey = Security(get_api_key)) -> bool:
     if api_key != settings.EXT_API_KEY:
+        logger.warning(event=E.AUTH.ACCESS.DENIED, extra={
+            'reason': 'invalid_api_key',
+        })
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Invalid API key'

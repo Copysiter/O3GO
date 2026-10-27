@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api import deps
 from tasks import analytics_handler
+from core.logger import logger, E
 
 import crud
 import models
@@ -69,7 +70,22 @@ async def run_analytics(
         'status': 'pending',
         'user_id': current_user.id,
     })
-    analytics_handler.delay(item.id, data.filters, current_user.id, item.period)
+    context = {
+        'task_name': 'analytics', 'analytics_id': item.id,
+        'user_id': current_user.id,
+    }
+    try:
+        task = analytics_handler.delay(
+            item.id, data.filters, current_user.id, item.period
+        )
+    except Exception as error:
+        logger.error(event=E.TASK.PUBLISH.ERROR, extra={
+            **context, 'error_type': type(error).__name__,
+        })
+        raise
+    logger.info(event=E.TASK.PUBLISH.SUCCESS, extra={
+        **context, 'task_id': task.id,
+    })
     return item
 
 

@@ -3,11 +3,12 @@ import asyncio
 
 from datetime import datetime, date, timedelta
 from typing import Any, Optional, Tuple, Union
-from celery import Celery
+from celery import Celery, signals
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
 
 from core.config import settings
+from core.logger import logger, E
 from db.session import async_session
 from services.export.employee_analytics import generate_analytics_files
 from services.export.report_rows import build_report_rows
@@ -21,6 +22,14 @@ celery = Celery(__name__)
 celery.conf.broker_url = settings.CELERY_BROKER_URL
 celery.conf.result_backend = settings.CELERY_RESULT_BACKEND
 celery.conf.broker_connection_retry_on_startup = True
+celery.conf.worker_hijack_root_logger = False
+celery.conf.worker_redirect_stdouts = False
+
+
+@signals.setup_logging.connect
+def preserve_logging_config(**kwargs):
+    # core.logger already called setup_logger(); do not overwrite it in Celery.
+    pass
 
 
 def _flat_filters(filters: Optional[Union[list, dict]]):
@@ -347,8 +356,17 @@ async def event_handler(data: schemas.WebhookRequest):
 
 @celery.task(name="webhook")
 def webhook_handler(data: schemas.WebhookRequest):
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(event_handler(data))
+    context = {'task_name': 'webhook', 'task_id': webhook_handler.request.id}
+    logger.info(event=E.TASK.EXECUTION.START, extra=dict(context))
+    try:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(event_handler(data))
+    except Exception as error:
+        logger.error(event=E.TASK.EXECUTION.ERROR, extra={
+            **context, 'error_type': type(error).__name__,
+        })
+        raise
+    logger.info(event=E.TASK.EXECUTION.SUCCESS, extra=dict(context))
 
 
 async def analytics_event_handler(
@@ -400,7 +418,19 @@ async def analytics_event_handler(
 def analytics_handler(
     analytics_id: int, filters: list, user_id: int, period: str
 ):
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(
-        analytics_event_handler(analytics_id, filters, user_id, period)
-    )
+    context = {
+        'task_name': 'analytics', 'task_id': analytics_handler.request.id,
+        'analytics_id': analytics_id,
+    }
+    logger.info(event=E.TASK.EXECUTION.START, extra=dict(context))
+    try:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            analytics_event_handler(analytics_id, filters, user_id, period)
+        )
+    except Exception as error:
+        logger.error(event=E.TASK.EXECUTION.ERROR, extra={
+            **context, 'error_type': type(error).__name__,
+        })
+        raise
+    logger.info(event=E.TASK.EXECUTION.SUCCESS, extra=dict(context))

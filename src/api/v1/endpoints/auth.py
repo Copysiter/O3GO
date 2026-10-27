@@ -10,6 +10,7 @@ import crud, models, schemas  # noqa
 from api import deps  # noqa
 from core import security  # noqa
 from core.config import settings  # noqa
+from core.logger import logger, E
 from core.security import get_password_hash  # noqa
 from core.utils import verify_password_reset_token  # noqa
 
@@ -57,12 +58,20 @@ async def login_access_token(
         db, login=form_data.username, password=form_data.password
     )
     if not user:
+        logger.warning(event=E.AUTH.LOGIN.FAILURE, extra={
+            'reason': 'invalid_credentials',
+        })
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='Incorrect login or password')
     elif not crud.user.is_active(user):
+        logger.warning(event=E.AUTH.LOGIN.FAILURE, extra={
+            'reason': 'inactive_user', 'user_id': user.id,
+        })
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='Inactive user')
-    return get_tokens(user)
+    response = get_tokens(user)
+    logger.info(event=E.AUTH.LOGIN.SUCCESS, extra={'user_id': user.id})
+    return response
 
 
 @router.post('/refresh-token', response_model=schemas.Token)

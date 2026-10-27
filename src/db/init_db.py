@@ -1,5 +1,6 @@
 ﻿import crud, schemas  # noqa
 from core.config import settings  # noqa
+from core.logger import logger, E
 from db.base_class import Base  # noqa
 from db.session import engine, async_session  # noqa
 
@@ -21,8 +22,12 @@ async def create_superuser() -> None:
                     is_superuser=True,
                 )
                 user = await crud.user.create(session, obj_in=user_in)
-        except Exception as e:
-            pass
+        except Exception as error:
+            # Preserve the existing best-effort superuser initialization.
+            logger.error(event=E.DB.CONNECTION.ERROR, extra={
+                'action': 'create_superuser',
+                'error_type': type(error).__name__,
+            })
 
 
 # Create tables
@@ -35,5 +40,7 @@ async def init_models() -> None:
 
 
 async def init_db() -> None:
+    logger.info(event=E.DB.CONNECTION.INIT)
     await init_models()
+    logger.info(event=E.DB.CONNECTION.SUCCESS)
     await create_superuser()

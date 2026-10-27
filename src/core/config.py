@@ -1,10 +1,8 @@
 ﻿import secrets
 
-from typing import Any, Union, Optional, List, Dict  # noqa
+from typing import Any, Union, Optional, List, Dict, Literal  # noqa
 from pydantic import Field, EmailStr, PostgresDsn, ValidationInfo, field_validator  # noqa
 from pydantic_settings import BaseSettings
-
-from logging import config as logging_config
 
 
 class Settings(BaseSettings):
@@ -21,6 +19,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = 'HS256'
 
     PROJECT_NAME: str = Field('FastAPI', env='PROJECT_NAME')
+    PROJECT_VERSION: str = '0.0.1'
+    PROJECT_ENVIRONMENT: str = 'dev'
+    PROJECT_INSTANCE_ID: Optional[str] = None
     PROJECT_HOST: str = Field('127.0.0.1', env='PROJECT_HOST')
     PROJECT_PORT: int = Field(8080, env='PROJECT_PORT')
 
@@ -79,14 +80,41 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = Field('redis://redis:6379', env='CELERY_BROKER_URL')
     CELERY_RESULT_BACKEND: str = Field('redis://redis:6379', env='CELERY_RESULT_BACKEND')
 
-    LOG_PATH: Union[str, None] = Field(None, env='LOG_PATH')
-    LOG_FORMAT: str = Field(
-        '%(asctime)s.%(msecs)03d [%(levelname)s] %(name)s - %(message)s',
-        env='LOG_DEFAULT_FORMAT'
-    )
-    LOG_LEVEL_DEFAULT: str = Field('INFO', env='LOG_LEVEL_DEFAULT')
-    LOG_LEVEL_ACCESS: str = Field('INFO', env='LOG_LEVEL_ACCESS')
-    LOG_LEVEL_SQLALCHEMY: str = Field('ERROR', env='LOG_LEVEL_SQLALCHEMY')
+    LOG_NAME: str = Field('o3go', min_length=1)
+    LOG_LEVEL: str = 'INFO'
+    LOG_STDOUT: bool = False
+    LOG_PATH: str = Field('log/app.log', min_length=1)
+    LOG_ROTATION_TYPE: Literal['time'] = 'time'
+    LOG_ROTATION_WHEN: Literal['midnight'] = 'midnight'
+    LOG_ROTATION_INTERVAL: int = Field(1, ge=1, le=1)
+    # Six daily archives plus the current file, managed by atol_logging.
+    LOG_BACKUP_COUNT: int = Field(6, ge=1, le=6)
+    LOG_ENABLED_LOGGERS: Optional[Dict[str, str]] = None
+
+    @field_validator('LOG_LEVEL')
+    def validate_log_level(cls, value: str) -> str:
+        value = value.upper()
+        if value not in {
+            'TRACE', 'DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR',
+            'CRITICAL', 'FATAL',
+        }:
+            raise ValueError('Unknown logging level')
+        return value
+
+    @field_validator('LOG_ENABLED_LOGGERS')
+    def validate_logger_levels(
+        cls, value: Optional[Dict[str, str]],
+    ) -> Optional[Dict[str, str]]:
+        if value is None:
+            return None
+        return {name: cls.validate_log_level(level)
+                for name, level in value.items()}
+
+    @field_validator('LOG_NAME')
+    def validate_log_name(cls, value: str) -> str:
+        if value == 'root' or not value.strip():
+            raise ValueError('LOG_NAME must be a non-root logger name')
+        return value
 
     ASGI_WORKERS: int = Field(1, env='ASGI_WORKERS')
 

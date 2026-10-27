@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from contextlib import asynccontextmanager
 
-from core.logger import LOGGING   # noqa
+from core.logger import logger, E
 from core.config import settings
 
 from db.init_db import init_db
@@ -18,9 +18,19 @@ from middlewares.stats import StatsMiddleware
 def init_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        await init_db()
-        yield
-        pass
+        logger.info(event=E.SYSTEM.APP.STARTUP)
+        try:
+            await init_db()
+        except Exception as error:
+            logger.error(event=E.SYSTEM.APP.ERROR, extra={
+                'error_type': type(error).__name__,
+            })
+            raise
+        logger.info(event=E.SYSTEM.APP.SUCCESS)
+        try:
+            yield
+        finally:
+            logger.info(event=E.SYSTEM.APP.SHUTDOWN)
 
     app = FastAPI(
         title=settings.PROJECT_NAME,
@@ -75,6 +85,6 @@ if __name__ == '__main__':
     uvicorn.run(
         'main:app',
         host=settings.PROJECT_HOST, port=settings.PROJECT_PORT,
-        workers=settings.ASGI_WORKERS, log_config=LOGGING,
-        access_log=True, reload=False
+        workers=settings.ASGI_WORKERS, log_config=None,
+        access_log=False, reload=False
     )
