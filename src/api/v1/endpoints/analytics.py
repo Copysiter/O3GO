@@ -79,8 +79,9 @@ async def run_analytics(
             item.id, data.filters, current_user.id, item.period
         )
     except Exception as error:
-        logger.error(event=E.TASK.PUBLISH.ERROR, extra={
-            **context, 'error_type': type(error).__name__,
+        logger.exception(event=E.TASK.PUBLISH.ERROR, extra={
+            **context,
+            'error': {'type': type(error).__name__, 'msg': str(error)},
         })
         raise
     logger.info(event=E.TASK.PUBLISH.SUCCESS, extra={

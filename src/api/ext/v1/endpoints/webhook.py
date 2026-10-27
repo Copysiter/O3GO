@@ -19,8 +19,9 @@ async def webhook(
     try:
         r = webhook_handler.delay(data.model_dump())
     except Exception as error:
-        logger.error(event=E.TASK.PUBLISH.ERROR, extra={
-            'task_name': 'webhook', 'error_type': type(error).__name__,
+        logger.exception(event=E.TASK.PUBLISH.ERROR, extra={
+            'task_name': 'webhook',
+            'error': {'type': type(error).__name__, 'msg': str(error)},
         })
         raise
     logger.info(event=E.TASK.PUBLISH.SUCCESS, extra={

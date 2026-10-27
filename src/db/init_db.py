@@ -24,9 +24,9 @@ async def create_superuser() -> None:
                 user = await crud.user.create(session, obj_in=user_in)
         except Exception as error:
             # Preserve the existing best-effort superuser initialization.
-            logger.error(event=E.DB.CONNECTION.ERROR, extra={
+            logger.exception(event=E.DB.CONNECTION.ERROR, extra={
                 'action': 'create_superuser',
-                'error_type': type(error).__name__,
+                'error': {'type': type(error).__name__, 'msg': str(error)},
             })
 
 

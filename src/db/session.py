@@ -7,6 +7,7 @@ url = settings.POSTGRES_DSN
 
 engine = create_async_engine(
     str(url), future=True, echo=False, pool_pre_ping=True,
+    hide_parameters=True,
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=settings.DATABASE_MAX_OVERFLOW
 )

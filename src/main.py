@@ -22,8 +22,8 @@ def init_app() -> FastAPI:
         try:
             await init_db()
         except Exception as error:
-            logger.error(event=E.SYSTEM.APP.ERROR, extra={
-                'error_type': type(error).__name__,
+            logger.exception(event=E.SYSTEM.APP.ERROR, extra={
+                'error': {'type': type(error).__name__, 'msg': str(error)},
             })
             raise
         logger.info(event=E.SYSTEM.APP.SUCCESS)

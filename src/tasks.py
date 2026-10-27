@@ -362,8 +362,9 @@ def webhook_handler(data: schemas.WebhookRequest):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(event_handler(data))
     except Exception as error:
-        logger.error(event=E.TASK.EXECUTION.ERROR, extra={
-            **context, 'error_type': type(error).__name__,
+        logger.exception(event=E.TASK.EXECUTION.ERROR, extra={
+            **context,
+            'error': {'type': type(error).__name__, 'msg': str(error)},
         })
         raise
     logger.info(event=E.TASK.EXECUTION.SUCCESS, extra=dict(context))
@@ -429,8 +430,9 @@ def analytics_handler(
             analytics_event_handler(analytics_id, filters, user_id, period)
         )
     except Exception as error:
-        logger.error(event=E.TASK.EXECUTION.ERROR, extra={
-            **context, 'error_type': type(error).__name__,
+        logger.exception(event=E.TASK.EXECUTION.ERROR, extra={
+            **context,
+            'error': {'type': type(error).__name__, 'msg': str(error)},
         })
         raise
     logger.info(event=E.TASK.EXECUTION.SUCCESS, extra=dict(context))
